@@ -1,6 +1,6 @@
-package com.thinkconstructive.invoice_application.service;
+package com.invoice.service;
 
-import com.thinkconstructive.invoice_application.model.ProductModel;
+import com.invoice.model.ProductModel;
 import jakarta.transaction.Transactional;
 
 import java.util.List;

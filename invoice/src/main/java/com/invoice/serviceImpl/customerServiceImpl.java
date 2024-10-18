@@ -1,8 +1,8 @@
-package com.thinkconstructive.invoice_application.serviceImpl;
+package com.invoice.serviceImpl;
 
-import com.thinkconstructive.invoice_application.model.customerModel;
-import com.thinkconstructive.invoice_application.repository.customerRepository;
-import com.thinkconstructive.invoice_application.service.customerService;
+import com.invoice.model.customerModel;
+import com.invoice.repository.customerRepository;
+import com.invoice.service.customerService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,7 +12,7 @@ import java.util.List;
 @Service
 public class customerServiceImpl implements customerService {
 
-    customerRepository customerRepository;
+    com.invoice.repository.customerRepository customerRepository;
 
 
     @Autowired

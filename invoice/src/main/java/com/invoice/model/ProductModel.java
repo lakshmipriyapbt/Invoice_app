@@ -1,4 +1,4 @@
-package com.thinkconstructive.invoice_application.model;
+package com.invoice.model;
 
 
 import jakarta.persistence.*;

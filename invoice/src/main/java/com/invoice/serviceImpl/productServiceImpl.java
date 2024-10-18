@@ -1,8 +1,8 @@
-package com.thinkconstructive.invoice_application.serviceImpl;
+package com.invoice.serviceImpl;
 
-import com.thinkconstructive.invoice_application.model.ProductModel;
-import com.thinkconstructive.invoice_application.repository.productRepository;
-import com.thinkconstructive.invoice_application.service.productService;
+import com.invoice.model.ProductModel;
+import com.invoice.repository.productRepository;
+import com.invoice.service.productService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -11,6 +11,7 @@ import java.util.List;
 
 @Service
 public class productServiceImpl implements productService {
+
 
     productRepository repository;
 
@@ -27,7 +28,6 @@ public class productServiceImpl implements productService {
     }
 
     @Override
-    @Transactional
     public ProductModel getProduct(String productId) {
 
         return repository.findById(productId).get();

@@ -1,7 +1,7 @@
-package com.thinkconstructive.invoice_application.controller;
+package com.invoice.controller;
 
-import com.thinkconstructive.invoice_application.model.ProductModel;
-import com.thinkconstructive.invoice_application.service.productService;
+import com.invoice.model.ProductModel;
+import com.invoice.service.productService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

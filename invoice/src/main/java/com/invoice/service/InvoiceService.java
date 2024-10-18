@@ -1,7 +1,7 @@
-package com.thinkconstructive.invoice_application.service;
+package com.invoice.service;
 
 
-import com.thinkconstructive.invoice_application.model.InvoiceModel;
+import com.invoice.model.InvoiceModel;
 
 import java.util.List;
 

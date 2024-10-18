@@ -1,8 +1,8 @@
-package com.thinkconstructive.invoice_application.serviceImpl;
+package com.invoice.serviceImpl;
 
-import com.thinkconstructive.invoice_application.model.InvoiceModel;
-import com.thinkconstructive.invoice_application.repository.InvoiceRepository;
-import com.thinkconstructive.invoice_application.service.InvoiceService;
+import com.invoice.model.InvoiceModel;
+import com.invoice.repository.InvoiceRepository;
+import com.invoice.service.InvoiceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

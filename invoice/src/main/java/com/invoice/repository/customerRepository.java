@@ -1,6 +1,6 @@
-package com.thinkconstructive.invoice_application.repository;
+package com.invoice.repository;
 
-import com.thinkconstructive.invoice_application.model.customerModel;
+import com.invoice.model.customerModel;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface customerRepository extends JpaRepository<customerModel,String> {
