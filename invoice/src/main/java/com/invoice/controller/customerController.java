@@ -1,7 +1,7 @@
-package com.thinkconstructive.invoice_application.controller;
+package com.invoice.controller;
 
-import com.thinkconstructive.invoice_application.model.customerModel;
-import com.thinkconstructive.invoice_application.service.customerService;
+import com.invoice.model.customerModel;
+import com.invoice.service.customerService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,7 +25,7 @@ public class customerController {
 
         return service.getAllCustomers();
     }
-    @PostMapping("/registergit ")
+    @PostMapping("/register ")
     public String createCustomer(@RequestBody customerModel invoiceModel){
         service.createCustomer(invoiceModel);
         return "Customer created Successfully";
