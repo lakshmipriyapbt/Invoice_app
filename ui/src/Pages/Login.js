@@ -24,12 +24,16 @@ const Login = ({ setLoggedIn }) => {
   })
   const navigate = useNavigate();
   const [passwordShown, setPasswordShown] = useState(false);
-  const togglePasswordVisiblity = () => {
-    setPasswordShown(!passwordShown);
+  // const togglePasswordVisiblity = () => {
+  //   setPasswordShown(!passwordShown);
+  // };
+  const togglePasswordVisibility = () => {
+    setPasswordShown(prevState => !prevState);
   };
-  const handlePasswordChange = (e) => {
-    setPasswordShown(e.target.value);
-  };
+
+  // const handlePasswordChange = (e) => {
+  //   setPasswordShown(e.target.value);
+  // };
    
   const onSubmit = (data) => {
     
@@ -145,7 +149,7 @@ const Login = ({ setLoggedIn }) => {
                       {...register("email", {
                         required: "Email is Required",
                         pattern: {
-                          value: /^[^@ ]+@[^@ ]+\.[^@ .]{2,}$/,
+                          value: /^[a-z]([a-z0-9._-]*[a-z0-9])?@[a-z]([a-z0-9.-]*[a-z0-9])?\.(com|in|net|gov|org|edu)$/,
                           message: "Invalid Email"
                         }
                       })}
@@ -157,21 +161,31 @@ const Login = ({ setLoggedIn }) => {
                   </div>
                   <div className="input-group mb-3">
                     <input className="form-control" name="password" id="password" placeholder="Enter Password"
-                      onChange={handlePasswordChange}
+                      // onChange={handlePasswordChange}
                       type={passwordShown ? "text" : "password"}
                       {...register("password", {
                         required: "Enter Password",
+                        minLength: {
+                          value: 8,
+                          message: "Password must be at least 8 characters long"
+                        },
+                        maxLength: {
+                          value: 16,
+                          message: "Password must be at most 16 characters long"
+                        },
                         pattern: {
                           value: /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.* ).{8,16}$/,
-                          message: "Invalid Password"
+                          message: "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character."
                         }
                       })}
                     />
-                    <i onClick={togglePasswordVisiblity}> {passwordShown ? (
-                      <Eye size={20} />
-                    ) : (
-                      <EyeSlash size={20} />
-                    )}</i>
+                    <span
+                      onClick={togglePasswordVisibility}
+                      style={{ cursor: 'pointer', marginLeft: '10px',marginTop:'7px' }}
+                      aria-label={passwordShown ? "Hide password" : "Show password"}
+                    >
+                      {passwordShown ? <Eye size={20} /> : <EyeSlash size={20} />}
+                    </span>
                   </div>
                   {errors.password && ((<p className="errorsMsg">{errors.password.message}</p>))}
                   <button className="btn btn-info mt-1 mb-2" id="to-recover" type="button">Forgot password?</button>
