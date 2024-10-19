@@ -17,9 +17,10 @@ import ModalOTP from './modalotp';
 const Login = ({ setLoggedIn }) => {
   const [user, setUser] = useState('')
   const [load, setLoad] = useState(true)
-  const { register, handleSubmit,getValues, formState: { errors } } = useForm({
+  const { register, handleSubmit,getValues, formState: { errors },trigger } = useForm({
     defaultValues:{
-      email:""
+      email:"",
+      password: ""
     }
   })
   const navigate = useNavigate();
@@ -34,6 +35,12 @@ const Login = ({ setLoggedIn }) => {
   // const handlePasswordChange = (e) => {
   //   setPasswordShown(e.target.value);
   // };
+  const emailValidation = (value) => {
+    if (/[A-Z]/.test(value)) {
+      return "Email cannot contain uppercase letters"; // Error message for uppercase letters
+    }
+    return /^[a-z]([a-z0-9._-]*[a-z0-9])?@[a-z]([a-z0-9.-]*[a-z0-9])?\.(com|in|net|gov|org|edu)$/.test(value) || "Invalid Email format";
+  };
    
   const onSubmit = (data) => {
     
@@ -71,7 +78,7 @@ const Login = ({ setLoggedIn }) => {
           // Access error details from error.response.data or error.response.status
           const errorMessage = error.response.data; // Assuming the server sends an error message
           toast.error(`${errorMessage}!`, {
-            position: 'top-right',
+            position: 'top-left',
             transition: Slide,
             hideProgressBar: true,
             theme: "colored",
@@ -148,10 +155,11 @@ const Login = ({ setLoggedIn }) => {
                     <input className="form-control" name="email" type='text' id="email" defaultValue={emailValue} placeholder="Enter Email"
                       {...register("email", {
                         required: "Email is Required",
-                        pattern: {
-                          value: /^[a-z]([a-z0-9._-]*[a-z0-9])?@[a-z]([a-z0-9.-]*[a-z0-9])?\.(com|in|net|gov|org|edu)$/,
-                          message: "Invalid Email"
-                        }
+                        validate: emailValidation, // Custom validation function
+                        onChange: async (e) => {
+                          e.target.value = e.target.value.trim(); // Trim whitespace
+                          await trigger("email"); // Trigger validation
+                        },
                       })}
                     />
                   </div>
@@ -175,8 +183,12 @@ const Login = ({ setLoggedIn }) => {
                         },
                         pattern: {
                           value: /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.* ).{8,16}$/,
-                          message: "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character."
-                        }
+                          message: "Password Must Contain At least One Uppercase letter, One Lowercase letter, One number, And One Special Character."
+                        },
+                        onChange: async (e) => {
+                          e.target.value = e.target.value.trim(); // Trim whitespace
+                          await trigger("password"); // Trigger validation
+                        },
                       })}
                     />
                     <span
