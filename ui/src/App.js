@@ -24,7 +24,7 @@ const App=()=> {
  
   return (
       <Routes>
-        <Route path="/" element={<Login/>}></Route>
+        <Route path='/Login' element={<Login/>}></Route>
         <Route path='/otp' element={<Otp/>}></Route>
         <Route path='/main' element={<Main/>}></Route>
         <Route path='/dashboard' element={<Dash/>}></Route>
@@ -33,7 +33,7 @@ const App=()=> {
         <Route path ='/productview' element = {<ProductViews/>}></Route>
         <Route path='/CustomersRegistration' element={<CustomersRegistration/>}></Route>
         <Route path ='/UserRegistration' element ={<UserRegistration/>}></Route>
-        <Route path = '/AdminRegistration' element = {<AdminRegistration/>}></Route>
+        <Route path = '/' element = {<AdminRegistration/>}></Route>
         <Route path ='/Usersviews' element ={<Usersview/>}></Route>
         <Route path='/Invoices' element={<InvoiceViews/>}></Route>
       <Route path='/invoiceRegistration/*' element={<InvoiceReg/>}></Route>

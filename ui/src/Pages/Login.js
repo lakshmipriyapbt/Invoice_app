@@ -17,33 +17,22 @@ import ModalOTP from './modalotp';
 const Login = ({ setLoggedIn }) => {
   const [user, setUser] = useState('')
   const [load, setLoad] = useState(true)
-  const { register, handleSubmit,getValues, formState: { errors },trigger } = useForm({
-    defaultValues:{
-      email:"",
+  const { register, handleSubmit, getValues, formState: { errors }, trigger } = useForm({
+    defaultValues: {
+      email: "",
       password: ""
     }
   })
   const navigate = useNavigate();
   const [passwordShown, setPasswordShown] = useState(false);
-  // const togglePasswordVisiblity = () => {
-  //   setPasswordShown(!passwordShown);
-  // };
+
   const togglePasswordVisibility = () => {
     setPasswordShown(prevState => !prevState);
   };
 
-  // const handlePasswordChange = (e) => {
-  //   setPasswordShown(e.target.value);
-  // };
-  const emailValidation = (value) => {
-    if (/[A-Z]/.test(value)) {
-      return "Email cannot contain uppercase letters"; // Error message for uppercase letters
-    }
-    return /^[a-z]([a-z0-9._-]*[a-z0-9])?@[a-z]([a-z0-9.-]*[a-z0-9])?\.(com|in|net|gov|org|edu)$/.test(value) || "Invalid Email format";
-  };
-   
-  const onSubmit = (data) => {
-    
+  const onSubmit = (event, data) => {
+    // Prevent the default form submission behavior
+    event.preventDefault();
     axios.post("http://122.175.43.71:8001/api/sendotp", data)
       .then((response) => {
         if (response.status === 200) {
@@ -53,12 +42,12 @@ const Login = ({ setLoggedIn }) => {
             hideProgressBar: true,
             theme: "colored",
             autoClose: 1000, // Close the toast after 3 seconds
-           
+
           });
           setUser(response.data)
           setUser(true);
           console.log(response.data);
-          navigate('/otp',{state:{email:data.email}});
+          navigate('/otp', { state: { email: data.email } });
         } else {
           toast.error(response.data.data, {
             position: 'middle-right',
@@ -94,7 +83,7 @@ const Login = ({ setLoggedIn }) => {
         }
       });
   }
-  
+
   const emailValue = getValues("email");
   //const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -155,7 +144,10 @@ const Login = ({ setLoggedIn }) => {
                     <input className="form-control" name="email" type='text' id="email" defaultValue={emailValue} placeholder="Enter Email"
                       {...register("email", {
                         required: "Email is Required",
-                        validate: emailValidation, // Custom validation function
+                        pattern: {
+                          value: /^[a-z]([a-z0-9._-]*[a-z0-9])?@[a-z]([a-z0-9.-]*[a-z0-9])?\.(com|in|net|gov|org|edu)$/,
+                          message: "Invalid Email"
+                        },
                         onChange: async (e) => {
                           e.target.value = e.target.value.trim(); // Trim whitespace
                           await trigger("email"); // Trigger validation
@@ -164,26 +156,17 @@ const Login = ({ setLoggedIn }) => {
                     />
                   </div>
                   {errors.email && ((<p className="errorsMsg">{errors.email.message}</p>))}
-                  <div className="input-group-prepend">
+                  <div className="input-group-prepend mt-3">
                     <label style={{ color: "orange" }}>Password</label>
                   </div>
-                  <div className="input-group mb-3">
+                  <div className="input-group">
                     <input className="form-control" name="password" id="password" placeholder="Enter Password"
-                      // onChange={handlePasswordChange}
                       type={passwordShown ? "text" : "password"}
                       {...register("password", {
-                        required: "Enter Password",
-                        minLength: {
-                          value: 8,
-                          message: "Password must be at least 8 characters long"
-                        },
-                        maxLength: {
-                          value: 16,
-                          message: "Password must be at most 16 characters long"
-                        },
+                        required: "Password is Required",
                         pattern: {
                           value: /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.* ).{8,16}$/,
-                          message: "Password Must Contain At least One Uppercase letter, One Lowercase letter, One number, And One Special Character."
+                          message: "Invalid password"
                         },
                         onChange: async (e) => {
                           e.target.value = e.target.value.trim(); // Trim whitespace
@@ -191,16 +174,21 @@ const Login = ({ setLoggedIn }) => {
                         },
                       })}
                     />
-                    <span
-                      onClick={togglePasswordVisibility}
-                      style={{ cursor: 'pointer', marginLeft: '10px',marginTop:'7px' }}
-                      aria-label={passwordShown ? "Hide password" : "Show password"}
-                    >
-                      {passwordShown ? <Eye size={20} /> : <EyeSlash size={20} />}
-                    </span>
                   </div>
                   {errors.password && ((<p className="errorsMsg">{errors.password.message}</p>))}
-                  <button className="btn btn-info mt-1 mb-2" id="to-recover" type="button">Forgot password?</button>
+                  <span
+                    onClick={togglePasswordVisibility}
+                    style={{ cursor: 'pointer', marginLeft: '2px', marginBottom: '10px', color: "#000000" }}
+                    aria-label={passwordShown ? "Hide password" : "Show password"}
+                  >
+                    {passwordShown ? <Eye size={16} /> : <EyeSlash size={16} />}
+                  </span>
+
+                  {/* <button className="btn btn-info mt-2 mb-2" id="to-recover" type="button">Forgot password?</button>
+                  replaced the forgot password button with anchor element */}
+                  <a href="/forgot-password" className="btn btn-link mt-1 mb-3 " style={{ color: "orange", textDecoration: "underline" }}>
+                    Forgot password?
+                  </a>
                 </div>
               </div>
               <div className="row border-top border-secondary">
@@ -208,7 +196,7 @@ const Login = ({ setLoggedIn }) => {
                   <div className="form-group">
                     <div className="p-t-20">
                       <button className="btn btn-success mt-3" style={{ marginLeft: "40%" }} >Login</button>
-                     
+
                     </div>
                   </div>
                 </div>
@@ -217,11 +205,11 @@ const Login = ({ setLoggedIn }) => {
 
             {/* <TopNav handleLogOut={handleLogOut}/> */}
           </div>
-          
+
         </div>
-       
+
       </div>
-      
+
     </div>
 
   )
