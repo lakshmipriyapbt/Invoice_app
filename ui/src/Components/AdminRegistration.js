@@ -17,8 +17,10 @@ const AdminRegistration = () => {
     const formData = new FormData();
     formData.append("client", data.client);
     formData.append("email", data.email);
+    formData.append("password", data.password)
     formData.append("phone", data.phone);
-    formData.append("company", data.pan);
+    formData.append("company", data.company);
+    formData.append("service", data.service)
     formData.append("pan", data.pan);
     formData.append("gstnumber", data.gstnumber);
     formData.append("gender", data.gender);
@@ -50,10 +52,10 @@ const AdminRegistration = () => {
       console.error('Error:', error);
     }
   };
+
   // custom validation function for username
   const usernameValidation = (value) => {
-    const regex = /^[A-Za-z\s]+$/; // Only alphabetic characters
-    const trimmedValue = value.trim();
+    const regex = /^[A-Za-z\s]+$/;
     if (!regex.test(value)) {
       return "Username can only contain letters and spaces.";
     }
@@ -65,11 +67,10 @@ const AdminRegistration = () => {
     }
     return true;
   };
-
   // custom validation function for email
   const emailValidation = (value) => {
     if (/[A-Z]/.test(value)) {
-      return "Email cannot contain uppercase letters"; // Error message for uppercase letters
+      return "Email cannot contain uppercase letters";
     }
     return /^[a-z]([a-z0-9._-]*[a-z0-9])?@[a-z]([a-z0-9.-]*[a-z0-9])?\.(com|in|net|gov|org|edu)$/.test(value) || "Invalid Email format";
   };
@@ -79,25 +80,18 @@ const AdminRegistration = () => {
       e.preventDefault();
     }
   };
-
-  // function to prevent lowercase letters in the pan number input field
-  const preventLowercase = (e) => {
-    if (e.key >= 'a' && e.key <= 'z') {
-      e.preventDefault();
-    }
-  };
   // Prevent input of non-numeric characters
   const preventNonNumericCharacters = (e) => {
     if (!/[0-9]/.test(e.key)) {
       e.preventDefault();
     }
   }
-  // Prevent entering non-alphabetic characters
-  const preventNonAlphaCharacters = (e) => {
-    if (!/[A-Za-z]/.test(e.key)) {
+  // prevent entering numbers in the input fields
+  const preventNumbers = (e) => {
+    if (/[0-9]/.test(e.key)) {
       e.preventDefault();
     }
-  };
+  }
   const handlePhoneChange = (e) => {
     const value = e.target.value;
     // Allow only the first digit to be 6-9
@@ -132,8 +126,8 @@ const AdminRegistration = () => {
       <div className='container-fliuid'>
         <div className='row'>
           <div className='col-md-9 ' style={{ marginLeft: "300px", marginTop: "40px" }}>
-            <div className="card">
-              <form className="form-horizontal" onSubmit={handleSubmit(onSubmit)} encType='multipart/form-data'>
+            <form className="form-horizontal" onSubmit={handleSubmit(onSubmit)} encType='multipart/form-data'>
+              <div className="card">
                 <div className="card-body">
                   <h3 className="card-title" style={{ marginLeft: "10px", marginTop: "10px" }}>Admin Info</h3>
                   <div className='form row mt-4'>
@@ -142,16 +136,23 @@ const AdminRegistration = () => {
                       <input type="text" className="form-control" name="client" id="client" placeholder="Enter Client Name"
                         {...register("client", {
                           required: "User Name is required",
-                          validate: async (value) => {
+                          validate: (value) => {
                             const trimmedValue = value.trim();
-                            return usernameValidation(trimmedValue); // Call validation on trimmed value
+                            const usernameValidationResult = usernameValidation(trimmedValue); // Call the validation function
+                            if (usernameValidationResult !== true) {
+                              return usernameValidationResult; // Return error message if validation fails
+                            }
+                            // Check that the trimmed value has at least one character,
+                            // and allows one space after the first character.
+                            return /^(\S+ ?)$/.test(trimmedValue);
                           },
                           onChange: async (e) => {
-                            const trimmedValue = e.target.value.trim(); // Trim whitespace at start and end
-                            e.target.value = trimmedValue; // Update the input value
+                            const trimmedValue = e.target.value.trimStart(); // Trim leading whitespace
+                            e.target.value = trimmedValue.replace(/ {2,}/g, ' '); // Replace multiple spaces with a single space
                             await trigger("client"); // Trigger validation
                           },
                         })}
+                        onKeyPress={preventNumbers}
                       />
                       {errors.client && <p className='errorsMsg '>{errors.client.message}</p>}
                     </div>
@@ -162,11 +163,11 @@ const AdminRegistration = () => {
                           required: "Email is Required",
                           validate: emailValidation, // Custom validation function
                           onChange: async (e) => {
-                            e.target.value = e.target.value.trimStart().trimEnd(); // Trim whitespace
+                            e.target.value = e.target.value.trim(); // Trim whitespace
                             await trigger("email"); // Trigger validation
                           },
                         })}
-                        onKeyPress={preventWhitespace}
+                        onKeyPress={preventWhitespace} //white spaces
                       />
                       {errors.email && <p className="errorsMsg">{errors.email.message}</p>}
                     </div>
@@ -194,7 +195,7 @@ const AdminRegistration = () => {
                             await trigger("password"); // Trigger validation
                           },
                         })}
-                        onKeyPress={preventWhitespace}
+                      // onKeyPress={preventWhitespace}
                       />
                       {errors.password && <p className="errorsMsg">{errors.password.message}</p>}
                     </div>
@@ -216,7 +217,6 @@ const AdminRegistration = () => {
                           preventNonNumericCharacters(e);
                           handlePhoneChange(e);
                         }}
-
                       />
                       {errors.phone && (<p className='errorsMsg'>{errors.phone.message}</p>)}
                     </div>
@@ -228,11 +228,12 @@ const AdminRegistration = () => {
                         {...register("company", {
                           required: "Company Name is Required",
                           onChange: async (e) => {
-                            e.target.value = e.target.value.trim(); // Trim whitespace
+                            const trimmedValue = e.target.value.trimStart(); // Trim whitespace
+                            e.target.value = trimmedValue.replace(/ {2,}/g, ' ');
                             await trigger("company"); // Trigger validation
                           },
                         })}
-                        onKeyPress={preventNonAlphaCharacters}
+                        onKeyPress={preventNumbers}
                       />
                       {errors.company && <p className='errorsMsg '>{errors.company.message}</p>}
                     </div>
@@ -242,11 +243,12 @@ const AdminRegistration = () => {
                         {...register("service", {
                           required: "Enter service Name",
                           onChange: async (e) => {
-                            e.target.value = e.target.value.trim(); // Trim whitespace
+                            const trimmedValue = e.target.value.trimStart(); // Trim whitespace
+                            e.target.value = trimmedValue.replace(/ {2,}/g, ' ');
                             await trigger("service"); // Trigger validation
                           },
                         })}
-                        onKeyPress={preventNonAlphaCharacters}
+                        onKeyPress={preventNumbers}
                       />
                       {errors.service && <p className='errorsMsg '>{errors.service.message}</p>}
                     </div>
@@ -266,11 +268,11 @@ const AdminRegistration = () => {
                             await trigger("pan"); // Trigger validation
                           },
                         })}
-                        onKeyPress={(e) => {
-                          preventWhitespace(e)
-                          preventLowercase(e);
-                        }
-                        }
+                      // onKeyPress={(e) => {
+                      //   preventWhitespace(e)
+                      //   // preventLowercase(e);
+                      // }
+                      // }
                       />
                       {errors.pan && (
                         <p className="errorsMsg">{errors.pan.message}</p>
@@ -290,11 +292,11 @@ const AdminRegistration = () => {
                             await trigger("gstnumber"); // Trigger validation
                           },
                         })}
-                        onKeyPress={(e) => {
-                          preventWhitespace(e)
-                          preventLowercase(e);
-                        }
-                        }
+                      // onKeyPress={(e) => {
+                      //   preventWhitespace(e)
+                      //   // preventLowercase(e);
+                      // }
+                      // }
                       />
                       {errors.gstnumber && (<p className='errorsMsg'>{errors.gstnumber.message}</p>)}
                     </div>
@@ -343,8 +345,12 @@ const AdminRegistration = () => {
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
 
-                  <h3 className="card-title " style={{ marginLeft: "10px", marginTop: "30px" }}>Bank Details</h3>
+              <div className="card">
+                <div className="card-body">
+                  <h3 className="card-title " style={{ marginLeft: "10px", marginTop: "15px" }}>Bank Details</h3>
                   <div className='form-row mt-4'>
                     <div className="form-group col-md-6">
                       <label htmlFor="bankaccount" className="col-sm-4 text-left control-label col-form-label">Bank Account</label>
@@ -352,8 +358,12 @@ const AdminRegistration = () => {
                         {...register("bankAccount", {
                           required: "Account Number is Required",
                           minLength: {
-                            value: 12,
-                            message: 'Enter valid Account Number',
+                            value: 9,
+                            message: 'Bank Account Number must be at least 9 characters long',
+                          },
+                          maxLength: {
+                            value: 18,
+                            message: 'Bank Account Number must be at most 18 characters long'
                           },
                           onChange: async (e) => {
                             e.target.value = e.target.value.trim(); // Trim whitespace
@@ -370,11 +380,12 @@ const AdminRegistration = () => {
                         {...register("bankName", {
                           required: "Bank Name is Required",
                           onChange: async (e) => {
-                            e.target.value = e.target.value.trim(); // Trim whitespace
+                            const trimmedValue = e.target.value.trimStart(); // Trim whitespace
+                            e.target.value = trimmedValue.replace(/ {2,}/g, ' ');
                             await trigger("bankName"); // Trigger validation
                           },
                         })}
-                        onKeyPress={preventNonAlphaCharacters}
+                        onKeyPress={preventNumbers}
                       />
                       {errors.bankName && <p className='errorsMsg '>{errors.bankName.message}</p>}
                     </div>
@@ -386,11 +397,12 @@ const AdminRegistration = () => {
                         {...register("bankBranch", {
                           required: "Branch Name is Required",
                           onChange: async (e) => {
-                            e.target.value = e.target.value.trim(); // Trim whitespaces
+                            const trimmedValue = e.target.value.trimStart(); // Trim whitespaces
+                            e.target.value = trimmedValue.replace(/ {2,}/g, ' ');
                             await trigger("bankBranch");  // Trigger validation
                           }
                         })}
-                        onKeyPress={preventNonAlphaCharacters}
+                        onKeyPress={preventNumbers}
                       />
                       {errors.bankBranch && <p className='errorsMsg '>{errors.bankBranch.message}</p>}
                     </div>
@@ -416,7 +428,6 @@ const AdminRegistration = () => {
                             await trigger("ifsc");  // trigger validation
                           }
                         })}
-                      // onKeyPress={preventWhitespace}
                       />
                       {errors.ifsc && (<p className='errorsMsg'>{errors.ifsc.message}</p>)}
                     </div>
@@ -428,11 +439,12 @@ const AdminRegistration = () => {
                         {...register("state", {
                           required: "State Name is Required",
                           onChange: async (e) => {
-                            e.target.value = e.target.value.trim(); // trim whitespaces
+                            const trimmedValue = e.target.value.trimStart(); // trim whitespaces
+                            e.target.value = trimmedValue.replace(/ {2,}/g, ' ');
                             await trigger("state");  // trigger validation
                           }
                         })}
-                        onKeyPress={preventNonAlphaCharacters}
+                        onKeyPress={preventNumbers}
                       />
                       {errors.state && <p className='errorsMsg '>{errors.state.message}</p>}
                     </div>
@@ -441,24 +453,28 @@ const AdminRegistration = () => {
                       < textarea rows="3" cols="5" className="form-control" name="address" id="address" placeholder="Enter Address"
                         {...register("address", {
                           required: "Address is Required",
+                          maxLength:{
+                            value:250,
+                            message:'Address must be at most 250 characters long'
+                          },
                           onChange: async (e) => {
-                            e.target.value = e.target.value.trim(); // trim whitespaces
+                            const trimmedValue = e.target.value.trimStart(); // trim whitespaces
+                            e.target.value = trimmedValue.replace(/ {2,}/g, ' ');
                             await trigger("address"); //trigger validations
                           },
                         })}
-                        onKeyPress={preventWhitespace}
                       />
                       {errors.address && <p className='errorsMsg '>{errors.address.message}</p>}
                     </div>
                   </div>
-                  <div className="border-top">
-                    <div className="card-body">
-                      <button type="submit" className="btn btn-primary" style={{ marginLeft: "400px" }}>Submit</button>
-                    </div>
-                  </div>
                 </div>
-              </form>
-            </div>
+              </div>
+              <div className="border-top">
+                <div className="card-body">
+                  <button type="submit" className="btn btn-primary" style={{ marginLeft: "85%" }}>Submit</button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       </div>
