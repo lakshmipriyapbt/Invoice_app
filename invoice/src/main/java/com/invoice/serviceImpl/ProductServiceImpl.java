@@ -3,9 +3,9 @@ package com.invoice.serviceImpl;
 import com.invoice.exception.InvoiceErrorMessageKey;
 import com.invoice.exception.InvoiceException;
 import com.invoice.model.ProductModel;
-import com.invoice.repository.productRepository;  // Note: Fixed the naming convention here
+import com.invoice.repository.ProductRepository;  // Note: Fixed the naming convention here
 import com.invoice.request.ProductRequest;  // Import the ProductRequest
-import com.invoice.service.productService;  // Fixed naming convention
+import com.invoice.service.ProductService;  // Fixed naming convention
 import com.invoice.common.ResponseBuilder;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -19,19 +19,18 @@ import java.util.Optional;
 
 @Service
 @Slf4j
-public class ProductServiceImpl implements productService {  // Fixed naming convention
+public class ProductServiceImpl implements ProductService {  // Fixed naming convention
 
-    private final productRepository repository;  // Fixed naming convention
+    private final ProductRepository repository;  // Fixed naming convention
 
     @Autowired
-    public ProductServiceImpl(productRepository repository) {
+    public ProductServiceImpl(ProductRepository repository) {
         this.repository = repository;
     }
 
     @Override
     public ResponseEntity<?> createProduct(@Valid ProductRequest productRequest) {
         log.debug("Creating product: {}", productRequest);
-
         // Convert ProductRequest to ProductModel
         ProductModel product = new ProductModel();
         product.setProductName(productRequest.getProductName());
@@ -40,7 +39,6 @@ public class ProductServiceImpl implements productService {  // Fixed naming con
         product.setCgstNo(productRequest.getCgstNo());
         product.setSgstNo(productRequest.getSgstNo());
         product.setIgstNo(productRequest.getIgstNo());
-
         repository.save(product);
         return new ResponseEntity<>(
                 ResponseBuilder.builder().build().createSuccessResponse("Product created successfully!"),
@@ -103,7 +101,6 @@ public class ProductServiceImpl implements productService {  // Fixed naming con
             productToUpdate.setCgstNo(productRequest.getCgstNo());
             productToUpdate.setSgstNo(productRequest.getSgstNo());
             productToUpdate.setIgstNo(productRequest.getIgstNo());
-
             repository.save(productToUpdate);
             return new ResponseEntity<>(
                     ResponseBuilder.builder().build().createSuccessResponse("Product updated successfully!"),

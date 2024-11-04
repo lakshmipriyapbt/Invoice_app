@@ -1,18 +1,20 @@
 package com.invoice.service;
 
-import com.invoice.model.ProductModel;
-import jakarta.transaction.Transactional;
+import com.invoice.exception.InvoiceException;
+import com.invoice.request.ProductRequest;
+import org.springframework.http.ResponseEntity;
 
-import java.util.List;
+import java.io.IOException;
 
-public interface productService {
+public interface ProductService {
 
-     String createProduct(ProductModel product);
-      ProductModel getProduct(String productId);
-      List<ProductModel> getAllProduct();
-      String deleteProduct(String productId);
-     // String updateProduct(String productId, productModel product);
+    ResponseEntity<?> createProduct(ProductRequest productRequest) throws InvoiceException;
 
-    @Transactional
-    String updateProduct(String productId, ProductModel product);
+    ResponseEntity<?> getProduct(String productId) throws InvoiceException;
+
+    ResponseEntity<?> getAllProducts() throws InvoiceException;
+
+    ResponseEntity<?> deleteProduct(String productId) throws InvoiceException;
+
+    ResponseEntity<?> updateProduct(String productId, ProductRequest productRequest) throws IOException, InvoiceException;
 }

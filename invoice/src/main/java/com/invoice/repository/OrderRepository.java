@@ -1,2 +1,12 @@
-package com.invoice.repository;public interface OrderRepository {
+package com.invoice.repository;
+
+import com.invoice.model.OrderModel;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface OrderRepository extends JpaRepository<OrderModel, String> {
+    List<OrderModel> findByInvoice_InvoiceId(Long invoiceId);
 }
