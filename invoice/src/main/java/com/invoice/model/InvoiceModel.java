@@ -31,7 +31,8 @@ public class InvoiceModel {
     private String invoiceNumber;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "invoice")
-    private List<OrderModel> orders;
+    private List<OrderModel> orderModel;
+
     private String totalAmount;
     private String status;
 }

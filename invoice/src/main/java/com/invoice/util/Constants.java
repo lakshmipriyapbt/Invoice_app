@@ -28,5 +28,6 @@ public class Constants {
     public static final String PAYMENT_METHOD_PAYPAL = "PayPal";
 
 
+    public static final String AUTH_KEY = "Authorization";
 }
 

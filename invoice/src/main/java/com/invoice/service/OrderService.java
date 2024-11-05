@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface OrderService {
 
-    ResponseEntity<?> createOrder(OrderModel orderModel) throws InvoiceException;
+//    ResponseEntity<?> createOrder(OrderModel orderModel) throws InvoiceException;
 
     ResponseEntity<?> getOrderById(String orderId) throws InvoiceException;
 

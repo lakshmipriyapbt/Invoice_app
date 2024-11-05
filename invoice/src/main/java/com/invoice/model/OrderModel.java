@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Setter
@@ -19,17 +20,14 @@ public class OrderModel {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long orderId;
 
-    @Column(nullable = false)
-    private String productId;
     private String purchaseDate;
     private String quantity;
     private String cost;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "productId", referencedColumnName = "productId", insertable = false, updatable = false)
-    private ProductModel product;
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "orderModel")
+    private List<ProductModel> product;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "invoiceId", nullable = false)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "invoiceId", referencedColumnName = "invoiceId", insertable = false, updatable = false)
     private InvoiceModel invoice;
 }

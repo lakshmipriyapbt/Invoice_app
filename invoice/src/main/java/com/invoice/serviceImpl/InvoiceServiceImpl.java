@@ -36,7 +36,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .vendorCode(invoiceModel.getVendorCode())
                 .invoiceDate(invoiceModel.getInvoiceDate())
                 .invoiceNumber(invoiceModel.getInvoiceNumber())
-                .orders(invoiceModel.getOrders())
+                .orderModel(invoiceModel.getOrderModel())
                 .totalAmount(invoiceModel.getTotalAmount())
                 .status("Pending")  // Default status
                 .build();
@@ -95,7 +95,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                     existingInvoice.setVendorCode(invoiceModel.getVendorCode());
                     existingInvoice.setInvoiceDate(invoiceModel.getInvoiceDate());
                     existingInvoice.setInvoiceNumber(invoiceModel.getInvoiceNumber());
-                    existingInvoice.setOrders(invoiceModel.getOrders());
+                    existingInvoice.setOrderModel(invoiceModel.getOrderModel());
                     existingInvoice.setTotalAmount(invoiceModel.getTotalAmount());
                     existingInvoice.setStatus(invoiceModel.getStatus());
                     repository.save(existingInvoice);

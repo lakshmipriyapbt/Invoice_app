@@ -34,33 +34,33 @@ public class OrderServiceImpl implements OrderService {
         this.invoiceRepository = invoiceRepository;
     }
 
-    @Override
-    public ResponseEntity<?> createOrder(OrderModel orderModel) throws InvoiceException {
-        log.info("Creating order: {}", orderModel);
-
-        // Find ProductModel using productId and HSN number
-        Optional<ProductModel> productOpt = productRepository.findByHsnNo(orderModel.getProduct().getHsnNo());
-        if (productOpt.isEmpty()) {
-            throw new InvoiceException(InvoiceErrorMessageKey.PRODUCT_NOT_FOUND, HttpStatus.NOT_FOUND);
-        }
-
-        // Find InvoiceModel by invoiceId
-        Optional<InvoiceModel> invoiceOpt = invoiceRepository.findById(String.valueOf(orderModel.getInvoice().getInvoiceId()));
-        if (invoiceOpt.isEmpty()) {
-            throw new InvoiceException(InvoiceErrorMessageKey.INVOICE_NOT_FOUND, HttpStatus.NOT_FOUND);
-        }
-
-        // Set the OrderModel properties
-        orderModel.setProduct(productOpt.get());
-        orderModel.setInvoice(invoiceOpt.get());
-
-        orderRepository.save(orderModel);
-
-        return new ResponseEntity<>(
-                ResponseBuilder.builder().build().createSuccessResponse("Order created successfully!"),
-                HttpStatus.CREATED
-        );
-    }
+//    @Override
+//    public ResponseEntity<?> createOrder(OrderModel orderModel) throws InvoiceException {
+//        log.info("Creating order: {}", orderModel);
+//
+//        // Find ProductModel using productId and HSN number
+//        Optional<ProductModel> productOpt = productRepository.findByHsnNo(orderModel.getProduct().getHsnNo());
+//        if (productOpt.isEmpty()) {
+//            throw new InvoiceException(InvoiceErrorMessageKey.PRODUCT_NOT_FOUND, HttpStatus.NOT_FOUND);
+//        }
+//
+//        // Find InvoiceModel by invoiceId
+//        Optional<InvoiceModel> invoiceOpt = invoiceRepository.findById(String.valueOf(orderModel.getInvoice().getInvoiceId()));
+//        if (invoiceOpt.isEmpty()) {
+//            throw new InvoiceException(InvoiceErrorMessageKey.INVOICE_NOT_FOUND, HttpStatus.NOT_FOUND);
+//        }
+//
+//        // Set the OrderModel properties
+//        orderModel.setProduct(productOpt.get());
+//        orderModel.setInvoice(invoiceOpt.get());
+//
+//        orderRepository.save(orderModel);
+//
+//        return new ResponseEntity<>(
+//                ResponseBuilder.builder().build().createSuccessResponse("Order created successfully!"),
+//                HttpStatus.CREATED
+//        );
+//    }
 
     @Override
     public ResponseEntity<?> getOrderById(String orderId) throws InvoiceException {
@@ -90,15 +90,15 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new InvoiceException(InvoiceErrorMessageKey.ORDER_NOT_FOUND, HttpStatus.NOT_FOUND));
 
         // Find ProductModel for update reference
-        Optional<ProductModel> productOpt = productRepository.findByHsnNo(orderModel.getProduct().getHsnNo());
+        Optional<ProductModel> productOpt = productRepository.findByHsnNo(orderModel.getProduct().getFirst().getHsnNo());
         if (productOpt.isEmpty()) {
             throw new InvoiceException(InvoiceErrorMessageKey.PRODUCT_NOT_FOUND, HttpStatus.NOT_FOUND);
         }
-        order.setProductId(orderModel.getProductId());
+        order.setProduct(orderModel.getProduct());
         order.setPurchaseDate(orderModel.getPurchaseDate());
         order.setQuantity(orderModel.getQuantity());
         order.setCost(orderModel.getCost());
-        order.setProduct(productOpt.get());
+        order.setProduct((List<ProductModel>) productOpt.get());
 
         orderRepository.save(order);
 
