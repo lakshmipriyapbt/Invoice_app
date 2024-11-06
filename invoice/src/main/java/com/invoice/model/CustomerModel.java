@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @Builder
@@ -24,8 +26,11 @@ public class CustomerModel {
     private String state;
     private String city;
     private String pinCode;
-    private String gstno;
+    private String gstNo;
     private String stateCode;
+
+    @OneToMany(mappedBy = "customer",orphanRemoval = true,cascade = CascadeType.ALL)
+    private List<InvoiceModel> invoiceModel;
 
 
 }

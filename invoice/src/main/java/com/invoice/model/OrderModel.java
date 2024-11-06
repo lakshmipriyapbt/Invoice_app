@@ -24,10 +24,11 @@ public class OrderModel {
     private String quantity;
     private String cost;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "orderModel")
-    private List<ProductModel> product;
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "invoiceId")
+    private InvoiceModel invoiceModel;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "invoiceId", referencedColumnName = "invoiceId", insertable = false, updatable = false)
-    private InvoiceModel invoice;
+
+    @OneToMany(mappedBy="orderModel",orphanRemoval = true)
+    private List<ProductModel> product;
 }

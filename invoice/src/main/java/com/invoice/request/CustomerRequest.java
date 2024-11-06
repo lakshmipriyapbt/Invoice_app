@@ -10,38 +10,38 @@ import lombok.*;
 @AllArgsConstructor
 public class CustomerRequest {
 
-    @NotBlank(message = "Customer name is mandatory")
-    @Size(min = 2, max = 100, message = "Customer name must be between 2 and 100 characters")
+    @NotBlank(message = "{customerName.notnull.message}")
+    @Size(min = 2, max = 100, message = "{customerName.size.message}")
     private String customerName;
 
-    @NotBlank(message = "Email is mandatory")
-    @Email(message = "Email should be valid")
+    @NotBlank(message = "{email.notnull.message}")
+    @Email(message = "{email.message}")
     private String email;
 
-    @NotBlank(message = "Mobile number is mandatory")
-    @Pattern(regexp = "^\\d{10}$", message = "Mobile number must be a 10-digit number")
+    @NotBlank(message = "{mobileNumber.notnull.message}")
+    @Pattern(regexp = "^\\d{10}$", message = "{mobileNumber.format}")
     private String mobileNumber;
 
-    @NotBlank(message = "Address is mandatory")
-    @Size(max = 255, message = "Address can be a maximum of 255 characters")
+    @NotBlank(message = "{address.notnull.message}")
+    @Size(max = 255, message = "{address.size.message}")
     private String address;
 
-    @NotBlank(message = "State is mandatory")
+    @NotBlank(message = "{state.notnull.message}")
     private String state;
 
-    @NotBlank(message = "City is mandatory")
+    @NotBlank(message = "{city.notnull.message}")
     private String city;
 
-    @NotBlank(message = "Pin code is mandatory")
-    @Pattern(regexp = "^\\d{6}$", message = "Pin code must be a valid 6-digit number")
+    @NotBlank(message = "{pinCode.notnull.message}")
+    @Pattern(regexp = "^\\d{6}$", message = "{pinCode.format}")
     private String pinCode;
 
-    @NotBlank(message = "GST number is mandatory")
-    @Pattern(regexp = "^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$", message = "GST number must be valid")
+    @NotBlank(message = "{gstNo.notnull.message}")
+    @Pattern(regexp = "^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$", message = "{gstNo.format}")
     private String gstNo;
 
-    @NotBlank(message = "State code is mandatory")
-    @Pattern(regexp = "^\\d{2}$", message = "State code must be a valid 2-digit number")
+    @NotBlank(message = "{stateCode.notnull.message}")
+    @Pattern(regexp = "^\\d{2}$", message = "{stateCode.format}")
     private String stateCode;
 }
 

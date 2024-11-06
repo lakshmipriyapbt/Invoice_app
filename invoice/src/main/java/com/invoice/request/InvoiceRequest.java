@@ -14,24 +14,24 @@ import java.util.List;
 @AllArgsConstructor
 public class InvoiceRequest {
 
-    @NotNull(message = "Customer name is required")
+    @NotNull(message = "{customerName.notnull.message}")
     private String customerName;
 
-    @NotNull(message = "Purchase order is required")
+    @NotNull(message = "{purchaseOrder.notnull.message}")
     private String purchaseOrder;
 
-    @NotNull(message = "Vendor code is required")
+    @NotNull(message = "{vendorCode.notnull.message}")
     private String vendorCode;
 
-    @NotNull(message = "Invoice date is required")
+    @NotNull(message = "{invoiceDate.notnull.message}")
     private LocalDate invoiceDate;
 
-    @NotNull(message = "Invoice number is required")
-    @Size(max = 50, message = "Invoice number cannot exceed 50 characters")
+    @NotNull(message = "{invoiceNumber.notnull.message}")
+    @Size(max = 50, message = "{invoiceNumber.size.message}")
     private String invoiceNumber;
 
-    @NotNull(message = "Product details are required")
-    @Size(min = 1, message = "At least one product detail is required")
+    @NotNull(message = "{Product.Details.notnull.message}")
+    @Size(min = 1, message = "{Product.Details.size.message}")
     private List<OrderRequest> products;
 
     private String status;

@@ -23,15 +23,16 @@ public class InvoiceModel {
     private Long invoiceId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customerId", referencedColumnName = "customerId", nullable = false)
+    @JoinColumn(name = "customerId")
     private CustomerModel customer;
+
     private String purchaseOrder;
     private String vendorCode;
     private LocalDate invoiceDate;
     private String invoiceNumber;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "invoice")
-    private List<OrderModel> orderModel;
+    @OneToOne(mappedBy = "invoiceModel", cascade = CascadeType.ALL, orphanRemoval = true)
+    private OrderModel orderModel;
 
     private String totalAmount;
     private String status;

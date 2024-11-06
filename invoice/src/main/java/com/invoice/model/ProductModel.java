@@ -26,8 +26,9 @@ public class ProductModel {
     private String igstNo;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "orderId", referencedColumnName = "orderId", insertable = false, updatable = false)
+    @JoinColumn(name = "orderId")
     private OrderModel orderModel;
+
 
 
 }

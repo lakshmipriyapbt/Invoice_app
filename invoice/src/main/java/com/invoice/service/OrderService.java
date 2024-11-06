@@ -12,7 +12,7 @@ public interface OrderService {
 
     ResponseEntity<?> getOrderById(String orderId) throws InvoiceException;
 
-    ResponseEntity<List<?>> getOrdersByInvoiceId(String invoiceId) throws InvoiceException;
+    ResponseEntity<?> getOrdersByInvoiceId(String invoiceId) throws InvoiceException;
 
     ResponseEntity<?> updateOrder(String orderId, OrderModel orderRequest) throws InvoiceException;
 

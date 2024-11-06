@@ -12,18 +12,18 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class OrderRequest {
 
-    @NotNull(message = "Product ID is required")
+    @NotNull(message = "{productId.notnull.message}")
     private String productId;
 
-    @NotNull(message = "HSN number is required")
+    @NotNull(message = "{hsnNo.notnull.message}")
     private String hsnNo;
 
-    @NotNull(message = "Purchase date is required")
+    @NotNull(message = "{purchaseDate.notnull.message}")
     private LocalDate purchaseDate;
 
-    @NotNull(message = "Quantity is required")
+    @NotNull(message = "{quantity.notnull.message}")
     private Integer quantity;
 
-    @NotNull(message = "Cost is required")
+    @NotNull(message = "{cost.notnull.message}")
     private BigDecimal cost;
 }

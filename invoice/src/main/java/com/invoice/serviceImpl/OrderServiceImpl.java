@@ -2,20 +2,23 @@ package com.invoice.serviceImpl;
 
 import com.invoice.exception.InvoiceErrorMessageKey;
 import com.invoice.exception.InvoiceException;
+import com.invoice.mappers.OrderMapper;
 import com.invoice.model.OrderModel;
 import com.invoice.model.ProductModel;
-import com.invoice.model.InvoiceModel;
 import com.invoice.repository.OrderRepository;
 import com.invoice.repository.ProductRepository;
 import com.invoice.repository.InvoiceRepository;
 import com.invoice.service.OrderService;
 import com.invoice.common.ResponseBuilder;
+import com.invoice.util.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -72,14 +75,17 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public ResponseEntity<List<?>> getOrdersByInvoiceId(String invoiceId) throws InvoiceException {
+    public ResponseEntity<?> getOrdersByInvoiceId(String invoiceId) throws InvoiceException {
         log.info("Fetching all orders for invoice ID: {}", invoiceId);
         if (!invoiceRepository.existsById(invoiceId)) {
             throw new InvoiceException(InvoiceErrorMessageKey.INVOICE_NOT_FOUND, HttpStatus.NOT_FOUND);
         }
-        List<OrderModel> orders = orderRepository.findByInvoice_InvoiceId(Long.valueOf(invoiceId));
+        Optional<OrderModel> orders = orderRepository.findByInvoiceModel_InvoiceId(Long.valueOf(invoiceId));
         return new ResponseEntity<>(orders, HttpStatus.OK);
     }
+
+    @Autowired
+    private OrderMapper orderMapper;
 
     @Override
     @Transactional
@@ -90,20 +96,17 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new InvoiceException(InvoiceErrorMessageKey.ORDER_NOT_FOUND, HttpStatus.NOT_FOUND));
 
         // Find ProductModel for update reference
-        Optional<ProductModel> productOpt = productRepository.findByHsnNo(orderModel.getProduct().getFirst().getHsnNo());
-        if (productOpt.isEmpty()) {
-            throw new InvoiceException(InvoiceErrorMessageKey.PRODUCT_NOT_FOUND, HttpStatus.NOT_FOUND);
-        }
-        order.setProduct(orderModel.getProduct());
-        order.setPurchaseDate(orderModel.getPurchaseDate());
-        order.setQuantity(orderModel.getQuantity());
-        order.setCost(orderModel.getCost());
-        order.setProduct((List<ProductModel>) productOpt.get());
+        ProductModel product = productRepository.findByHsnNo(orderModel.getProduct().getFirst().getHsnNo())
+                .orElseThrow(() -> new InvoiceException(InvoiceErrorMessageKey.PRODUCT_NOT_FOUND, HttpStatus.NOT_FOUND));
+
+        // Map fields from orderModel to the existing order
+        orderMapper.updateOrderFromModel(orderModel, order);
+        order.setProduct(Collections.singletonList(product));  // Update the product reference as needed
 
         orderRepository.save(order);
 
         return new ResponseEntity<>(
-                ResponseBuilder.builder().build().createSuccessResponse("Order updated successfully!"),
+                ResponseBuilder.builder().build().createSuccessResponse(Constants.UPDATE_SUCCESS),
                 HttpStatus.OK
         );
     }
@@ -117,7 +120,7 @@ public class OrderServiceImpl implements OrderService {
         }
         orderRepository.deleteById(orderId);
         return new ResponseEntity<>(
-                ResponseBuilder.builder().build().createSuccessResponse("Order deleted successfully!"),
+                ResponseBuilder.builder().build().createSuccessResponse(Constants.DELETE_SUCCESS),
                 HttpStatus.OK
         );
     }

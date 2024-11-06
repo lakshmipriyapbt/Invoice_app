@@ -2,6 +2,7 @@ package com.invoice.serviceImpl;
 
 import com.invoice.exception.InvoiceErrorMessageKey;
 import com.invoice.exception.InvoiceException;
+import com.invoice.mappers.CustomerMapper;
 import com.invoice.model.CustomerModel;
 import com.invoice.repository.CustomerRepository;
 import com.invoice.request.CustomerRequest;
@@ -29,19 +30,10 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public ResponseEntity<?> createCustomer(@Valid CustomerRequest customerRequest) {
+    public ResponseEntity<?> createCustomer(CustomerRequest customerRequest) {
         log.debug("Creating customer: {}", customerRequest);
-        // Convert CustomerRequest to CustomerModel
-        CustomerModel customer = new CustomerModel();
-        customer.setCustomerName(customerRequest.getCustomerName());
-        customer.setEmail(customerRequest.getEmail());
-        customer.setMobileNumber(customerRequest.getMobileNumber());
-        customer.setAddress(customerRequest.getAddress());
-        customer.setState(customerRequest.getState());
-        customer.setCity(customerRequest.getCity());
-        customer.setPinCode(customerRequest.getPinCode());
-        customer.setGstno(customerRequest.getGstNo());
-        customer.setStateCode(customerRequest.getStateCode());
+        // Use mapper to convert CustomerRequest to CustomerModel
+        CustomerModel customer = customerMapper.toCustomerModel(customerRequest);
         repository.save(customer);
         return new ResponseEntity<>(
                 ResponseBuilder.builder().build().createSuccessResponse("Customer created successfully!"),
@@ -89,24 +81,18 @@ public class CustomerServiceImpl implements CustomerService {
         }
     }
 
+    @Autowired
+    private CustomerMapper customerMapper;
+
     @Override
     @Transactional
     public ResponseEntity<?> updateCustomer(String customerId, @Valid CustomerRequest customerRequest) throws InvoiceException {
         log.info("Updating customer with ID: {}", customerId);
-        Optional<CustomerModel> existingCustomer = repository.findById((customerId));
+        Optional<CustomerModel> existingCustomer = repository.findById(customerId);
 
         if (existingCustomer.isPresent()) {
             CustomerModel customerToUpdate = existingCustomer.get();
-            // Update the fields
-            customerToUpdate.setCustomerName(customerRequest.getCustomerName());
-            customerToUpdate.setEmail(customerRequest.getEmail());
-            customerToUpdate.setMobileNumber(customerRequest.getMobileNumber());
-            customerToUpdate.setAddress(customerRequest.getAddress());
-            customerToUpdate.setState(customerRequest.getState());
-            customerToUpdate.setCity(customerRequest.getCity());
-            customerToUpdate.setPinCode(customerRequest.getPinCode());
-            customerToUpdate.setGstno(customerRequest.getGstNo());
-            customerToUpdate.setStateCode(customerRequest.getStateCode());
+            customerMapper.updateCustomerFromRequest(customerRequest, customerToUpdate);
             repository.save(customerToUpdate);
             return new ResponseEntity<>(
                     ResponseBuilder.builder().build().createSuccessResponse("Customer updated successfully!"),
@@ -117,3 +103,4 @@ public class CustomerServiceImpl implements CustomerService {
         }
     }
 }
+

@@ -29,5 +29,8 @@ public class Constants {
 
 
     public static final String AUTH_KEY = "Authorization";
+    public static final Object CREATE_SUCCESS = "Created successfully!";
+    public static final Object DELETE_SUCCESS = "Deleted successfully";
+    public static final Object UPDATE_SUCCESS = "Updated successfully!";
 }
 

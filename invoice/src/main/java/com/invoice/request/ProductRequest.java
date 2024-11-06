@@ -12,29 +12,29 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class ProductRequest {
 
-    @NotBlank(message = "Product name is mandatory")
-    @Size(min = 2, max = 100, message = "Product name must be between 2 and 100 characters")
+    @NotBlank(message = "{productName.notnull.message}")
+    @Size(min = 2, max = 100, message = "{productName.size.message}")
     private String productName;
 
-    @NotNull(message = "Product cost is mandatory")
-    @Positive(message = "Product cost must be positive")
+    @NotNull(message = "{productCost.notnull.message}")
+    @Positive(message = "{productCost.type}")
     private String productCost;
 
-    @NotBlank(message = "HSN number is mandatory")
-    @Pattern(regexp = "^\\d{4}$", message = "HSN number must be a valid 4-digit number")
+    @NotBlank(message = "{hsnNo.notnull.message}")
+    @Pattern(regexp = "^\\d{4}$", message = "{hsnNo.format}")
     private String hsnNo;
 
-    @NotNull(message = "CGST rate is mandatory")
-    @DecimalMin(value = "0", message = "CGST rate cannot be negative")
-    @DecimalMax(value = "100", message = "CGST rate cannot exceed 100%")
+    @NotNull(message = "{cgstNo.notnull.message}")
+    @DecimalMin(value = "0", message = "{cgstNo.type}")
+    @DecimalMax(value = "100", message = "{cgstNo.size}")
     private String cgstNo;
 
-    @NotNull(message = "SGST rate is mandatory")
-    @DecimalMin(value = "0", message = "SGST rate cannot be negative")
-    @DecimalMax(value = "100", message = "SGST rate cannot exceed 100%")
+    @NotNull(message = "{sgstNo.notnull.message}")
+    @DecimalMin(value = "0", message = "{sgstNo.type}")
+    @DecimalMax(value = "100", message = "{sgstNo.size}")
     private String sgstNo;
 
-    @NotNull(message = "IGST rate is mandatory")
+    @NotNull(message = "{igstNo.notnull.message}")
     @DecimalMin(value = "0", message = "IGST rate cannot be negative")
     @DecimalMax(value = "100", message = "IGST rate cannot exceed 100%")
     private String igstNo;

@@ -2,10 +2,12 @@ package com.invoice.serviceImpl;
 
 import com.invoice.exception.InvoiceErrorMessageKey;
 import com.invoice.exception.InvoiceException;
+import com.invoice.mappers.InvoiceMapper;
 import com.invoice.model.InvoiceModel;
 import com.invoice.repository.InvoiceRepository;
 import com.invoice.service.InvoiceService;
 import com.invoice.common.ResponseBuilder;
+import com.invoice.util.Constants;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,26 +29,21 @@ public class InvoiceServiceImpl implements InvoiceService {
         this.repository = repository;
     }
 
+    @Autowired
+    private InvoiceMapper invoiceMapper;
+
     @Override
     public ResponseEntity<?> createInvoice(@Valid InvoiceModel invoiceModel) {
         log.debug("Creating invoice: {}", invoiceModel);
-        InvoiceModel invoice = InvoiceModel.builder()
-                .customer(invoiceModel.getCustomer())
-                .purchaseOrder(invoiceModel.getPurchaseOrder())
-                .vendorCode(invoiceModel.getVendorCode())
-                .invoiceDate(invoiceModel.getInvoiceDate())
-                .invoiceNumber(invoiceModel.getInvoiceNumber())
-                .orderModel(invoiceModel.getOrderModel())
-                .totalAmount(invoiceModel.getTotalAmount())
-                .status("Pending")  // Default status
-                .build();
-
+        // Use mapper to set fields and apply default "Pending" status
+        InvoiceModel invoice = invoiceMapper.toInvoiceModel(invoiceModel);
         repository.save(invoice);
         return new ResponseEntity<>(
-                ResponseBuilder.builder().build().createSuccessResponse("Invoice created successfully!"),
+                ResponseBuilder.builder().build().createSuccessResponse(Constants.CREATE_SUCCESS),
                 HttpStatus.CREATED
         );
     }
+
 
     @Override
     public ResponseEntity<?> getInvoice(String invoiceId) throws InvoiceException {
@@ -76,7 +73,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         if (repository.existsById(invoiceId)) {
             repository.deleteById(invoiceId);
             return new ResponseEntity<>(
-                    ResponseBuilder.builder().build().createSuccessResponse("Deleted record successfully"),
+                    ResponseBuilder.builder().build().createSuccessResponse(Constants.DELETE_SUCCESS),
                     HttpStatus.OK
             );
         } else {
@@ -84,25 +81,20 @@ public class InvoiceServiceImpl implements InvoiceService {
         }
     }
 
+
     @Override
     @Transactional
     public ResponseEntity<?> updateInvoice(String invoiceId, @Valid InvoiceModel invoiceModel) throws InvoiceException {
         log.info("Updating invoice with ID: {}", invoiceId);
-        return repository.findById((invoiceId))
+        return repository.findById(invoiceId)
                 .map(existingInvoice -> {
-                    existingInvoice.setCustomer(invoiceModel.getCustomer());
-                    existingInvoice.setPurchaseOrder(invoiceModel.getPurchaseOrder());
-                    existingInvoice.setVendorCode(invoiceModel.getVendorCode());
-                    existingInvoice.setInvoiceDate(invoiceModel.getInvoiceDate());
-                    existingInvoice.setInvoiceNumber(invoiceModel.getInvoiceNumber());
-                    existingInvoice.setOrderModel(invoiceModel.getOrderModel());
-                    existingInvoice.setTotalAmount(invoiceModel.getTotalAmount());
-                    existingInvoice.setStatus(invoiceModel.getStatus());
+                    invoiceMapper.updateInvoiceFromModel(invoiceModel, existingInvoice);
                     repository.save(existingInvoice);
                     return new ResponseEntity<>(
-                            ResponseBuilder.builder().build().createSuccessResponse("Invoice updated successfully!"),
+                            ResponseBuilder.builder().build().createSuccessResponse(Constants.UPDATE_SUCCESS),
                             HttpStatus.OK
                     );
                 }).orElseThrow(() -> new InvoiceException(InvoiceErrorMessageKey.INVOICE_NOT_FOUND, HttpStatus.NOT_FOUND));
     }
 }
+
