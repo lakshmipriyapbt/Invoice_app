@@ -1,0 +1,29 @@
+package com.invoice.request;
+
+import lombok.*;
+import jakarta.validation.constraints.NotNull;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class OrderRequest {
+
+    @NotNull(message = "{productId.notnull.message}")
+    private String productId;
+
+    @NotNull(message = "{hsnNo.notnull.message}")
+    private String hsnNo;
+
+    @NotNull(message = "{purchaseDate.notnull.message}")
+    private LocalDate purchaseDate;
+
+    @NotNull(message = "{quantity.notnull.message}")
+    private Integer quantity;
+
+    @NotNull(message = "{cost.notnull.message}")
+    private BigDecimal cost;
+}
