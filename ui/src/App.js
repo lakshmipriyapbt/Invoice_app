@@ -24,26 +24,6 @@ const App = () => {
   const [loggedIn, setLoggedIn] = useState(false);
 
   return (
-<<<<<<< Updated upstream
-      <Routes>
-        <Route path="/" element={<Login/>}></Route>
-        <Route path='/otp' element={<Otp/>}></Route>
-        <Route path='/main' element={<Main/>}></Route>
-        <Route path='/dashboard' element={<Dash/>}></Route>
-        <Route path='/Customers' element={<Customers/>}></Route>
-        <Route path='/productsRegistration' element={<Products/>}></Route>
-        <Route path ='/productview' element = {<ProductViews/>}></Route>
-        <Route path='/CustomersRegistration' element={<CustomersRegistration/>}></Route>
-        <Route path ='/UserRegistration' element ={<UserRegistration/>}></Route>
-        <Route path = '/AdminRegistration' element = {<AdminRegistration/>}></Route>
-        <Route path ='/Usersviews' element ={<Usersview/>}></Route>
-        <Route path='/Invoices' element={<InvoiceViews/>}></Route>
-      <Route path='/invoiceRegistration/*' element={<InvoiceReg/>}></Route>
-       <Route path='/invoiceSlip' element={<InvoicePdf/>}></Route>
-       <Route path='/modalotp' element={<Modal/>}></Route>
-       {/* <Route path='/pagination' element={<Pagination/>}></Route> */}
- 
-=======
     <Routes>
       <Route path='/' element={<Login/>}></Route>
       <Route path='/otp' element={<Otp />}></Route>
@@ -63,7 +43,6 @@ const App = () => {
       <Route path='companyLogin' element={<CompanyLogin />}></Route>
       {/* <Route path='/pagination' element={<Pagination/>}></Route> */}
 
->>>>>>> Stashed changes
     </Routes>
 
   );
