@@ -89,6 +89,9 @@ th{
   font-size: smaller;
   position:relative;
 }
+#errorMsg{
+  margin-left: 259px;
+}
 .errorMsgs{
   color: #eb2b2b;
     font-size: medium;

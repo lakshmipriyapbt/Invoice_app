@@ -17,10 +17,11 @@ import InvoicePreview from "./InvoicePreview";
 import e from "cors";
 import { HandbagFill } from "react-bootstrap-icons";
 //import { CalendarFill } from 'react-bootstrap-icons';
+import {InvoicePostApi,} from '../Axos'
 
 
 const InvoiceReg = () => {
-  const { register, handleSubmit, control, getValues, reset, setValue, formState: { errors } } = useForm();
+  const { register, handleSubmit, control, getValues, reset,trigger, setValue, formState: { errors } } = useForm();
   const [invoiceData, setInvoiceData] = useState(null)
   const [productsInfo, setProductsInfo] = useState([
     {
@@ -33,7 +34,7 @@ const InvoiceReg = () => {
   ]);
   const [showPreview, setShowPreview] = useState(false);
   const [seriesNumber, setSeriesNumber] = useState(0)
-  const [productList, setProductList] = useState([]);
+  // const [productList, setProductList] = useState([]);
   const [customerList, setCustomerList] = useState([])
   const [customerData, setCustomerData] = useState('')
   const [formValues,setFormValues]=useState('')
@@ -135,7 +136,7 @@ const InvoiceReg = () => {
     //   setShowPreview(false);
     //   console.log(showPreview);
     // }else{
-    axios.post('http://122.175.43.71:8001/api/createinvoice/', x, { headers: { 'Content-Type': 'application/json' } })
+      InvoicePostApi(date, x, { headers: { 'Content-Type': 'application/json' } })
       .then((response) => {
         toast.success('Register Successfully', {  //Notification status
           position: 'top-right',
@@ -197,21 +198,26 @@ const InvoiceReg = () => {
         setCustomerList(error);
       })
   }, [])
+  const preventNonNumericCharacters = (e) => {
+    if (!/[0-9]/.test(e.key)) {
+      e.preventDefault();
+    }
+  }
 
-  useEffect(() => {
-    axios.get(`http://122.175.43.71:8001/api/viewproduct`)
-      .then((response) => {
-        console.log(response.data.data)
-        const Details = response.data.data.map(list => {
-          let obj = { label: list.product_name, value: list.product_name, hsn_no: list.hsn_no, product_cost: list.product_cost }
-          return (obj);
-        })
-        setProductList(Details);
-      })
-      .catch(error => {
-        setProductList(error);
-      })
-  }, [])
+  // useEffect(() => {
+  //   axios.get(`http://122.175.43.71:8001/api/viewproduct`)
+  //     .then((response) => {
+  //       console.log(response.data.data)
+  //       const Details = response.data.data.map(list => {
+  //         let obj = { label: list.product_name, value: list.product_name, hsn_no: list.hsn_no, product_cost: list.product_cost }
+  //         return (obj);
+  //       })
+  //       setProductList(Details);
+  //     })
+  //     .catch(error => {
+  //       setProductList(error);
+  //     })
+  // }, [])
 
   // { if(showPreview) (
   //   // Render preview content here
@@ -272,8 +278,13 @@ const InvoiceReg = () => {
                     <div className="col-sm-9">
                       <input type="text" className="form-control" name="purchase_order" id="purchase_order" placeholder="Enter Purchase Order"
                         {...register("purchase_order", {
-                          required: 'Enter Purchase Order'
+                          required: 'Enter Purchase Order',
+                          onChange: async (e) => {
+                            e.target.value = e.target.value.trim(); // Trim whitespace
+                            await trigger("password"); // Trigger validation
+                          },
                         })}
+                        onKeyPress={preventNonNumericCharacters}
                       />
                     </div>
                     {errors.purchase_order && (<p className="errorsMsg">{errors.purchase_order.message}</p>)}
@@ -283,8 +294,13 @@ const InvoiceReg = () => {
                     <div className="col-sm-9">
                       <input type="text" className="form-control" name="vendor_code" id="vendor_code" placeholder="Enter Vendor Code"
                         {...register("vendor_code", {
-                          required: " Enter vendor_code"
+                          required: " Enter vendor_code",
+                          onChange: async (e) => {
+                            e.target.value = e.target.value.trim(); // Trim whitespace
+                            await trigger("password"); // Trigger validation
+                          },
                         })}
+                        onKeyPress={preventNonNumericCharacters}
                       />
                     </div>
                     {errors.vendor_code && (<p className="errorsMsg">{errors.vendor_code.message}</p>)}
@@ -333,8 +349,8 @@ const InvoiceReg = () => {
                                   <Select
                                     // inputRef={ref}
                                     classNamePrefix="addl-class"
-                                    options={productList}
-                                    value={productList.find((e) => e.value === value)}
+                                    // options={productList}
+                                    // value={productList.find((e) => e.value === value)}
                                     onChange={(val) => {
                                       setValue(`productsInfo[${index}][product_id]`, val.value);
                                       setValue(`productsInfo[${index}][product_cost]`, val.product_cost);
