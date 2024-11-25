@@ -3,26 +3,25 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import {BrowserRouter as Router}   from 'react-router-dom';  
- import { ToastContainer } from 'react-toastify';
- import 'react-toastify/dist/ReactToastify.css';
+import { BrowserRouter as Router } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { AuthProvider } from './Context/AuthContext'; // Import AuthProvider
+import { Provider } from 'react-redux';
+import store from './Redux/Store';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
 
+root.render(
   <Router>
-    <App/>
-   <ToastContainer/>
+    <Provider store={store}>
+      <AuthProvider> {/* Wrap App with AuthProvider */}
+        <App />
+        <ToastContainer />
+      </AuthProvider>
+    </Provider>
   </Router>
-     /*<HashRouter>
-     <App/>   
-     </HashRouter>*/
-        
-        
-      
-    
-   
-  );
+);
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))

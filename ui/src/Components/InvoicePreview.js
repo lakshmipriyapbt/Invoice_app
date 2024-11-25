@@ -25,10 +25,10 @@ const InvoicePreview = ({ invoiceData, formValues }) => {
                         <address>
                           <h6 style={{ fontSize: "smaller" }}>Billed To,</h6>
                           <h4 className="font-small">Name:{invoiceData.value}</h4>
-                          <h6 className="m-l-30">Mail-Id:{invoiceData.mail_id},</h6>
-                          <h6 className="m-l-30">Contact No: {invoiceData.mobile_number},</h6>
-                          <h6 className="m-l-30">GST: {invoiceData.gst_number},</h6>
-                          <h6 className="m-l-30">Address:{invoiceData.customer_address},{invoiceData.state}</h6>
+                          <h6 className="m-l-30">Mail-Id:{invoiceData.memail},</h6>
+                          <h6 className="m-l-30">Contact No: {invoiceData.mobileNumber},</h6>
+                          <h6 className="m-l-30">GST: {invoiceData.gstNo},</h6>
+                          <h6 className="m-l-30">Address:{invoiceData.address},{invoiceData.state}</h6>
                         </address>
                       </div>
                     </div>
@@ -58,12 +58,12 @@ const InvoicePreview = ({ invoiceData, formValues }) => {
                               invoiceData.product_details.map((item, index) => (
                                 <tr key={index}>
                                   <td className="text-center">{index + 1}</td>
-                                  <td className="text-left">{item.product_name}</td>
-                                  <td className="text-left">{item.hsn_no}</td>
+                                  <td className="text-left">{item.productName}</td>
+                                  <td className="text-left">{item.hsnNo}</td>
                                   <td className="text-left">{item.no_of_units}</td>
                                   <td className="text-left">{item.gst_rate}</td>
-                                  <td className="text-left">{item.product_cost}</td>
-                                  <td className="text-left">{item.total_amount}</td>
+                                  <td className="text-left">{item.productCost}</td>
+                                  <td className="text-left">{item.totalCost}</td>
                                 </tr>
 
                               ))
