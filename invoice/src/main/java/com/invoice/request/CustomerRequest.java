@@ -36,7 +36,6 @@ public class CustomerRequest {
     @Pattern(regexp = "^\\d{6}$", message = "{pinCode.format}")
     private String pinCode;
 
-    @NotBlank(message = "{gstNo.notnull.message}")
     @Pattern(regexp = "^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$", message = "{gstNo.format}")
     private String gstNo;
 

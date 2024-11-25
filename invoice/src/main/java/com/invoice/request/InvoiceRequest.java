@@ -3,7 +3,6 @@ package com.invoice.request;
 import lombok.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-
 import java.time.LocalDate;
 import java.util.List;
 
@@ -26,13 +25,9 @@ public class InvoiceRequest {
     @NotNull(message = "{invoiceDate.notnull.message}")
     private LocalDate invoiceDate;
 
-    @NotNull(message = "{invoiceNumber.notnull.message}")
-    @Size(max = 50, message = "{invoiceNumber.size.message}")
-    private String invoiceNumber;
-
     @NotNull(message = "{Product.Details.notnull.message}")
     @Size(min = 1, message = "{Product.Details.size.message}")
-    private List<OrderRequest> products;
+    private List<OrderRequest> orderRequests;
 
     private String status;
 }

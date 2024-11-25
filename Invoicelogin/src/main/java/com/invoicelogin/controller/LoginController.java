@@ -37,7 +37,7 @@ public class LoginController {
     @PostMapping("admin/login")
     @io.swagger.v3.oas.annotations.Operation(summary = "${api.login.tag}", description = "${api.login.description}")
     @ResponseStatus(HttpStatus.OK)
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "OK")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "OK")
     public ResponseEntity<?> login(@RequestBody @Valid AdminLoginRequest request) throws Exception {
         return loginService.login(request);
     }
@@ -53,40 +53,55 @@ public class LoginController {
     @PostMapping("user/login")
     @io.swagger.v3.oas.annotations.Operation(summary = "${api.updatePassword.tag}", description = "${api.updatePassword.description}")
     @ResponseStatus(HttpStatus.OK)
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "OK")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "OK")
     public ResponseEntity<?> userLogin(@RequestBody @Valid UserLoginRequest request) throws InvoiceException {
         return loginService.UserLogin(request);
     }
 
-    @PostMapping("validate/UserOtp")
-    @io.swagger.v3.oas.annotations.Operation(summary = "${api.otpValidate.tag}", description = "${api.otpValidate.description}")
+    @PostMapping("validate/userOtp")
+    @io.swagger.v3.oas.annotations.Operation(summary = "${api.userOtpValidate.tag}", description = "${api.otpValidate.description}")
     @ResponseStatus(HttpStatus.OK)
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "OK")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "OK")
     public ResponseEntity<?> validateOtp(@RequestBody @Valid OtpRequest request) throws InvoiceException {
         return loginService.validateOtp(request);
     }
 
-    @PostMapping("validate/CompanyOtp")
-    @io.swagger.v3.oas.annotations.Operation(summary = "${api.otpValidate.tag}", description = "${api.otpValidate.description}")
+    @PostMapping("validate/companyOtp")
+    @io.swagger.v3.oas.annotations.Operation(summary = "${api.companyOtpValidate.tag}", description = "${api.otpValidate.description}")
     @ResponseStatus(HttpStatus.OK)
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "OK")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "OK")
     public ResponseEntity<?> validateCompanyOtp(@RequestBody @Valid CompanyOtpRequest request) throws InvoiceException {
         return loginService.validateCompanyOtp(request);
     }
 
-    @PostMapping("update/UserPassword")
+    @PatchMapping("userPassword")
     @io.swagger.v3.oas.annotations.Operation(summary = "${api.updateForgotPassword.tag}", description = "${api.updateForgotPassword.description}")
     @ResponseStatus(HttpStatus.CREATED)
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "CREATED")
-    public ResponseEntity<?> updateUserPassword(@RequestBody @Valid Passwordforgot request) throws InvoiceException {
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "CREATED")
+    public ResponseEntity<?> updateUserPassword(@RequestBody @Valid UserPassword request) throws InvoiceException {
         return loginService.updateUserPassword(request);
     }
 
-    @PostMapping("update/CompanyPassword")
+    @PatchMapping("companyPassword")
     @io.swagger.v3.oas.annotations.Operation(summary = "${api.updateForgotPassword.tag}", description = "${api.updateForgotPassword.description}")
     @ResponseStatus(HttpStatus.CREATED)
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "CREATED")
-    public ResponseEntity<?> updateCompanyPassword(@RequestBody @Valid CompanyPasswordUpdate request) throws InvoiceException {
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "CREATED")
+    public ResponseEntity<?> updateCompanyPassword(@RequestBody @Valid CompanyPassword request) throws InvoiceException {
         return loginService.updateCompanyPassword(request);
+    }
+
+    @PatchMapping("user/forgotPassword")
+    @io.swagger.v3.oas.annotations.Operation(summary = "${api.updateForgotPassword.tag}", description = "${api.updateForgotPassword.description}")
+    @ResponseStatus(HttpStatus.CREATED)
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "CREATED")
+    public ResponseEntity<?> forgotUserPassword(@RequestBody @Valid UserPassword request) throws InvoiceException {
+        return loginService.forgotUserPassword(request);
+    }
+    @PatchMapping("company/forgotPassword")
+    @io.swagger.v3.oas.annotations.Operation(summary = "${api.updateForgotPassword.tag}", description = "${api.updateForgotPassword.description}")
+    @ResponseStatus(HttpStatus.CREATED)
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "CREATED")
+    public ResponseEntity<?> forgotCompanyPassword(@RequestBody @Valid CompanyPassword request) throws InvoiceException {
+        return loginService.forgotCompanyPassword(request);
     }
 }

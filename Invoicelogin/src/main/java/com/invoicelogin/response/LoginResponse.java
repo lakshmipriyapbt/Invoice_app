@@ -18,5 +18,4 @@ public class LoginResponse {
 
     @Schema(required = true,  description = "${administration.refreshToken.description}", example = "abcdef12-1234-1234-1234-abcdefabcdef")
     private String refreshToken;
-
 }

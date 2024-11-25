@@ -5,12 +5,14 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
 import javax.ws.rs.WebApplicationException;
 
 @Builder
 @Getter
 @Setter
 public class ResponseBuilder {
+
     public <T> ResponseObject<T> createFailureResponse(ResponseErrorObject object) {
         return ResponseObject.<T>builder()
                 .path(ServletUriComponentsBuilder.fromCurrentRequest().toUriString())
@@ -23,6 +25,23 @@ public class ResponseBuilder {
                 .path(ServletUriComponentsBuilder.fromCurrentRequest().toUriString())
                 .message("Success")
                 .data(object)
+                .build();
+    }
+
+    public <T> ResponseObject<T> createSuccessResponseWithMessage(T object, String message) {
+        return ResponseObject.<T>builder()
+                .path(ServletUriComponentsBuilder.fromCurrentRequest().toUriString())
+                .message(message)
+                .data(object)
+                .build();
+    }
+
+    // A custom success response method that includes a custom message (like ID reuse message)
+    public static <T> ResponseObject<T> createSuccessResponse(T object, String customMessage) {
+        return ResponseObject.<T>builder()
+                .path(ServletUriComponentsBuilder.fromCurrentRequest().toUriString())
+                .message(customMessage)  // Use the custom message here
+                .data(object)  // Include the company data
                 .build();
     }
 
@@ -82,4 +101,3 @@ public class ResponseBuilder {
                 .build();
     }
 }
-

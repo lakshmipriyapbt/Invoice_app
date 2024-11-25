@@ -3,8 +3,6 @@ package com.invoice.request;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
-import java.math.BigDecimal;
-
 @Getter
 @Setter
 @Builder
@@ -24,18 +22,9 @@ public class ProductRequest {
     @Pattern(regexp = "^\\d{4}$", message = "{hsnNo.format}")
     private String hsnNo;
 
-    @NotNull(message = "{cgstNo.notnull.message}")
-    @DecimalMin(value = "0", message = "{cgstNo.type}")
-    @DecimalMax(value = "100", message = "{cgstNo.size}")
-    private String cgstNo;
+    @NotNull(message = "{gst.notnull.message}")
+    @DecimalMin(value = "0", message = "{gst.type}")
+    @DecimalMax(value = "100", message = "{gst.size}")
+    private String gst;
 
-    @NotNull(message = "{sgstNo.notnull.message}")
-    @DecimalMin(value = "0", message = "{sgstNo.type}")
-    @DecimalMax(value = "100", message = "{sgstNo.size}")
-    private String sgstNo;
-
-    @NotNull(message = "{igstNo.notnull.message}")
-    @DecimalMin(value = "0", message = "IGST rate cannot be negative")
-    @DecimalMax(value = "100", message = "IGST rate cannot exceed 100%")
-    private String igstNo;
 }
