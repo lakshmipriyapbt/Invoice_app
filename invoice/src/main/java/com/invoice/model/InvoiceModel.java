@@ -1,9 +1,9 @@
 package com.invoice.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -28,12 +28,22 @@ public class InvoiceModel {
 
     private String purchaseOrder;
     private String vendorCode;
+
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate invoiceDate;
-    private String invoiceNumber;
 
-    @OneToOne(mappedBy = "invoiceModel", cascade = CascadeType.ALL, orphanRemoval = true)
-    private OrderModel orderModel;
+    @OneToMany(mappedBy = "invoiceModel", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderModel> orderModels;
 
-    private String totalAmount;
+    private BigDecimal totalAmount;
     private String status;
+    private String gst;
+    private String cGst;
+    private String sGst;
+    private String iGst;
+    private String grandTotal;
+
+    @ManyToOne
+    @JoinColumn(name = "companyId")
+    private CompanyModel companyModel;
 }

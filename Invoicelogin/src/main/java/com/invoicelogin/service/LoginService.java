@@ -16,7 +16,11 @@ public interface LoginService {
 
     ResponseEntity<?> validateCompanyOtp(CompanyOtpRequest request) throws InvoiceException;
 
-    ResponseEntity<?> updateCompanyPassword(CompanyPasswordUpdate request) throws InvoiceException;
+    ResponseEntity<?> updateCompanyPassword(CompanyPassword request) throws InvoiceException;
 
-    ResponseEntity<?> updateUserPassword(Passwordforgot request) throws InvoiceException;
+    ResponseEntity<?> updateUserPassword(UserPassword request) throws InvoiceException;
+
+    ResponseEntity<?> forgotCompanyPassword(CompanyPassword request) throws InvoiceException;
+
+    ResponseEntity<?> forgotUserPassword(UserPassword request) throws InvoiceException;
 }

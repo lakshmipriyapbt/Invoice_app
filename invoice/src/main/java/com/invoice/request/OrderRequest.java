@@ -19,11 +19,8 @@ public class OrderRequest {
     private String hsnNo;
 
     @NotNull(message = "{purchaseDate.notnull.message}")
-    private LocalDate purchaseDate;
+    private String purchaseDate;
 
     @NotNull(message = "{quantity.notnull.message}")
     private Integer quantity;
-
-    @NotNull(message = "{cost.notnull.message}")
-    private BigDecimal cost;
 }

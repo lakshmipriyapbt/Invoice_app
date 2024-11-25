@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+import java.util.List;
+
 @Getter
 @Setter
 @Builder
@@ -11,6 +14,7 @@ import lombok.*;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity
+@Data
 @Table(name = "product")
 public class ProductModel {
 
@@ -20,16 +24,10 @@ public class ProductModel {
 
     private String productName;
     private String productCost;
-    private String HsnNo;
-    private String cgstNo;
-    private String sgstNo;
-    private String igstNo;
+    private String hsnNo;
+    private String gst;
+    private BigDecimal unitCost;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "orderId")
-    private OrderModel orderModel;
-
-
-
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderModel> orderModels;
 }
-

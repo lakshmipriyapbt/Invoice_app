@@ -1,11 +1,12 @@
 package com.invoice.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
+
 
 @Getter
 @Setter
@@ -20,15 +21,17 @@ public class OrderModel {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long orderId;
 
-    private String purchaseDate;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate purchaseDate;
     private String quantity;
     private String cost;
+    private BigDecimal totalCost;
 
-    @OneToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "invoiceId")
     private InvoiceModel invoiceModel;
 
-
-    @OneToMany(mappedBy="orderModel",orphanRemoval = true)
-    private List<ProductModel> product;
+    @ManyToOne
+    @JoinColumn(name = "productId")
+    private ProductModel product;
 }

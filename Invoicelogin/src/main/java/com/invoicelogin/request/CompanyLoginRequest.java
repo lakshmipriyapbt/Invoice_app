@@ -11,8 +11,8 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class CompanyLoginRequest {
-    @NotEmpty(message = "{user.companyEmail.message}")
-    @Email(message = "{user.companyEmail.invalid}")
+    @NotEmpty(message = "{company.companyEmail.message}")
+    @Email(message = "{company.companyEmail.invalid}")
     @Schema(required = true, description = "${login.companyEmail.description}", example = "user@example.com")
     @JsonProperty("companyEmail")
     private String companyEmail;

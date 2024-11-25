@@ -19,5 +19,4 @@ public class OtpRequest {
     @NotEmpty(message = "{user.userEmail.message}")
     @Schema(required = true, description = "${login.userEmail.description}", example = "path@gmail.com")
     private String userEmail;
-
 }

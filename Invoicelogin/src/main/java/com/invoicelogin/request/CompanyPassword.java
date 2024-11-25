@@ -12,7 +12,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @Builder
-public class CompanyPasswordUpdate {
+public class CompanyPassword {
 
     @NotEmpty(message = "{user.companyEmail.message}")
     @Schema(required = true, description = "${login.companyEmail.description}", example = "admin")
@@ -23,4 +23,9 @@ public class CompanyPasswordUpdate {
     @Schema(required = true, description = "${login.newPassword.description}", example = "newPassword")
     @JsonProperty("newPassword")
     private String newPassword;
+
+    @NotEmpty(message = "{user.confirmPassword.message}")
+    @Schema(required = true, description = "${login.confirmPassword.description}", example = "confirmPassword")
+    @JsonProperty("confirmPassword")
+    private String confirmPassword;
 }

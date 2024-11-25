@@ -17,10 +17,10 @@ public class Constants {
     public static final String COMPANY = "company";
     public static final String ROLES = "roles";
     public static final String SUCCESS ="success" ;
-    public static final String ADMIN = "admin";
-    public static final String Password = "password";
+    public static final String PASSWORD = "password";
     public static final String OTP = "otp";
     public static final String EXPIRY_TIME = "expiry_time";
-    public static final String QUERY ="\"UPDATE user SET otp = NULL, expiry_time = NULL WHERE email = ?\"";
+    public static final String COMPANY_ID ="company_Id";
+    public static final String USER_ID = "user_Id";
 }
 

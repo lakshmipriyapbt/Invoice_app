@@ -1,7 +1,6 @@
 package com.invoice.controller;
 
 import com.invoice.exception.InvoiceException;
-import com.invoice.model.InvoiceModel;
 import com.invoice.request.InvoiceRequest;
 import com.invoice.service.InvoiceService;
 import com.invoice.util.Constants;
@@ -19,29 +18,31 @@ import java.io.IOException;
 
 @RestController
 @CrossOrigin(origins = "*")
-@RequestMapping("/invoice") // Maps all methods in the class to URLs starting with /invoice
+@RequestMapping("/invoice")
 public class InvoiceController {
 
     @Autowired
     private InvoiceService invoiceService;
 
-    @PostMapping("create")
+    @PostMapping("")
     @Operation(security = { @SecurityRequirement(name = Constants.AUTH_KEY) },summary = "${api.createInvoice.tag}", description = "${api.createInvoice.description}")
     @ResponseStatus(HttpStatus.CREATED)
     @ApiResponse(responseCode = "201", description = "Invoice created successfully")
-    public ResponseEntity<?> createInvoice(@Parameter(hidden = true, required = true, description = "${apiAuthToken.description}", example = "Bearer abcdef12-1234-1234-1234-abcdefabcdef")
-                                               @RequestHeader(Constants.AUTH_KEY) String authToken,
-                                           @Parameter(required = true, description = "${api.createInvoicePayload.description}")
-                                           @RequestBody @Valid InvoiceModel invoiceRequest) throws InvoiceException {
-        return invoiceService.createInvoice(invoiceRequest);
+    public ResponseEntity<?> saveInvoice(@Parameter(hidden = true, required = true, description = "${apiAuthToken.description}", example = "Bearer abcdef12-1234-1234-1234-abcdefabcdef")
+                                         @RequestHeader(Constants.AUTH_KEY) String authToken,
+                                         @Parameter(required = true, description = "${api.createInvoicePayload.description}")
+                                         @RequestBody @Valid InvoiceRequest invoiceRequest) throws InvoiceException {
+
+        return invoiceService.saveInvoice(invoiceRequest);
     }
 
     @GetMapping("/{invoiceId}")
     @Operation(security = { @SecurityRequirement(name = Constants.AUTH_KEY) },summary = "${api.getInvoice.tag}", description = "${api.getInvoice.description}")
     @ApiResponse(responseCode = "200", description = "Invoice retrieved successfully")
     public ResponseEntity<?> getInvoice(@Parameter(hidden = true, required = true, description = "${apiAuthToken.description}", example = "Bearer abcdef12-1234-1234-1234-abcdefabcdef")
-                                            @RequestHeader(Constants.AUTH_KEY) String authToken,
+                                        @RequestHeader(Constants.AUTH_KEY) String authToken,
                                         @PathVariable String invoiceId) throws InvoiceException {
+
         return invoiceService.getInvoice(invoiceId);
     }
 
@@ -60,7 +61,8 @@ public class InvoiceController {
     public ResponseEntity<?> updateInvoice(@Parameter(hidden = true, required = true, description = "${apiAuthToken.description}", example = "Bearer abcdef12-1234-1234-1234-abcdefabcdef")
                                                @RequestHeader(Constants.AUTH_KEY) String authToken,
                                            @PathVariable String invoiceId,
-                                           @RequestBody @Valid InvoiceModel invoiceRequest) throws InvoiceException, IOException {
+                                           @RequestBody @Valid InvoiceRequest invoiceRequest) throws InvoiceException, IOException {
+
         return invoiceService.updateInvoice(invoiceId, invoiceRequest);
     }
 
@@ -70,8 +72,18 @@ public class InvoiceController {
     public ResponseEntity<?> deleteInvoice(@Parameter(hidden = true, required = true, description = "${apiAuthToken.description}", example = "Bearer abcdef12-1234-1234-1234-abcdefabcdef")
                                                @RequestHeader(Constants.AUTH_KEY) String authToken,
                                            @PathVariable String invoiceId) throws InvoiceException {
+
         return invoiceService.deleteInvoice(invoiceId);
     }
 
+    @GetMapping("/{invoiceId}/generate")
+    @Operation(security = { @SecurityRequirement(name = Constants.AUTH_KEY) }, summary = "${api.generateInvoice.tag}", description = "${api.generateInvoice.description}")
+    @ApiResponse(responseCode = "200", description = "Invoice generated successfully")
+    public ResponseEntity<?> generateInvoice(@Parameter(hidden = true, required = true, description = "${apiAuthToken.description}", example = "Bearer abcdef12-1234-1234-1234-abcdefabcdef")
+                                             @RequestHeader(Constants.AUTH_KEY) String authToken,
+                                             @PathVariable Long invoiceId) throws InvoiceException {
+
+        return invoiceService.generateInvoice(invoiceId);
+    }
 
 }

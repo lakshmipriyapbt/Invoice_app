@@ -3,7 +3,6 @@ package com.invoice.service;
 import com.invoice.exception.InvoiceException;
 import com.invoice.request.ProductRequest;
 import org.springframework.http.ResponseEntity;
-
 import java.io.IOException;
 
 public interface ProductService {
