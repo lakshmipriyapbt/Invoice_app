@@ -6,10 +6,10 @@ import { jwtDecode } from "jwt-decode";
 import { Modal, ModalBody, ModalHeader, ModalTitle } from "react-bootstrap";
 import Loader from "../Loader"
 import { Eye, EyeSlash } from "react-bootstrap-icons";
-import { loginApi } from "../Axos";
+import { loginApi } from "../Axios";
 
 const Login = () => {
-    const { register, handleSubmit, formState: { errors } } = useForm({ defaultValues: { username: "", password: "" }, mode: "onChange" });
+    const { register, handleSubmit,trigger, formState: { errors } } = useForm({ defaultValues: { userName: "", password: "" }, mode: "onChange" });
     //   const { setAuthUser } = useAuth();
     const navigate = useNavigate();
     const [passwordShown, setPasswordShown] = useState(false);
@@ -86,9 +86,15 @@ const Login = () => {
         }
         return true;
     };
+    const EmailValidation = (value) => {
+        if (/[A-Z]/.test(value)) {
+            return "Email cannot contain uppercase letters";
+        }
+        return /^[a-z]([a-z0-9._-]*[a-z0-9])?@[a-z]([a-z0-9.-]*[a-z0-9])?\.(com|in|net|gov|org|edu)$/.test(value) || "Invalid Email format";
+    };
     return (
         <div className="main-wrapper">
-            {loading && <Loader/>}
+            {loading && <Loader />}
             <div className="auth-wrapper d-flex justify-content-center align-items-center" style={{ backgroundColor: "#11375B" }}>
                 <div className="auth-box border-top border-secondary" style={{ backgroundColor: "#fefef" }} >
                     <div id="loginform">
@@ -106,15 +112,16 @@ const Login = () => {
                                         placeholder="Email Id"
                                         autoComplete="off"
                                         onKeyDown={handleEmailChange}
-                                        {...register("username", {
+                                        {...register("userName", {
                                             required: "Email Id is Required.",
-                                            pattern: {
-                                                value: /^(?![0-9]+@)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|in|org|net|edu|gov)$/,
-                                                message: "Invalid email Id format. Only .com, .in, .org, .net, .edu, .gov are allowed.",
+                                            validate: EmailValidation,
+                                            onChange: async (e) => {
+                                                e.target.value = e.target.value.trim();
+                                                await trigger('userName');
                                             },
                                         })}
                                     />
-                                    {errors.username && <p className="errorsMsg">{errors.username.message}</p>}
+                                    {errors.userName && <p className="errorsMsg">{errors.userName.message}</p>}
                                     <div className="input-group-prepend">
                                         <label style={{ color: "orange" }}>Password</label>
                                     </div>

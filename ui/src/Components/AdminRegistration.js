@@ -6,39 +6,34 @@ import { Controller, useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import Footer from '../Pages/Footer';
 import { Slide, toast } from 'react-toastify'
+import { CompanyRegistrationApi } from '../Axios';
 
 
 
 const AdminRegistration = () => {
-  const { register, handleSubmit, formState: { errors }, control, trigger } = useForm();
+  const { register, handleSubmit, formState: { errors }, control, trigger,setValue } = useForm();
   const [selectedFile, setSelectedFile] = useState(null);
 
   const onSubmit = async (data) => {
     const formData = new FormData();
-    formData.append("client", data.client);
+    formData.append("userName", data.userName);
     formData.append("email", data.email);
     formData.append("password", data.password)
     formData.append("phone", data.phone);
-    formData.append("company", data.company);
+    formData.append("companyName", data.companyName);
     formData.append("service", data.service)
     formData.append("pan", data.pan);
-    formData.append("gstnumber", data.gstnumber);
+    formData.append("gstNumber", data.gstNumber);
     formData.append("gender", data.gender);
-    formData.append("File", data.stamp[0]);
-    formData.append("FileName", data.stamp[0].name);
-    formData.append("BandkAccount", data.bankAccount);
-    formData.append("BankName", data.bankName);
-    formData.append("BankBranch", data.bankBranch);
-    formData.append("ifsc", data.ifsc);
+    formData.append("stampAndSign",data.signAndStamp)
+    formData.append("bankAccount", data.bankAccount);
+    formData.append("bankName", data.bankName);
+    formData.append("branch", data.branch);
+    formData.append("ifscCode", data.ifscCode);
     formData.append("address", data.address);
     formData.append("state", data.state);
     try {
-
-      const response = await axios.post("http://122.175.43.71:8001/api/adminprofile", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await CompanyRegistrationApi(formData);
       toast.success('Register Successfully', {
         position: 'top-right',
         theme: "colored",
@@ -49,23 +44,14 @@ const AdminRegistration = () => {
       console.log(response.data);
       console.log(data);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error:', error.response?.data || error.message);
+    toast.error(error.response?.data?.error?.message || 'Registration failed', {
+      position: 'top-right',
+      theme: "colored",
+      autoClose: 3000,
+      transition: Slide,
+    });
     }
-  };
-
-  // custom validation function for username
-  const usernameValidation = (value) => {
-    const regex = /^[A-Za-z\s]+$/;
-    if (!regex.test(value)) {
-      return "Username can only contain letters and spaces.";
-    }
-    if (value.length < 3) {
-      return "Username must be at least 3 characters long.";
-    }
-    if (value.length > 60) {
-      return "Username must not exceed 60 characters.";
-    }
-    return true;
   };
   // custom validation function for email
   const emailValidation = (value) => {
@@ -74,21 +60,9 @@ const AdminRegistration = () => {
     }
     return /^[a-z]([a-z0-9._-]*[a-z0-9])?@[a-z]([a-z0-9.-]*[a-z0-9])?\.(com|in|net|gov|org|edu)$/.test(value) || "Invalid Email format";
   };
-  // function to prevent white spaces in the input fields
-  const preventWhitespace = (e) => {
-    if (e.key === ' ') {
-      e.preventDefault();
-    }
-  };
   // Prevent input of non-numeric characters
   const preventNonNumericCharacters = (e) => {
     if (!/[0-9]/.test(e.key)) {
-      e.preventDefault();
-    }
-  }
-  // prevent entering numbers in the input fields
-  const preventNumbers = (e) => {
-    if (/[0-9]/.test(e.key)) {
       e.preventDefault();
     }
   }
@@ -103,6 +77,29 @@ const AdminRegistration = () => {
       e.preventDefault();
     }
   };
+  const preventNonAlphabets= (e)=>{
+    if(!/^[a-zA-Z\s]*$/.test(e.key)){
+      e.preventDefault();
+    }
+  }
+
+  const handleInputChange = async (e, triggerField,allowSpecialChars = false) => {
+    let value = e.target.value;
+    value = value.trimStart();
+    value = value.replace(/ {2,}/g, ' ');
+    if (value && value.length > 0) {
+      value = value.charAt(0).toUpperCase() + value.slice(1);
+    }
+    value = value.replace(/(\s[a-z])/g, (match) => match.toUpperCase());
+    if (allowSpecialChars) {
+      value = value.replace(/[^a-zA-Z0-9\s\/\-,]/g, '');  // Allow /, -, and ,
+    } else {
+      value = value.replace(/[^a-zA-Z0-9\s]/g, '');  // Only allow alphanumeric characters and spaces
+    }
+    setValue(triggerField, value);
+    await trigger(triggerField);
+  };
+  
 
   return (
     <div id="main-wrapper" data-sidebartype="mini-sidebar">
@@ -134,27 +131,25 @@ const AdminRegistration = () => {
                     <div className="form-group col-md-6">
                       <label htmlFor="fname" className="col-sm-4 text-left control-label col-form-label">User Name</label>
                       <input type="text" className="form-control" name="client" id="client" placeholder="Enter Client Name"
-                        {...register("client", {
-                          required: "User Name is required",
-                          validate: (value) => {
-                            const trimmedValue = value.trim();
-                            const usernameValidationResult = usernameValidation(trimmedValue); // Call the validation function
-                            if (usernameValidationResult !== true) {
-                              return usernameValidationResult; // Return error message if validation fails
-                            }
-                            // Check that the trimmed value has at least one character,
-                            // and allows one space after the first character.
-                            return /^(\S+ ?)$/.test(trimmedValue);
+                        {...register("userName", {
+                          required: "User Name is Required",
+                          minLength:{
+                            value:3,
+                            message:"Username must be at least 3 characters long"
                           },
-                          onChange: async (e) => {
-                            const trimmedValue = e.target.value.trimStart(); // Trim leading whitespace
-                            e.target.value = trimmedValue.replace(/ {2,}/g, ' '); // Replace multiple spaces with a single space
-                            await trigger("client"); // Trigger validation
+                          maxLength:{
+                            value:60,
+                            message:"Username must not exceed 60 characters."
                           },
+                          // validate: (value) => {
+                          //   const trimmedValue = value.trim();
+                          //   // return /^(\S+ ?)$/.test(trimmedValue);
+                          // },
                         })}
-                        onKeyPress={preventNumbers}
+                        onChange={(e)=>handleInputChange(e,"userName",false)}
+                        onKeyPress={preventNonAlphabets}
                       />
-                      {errors.client && <p className='errorsMsg '>{errors.client.message}</p>}
+                      {errors.userName && <p className='errorsMsg '>{errors.userName.message}</p>}
                     </div>
                     <div className="form-group col-md-6">
                       <label htmlFor="email" className="col-sm-4 text-left control-label col-form-label">Email</label>
@@ -167,7 +162,11 @@ const AdminRegistration = () => {
                             await trigger("email"); // Trigger validation
                           },
                         })}
-                        onKeyPress={preventWhitespace} //white spaces
+                        onKeyPress={(e)=>{
+                          if (e.key === ' ') {
+                            e.preventDefault();
+                          }
+                        }}
                       />
                       {errors.email && <p className="errorsMsg">{errors.email.message}</p>}
                     </div>
@@ -177,7 +176,7 @@ const AdminRegistration = () => {
                       <label htmlFor="password" className="col-sm-4 text-left control-label col-form-label">Password</label>
                       <input type="password" className="form-control" name="password" id="password" placeholder="Enter Password"
                         {...register("password", {
-                          required: "Enter Password",
+                          required: "Password is Required",
                           minLength: {
                             value: 8,
                             message: "Password must be at least 8 characters long"
@@ -195,7 +194,6 @@ const AdminRegistration = () => {
                             await trigger("password"); // Trigger validation
                           },
                         })}
-                      // onKeyPress={preventWhitespace}
                       />
                       {errors.password && <p className="errorsMsg">{errors.password.message}</p>}
                     </div>
@@ -203,7 +201,7 @@ const AdminRegistration = () => {
                       <label htmlFor="phone" className="col-sm-4 text-left control-label col-form-label">Phone</label>
                       <input type="tel" className="form-control" name="phone" id="phone" placeholder="Enter Phone Number"
                         {...register("phone", {
-                          required: "Enter Mobile Number",
+                          required: "Mobile Number is Required",
                           pattern: {
                             value: /^[6-9][0-9]{9}$/,
                             message: 'Enter valid Mobile Number',
@@ -225,15 +223,11 @@ const AdminRegistration = () => {
                     <div className="form-group col-md-6">
                       <label htmlFor="company" className="col-sm-4 text-left control-label col-form-label">Company Name</label>
                       <input type="text" className="form-control" name="company" id="company" placeholder="Enter Company Name"
-                        {...register("company", {
+                        {...register("companyName", {
                           required: "Company Name is Required",
-                          onChange: async (e) => {
-                            const trimmedValue = e.target.value.trimStart(); // Trim whitespace
-                            e.target.value = trimmedValue.replace(/ {2,}/g, ' ');
-                            await trigger("company"); // Trigger validation
-                          },
                         })}
-                        onKeyPress={preventNumbers}
+                        onChange={(e)=>handleInputChange(e,"companyName",false)}
+                        onKeyPress={preventNonAlphabets}
                       />
                       {errors.company && <p className='errorsMsg '>{errors.company.message}</p>}
                     </div>
@@ -241,14 +235,21 @@ const AdminRegistration = () => {
                       <label htmlFor="service" className="col-sm-4 text-left control-label col-form-label">Service Name</label>
                       <input type="text" className="form-control" name="service" id="service" placeholder="Enter Service Name"
                         {...register("service", {
-                          required: "Enter service Name",
+                          required: "Service Name is Required",
                           onChange: async (e) => {
                             const trimmedValue = e.target.value.trimStart(); // Trim whitespace
                             e.target.value = trimmedValue.replace(/ {2,}/g, ' ');
                             await trigger("service"); // Trigger validation
                           },
                         })}
-                        onKeyPress={preventNumbers}
+                        onKeyPress={(e)=>{
+                          if (e.key === ' ') {
+                            e.preventDefault();
+                          }
+                          if(!/[a-z]/.test(e.key)){
+                            e.preventDefault(e)
+                          }
+                        }}
                       />
                       {errors.service && <p className='errorsMsg '>{errors.service.message}</p>}
                     </div>
@@ -259,20 +260,19 @@ const AdminRegistration = () => {
                       <input type="text" className="form-control" name="pan" id="pan" placeholder="Enter Pan Card Number"
                         {...register("pan", {
                           required: "Pan Number is Required.",
+                          maxLength:{
+                            value:10,
+                            message:"Pan Number must not exceed 10 characters"
+                          },
                           pattern: {
                             value: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/,
                             message: "Invalid PAN format. It should be in the format: ABCDE1234F"
                           },
                           onChange: async (e) => {
-                            e.target.value = e.target.value.trim(); // Trim whitespace
+                            e.target.value = e.target.value.toUpperCase().trim(); // Trim whitespace
                             await trigger("pan"); // Trigger validation
                           },
                         })}
-                      // onKeyPress={(e) => {
-                      //   preventWhitespace(e)
-                      //   // preventLowercase(e);
-                      // }
-                      // }
                       />
                       {errors.pan && (
                         <p className="errorsMsg">{errors.pan.message}</p>
@@ -281,24 +281,23 @@ const AdminRegistration = () => {
                     <div className="form-group col-md-6">
                       <label htmlFor="gstnumber" className="col-sm-4 text-left control-label col-form-label">GST-Number</label>
                       <input type="text" className="form-control" name="gstnumber" id="gstnumber" placeholder="Enter GST Number"
-                        {...register("gstnumber", {
+                        {...register("gstNumber", {
                           required: "GST Number is Required",
+                          maxLength:{
+                            value:15,
+                            message:"GST-Numbe must not exceed 15 characters"
+                          },
                           pattern: {
                             value: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][0-9]{1}[Z][A-Z0-9]$/,
-                            message: "Invalid GST Number format. It should be in the format: 12ABCDE1234FZ1"
+                            message: "Invalid GST Number format. It should be in the format: 12ABCDE1234F1Z1"
                           },
                           onChange: async (e) => {
-                            e.target.value = e.target.value.trim(); // Trim whitespace
-                            await trigger("gstnumber"); // Trigger validation
+                            e.target.value = e.target.value.toUpperCase().trim(); // Trim whitespace
+                            await trigger("gstNumber"); // Trigger validation
                           },
                         })}
-                      // onKeyPress={(e) => {
-                      //   preventWhitespace(e)
-                      //   // preventLowercase(e);
-                      // }
-                      // }
                       />
-                      {errors.gstnumber && (<p className='errorsMsg'>{errors.gstnumber.message}</p>)}
+                      {errors.gstNumber && (<p className='errorsMsg'>{errors.gstNumber.message}</p>)}
                     </div>
                   </div>
                   <div className='form-row'>
@@ -327,7 +326,7 @@ const AdminRegistration = () => {
                       <label htmlFor="stamp" className="col-sm-4 text-left control-label col-form-label">Stamp & Sign</label>
                       <div className="custom-file">
                         <input type="file" className="custom-file-input" name='stamp' id="stamp" accept=".jpg,.jpeg,.png"
-                          {...register("stamp", {
+                          {...register("stampAndSign", {
                             required: "Upload a Stamp",
                             validate: {
                               correctFormat: (value) => {
@@ -341,7 +340,7 @@ const AdminRegistration = () => {
                           })}
                         />
                         <label className="custom-file-label" htmlFor="stamp">Choose file...</label>
-                        {errors.stamp && (<p className='errorsMsg'>{errors.stamp.message}</p>)}
+                        {errors.signAndStamp && (<p className='errorsMsg'>{errors.signAndStamp.message}</p>)}
                       </div>
                     </div>
                   </div>
@@ -379,13 +378,9 @@ const AdminRegistration = () => {
                       <input type="text" className="form-control" name="bankName" id="bankName" placeholder="Enter Bank Name"
                         {...register("bankName", {
                           required: "Bank Name is Required",
-                          onChange: async (e) => {
-                            const trimmedValue = e.target.value.trimStart(); // Trim whitespace
-                            e.target.value = trimmedValue.replace(/ {2,}/g, ' ');
-                            await trigger("bankName"); // Trigger validation
-                          },
                         })}
-                        onKeyPress={preventNumbers}
+                        onChange={(e)=>handleInputChange(e,"bankName",false)}
+                        onKeyPress={preventNonAlphabets}
                       />
                       {errors.bankName && <p className='errorsMsg '>{errors.bankName.message}</p>}
                     </div>
@@ -394,23 +389,19 @@ const AdminRegistration = () => {
                     <div className="form-group col-md-6">
                       <label htmlFor="Branch" className="col-sm-4 text-left control-label col-form-label">Branch</label>
                       <input type="text" className="form-control" name="bankBranch" id="bankBranch" placeholder="Enter Branch Name"
-                        {...register("bankBranch", {
+                        {...register("branch", {
                           required: "Branch Name is Required",
-                          onChange: async (e) => {
-                            const trimmedValue = e.target.value.trimStart(); // Trim whitespaces
-                            e.target.value = trimmedValue.replace(/ {2,}/g, ' ');
-                            await trigger("bankBranch");  // Trigger validation
-                          }
                         })}
-                        onKeyPress={preventNumbers}
+                        onChange={(e)=>handleInputChange(e,"branch",false)}
+                        onKeyPress={preventNonAlphabets}
                       />
-                      {errors.bankBranch && <p className='errorsMsg '>{errors.bankBranch.message}</p>}
+                      {errors.branch && <p className='errorsMsg '>{errors.branch.message}</p>}
                     </div>
                     <div className="form-group col-md-6">
                       <label htmlFor="ifsc" className="col-sm-4 text-left control-label col-form-label"> IFSC Code</label>
                       <input type="text" className="form-control" name="ifsc" id="ifsc" placeholder="Enter IFSC CODE"
-                        {...register("ifsc", {
-                          required: "Enter IFSC Code",
+                        {...register("ifscCode", {
+                          required: "IFSC Code is Required",
                           minLength: {
                             value: 11,
                             message: 'IFSC Code must be 11 characters long',
@@ -424,12 +415,12 @@ const AdminRegistration = () => {
                             message: 'Invalid IFSC Code format. It should be in the format: AAAA0BBBBBB',
                           },
                           onChange: async (e) => {
-                            e.target.value = e.target.value.trim(); // trim validations
-                            await trigger("ifsc");  // trigger validation
+                            e.target.value = e.target.value.toUpperCase().trim(); // trim validations
+                            await trigger("ifscCode");  // trigger validation
                           }
                         })}
                       />
-                      {errors.ifsc && (<p className='errorsMsg'>{errors.ifsc.message}</p>)}
+                      {errors.ifscCode && (<p className='errorsMsg'>{errors.ifscCode.message}</p>)}
                     </div>
                   </div>
                   <div className='form-row'>
@@ -438,13 +429,9 @@ const AdminRegistration = () => {
                       <input type="text" className="form-control" name="state" id="state" placeholder="Enter State"
                         {...register("state", {
                           required: "State Name is Required",
-                          onChange: async (e) => {
-                            const trimmedValue = e.target.value.trimStart(); // trim whitespaces
-                            e.target.value = trimmedValue.replace(/ {2,}/g, ' ');
-                            await trigger("state");  // trigger validation
-                          }
                         })}
-                        onKeyPress={preventNumbers}
+                        onChange={(e)=>handleInputChange(e,"state",false)}
+                        onKeyPress={preventNonAlphabets}
                       />
                       {errors.state && <p className='errorsMsg '>{errors.state.message}</p>}
                     </div>
@@ -453,16 +440,12 @@ const AdminRegistration = () => {
                       < textarea rows="3" cols="5" className="form-control" name="address" id="address" placeholder="Enter Address"
                         {...register("address", {
                           required: "Address is Required",
-                          maxLength:{
-                            value:250,
-                            message:'Address must be at most 250 characters long'
-                          },
-                          onChange: async (e) => {
-                            const trimmedValue = e.target.value.trimStart(); // trim whitespaces
-                            e.target.value = trimmedValue.replace(/ {2,}/g, ' ');
-                            await trigger("address"); //trigger validations
+                          maxLength: {
+                            value: 250,
+                            message: 'Address must be at most 250 characters long'
                           },
                         })}
+                        onChange={(e)=>handleInputChange(e,"address",true)}
                       />
                       {errors.address && <p className='errorsMsg '>{errors.address.message}</p>}
                     </div>
@@ -483,18 +466,3 @@ const AdminRegistration = () => {
   )
 }
 export default AdminRegistration;
-{/**
-try {
-      // Declare formData before the try block
-      const formData = new FormData();
-      Object.entries(data).forEach(([key, value]) => {
-        if (key === 'file') {
-          // For the 'file' field, append file name and file data
-          formData.append('fileName', value.fileName);
-          formData.append('fileData',value);
-        } else {
-          // For other fields, append key-value pairs
-          formData.append(key, value);
-        }
-      });
-     */}

@@ -1,11 +1,16 @@
-
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
+import { CustomerGetApi } from '../Axios';
 
-// Thunk for fetching customer data
 export const fetchCustomers = createAsyncThunk('customers/fetchCustomers', async () => {
-  const response = await axios.get('http://localhost:8002/invoice/customer/all');
-  return response.data.data; // The data returned from the API
+  try {
+      const response = await CustomerGetApi();   // Call the Customer API
+      console.log('Fetched Customers data from customerSlice:', response.data.data);  // Log the customers data (make sure it's an array)
+      return response.data.data;  // Return the data
+  } catch (error) {
+      console.error('Error in fetchCustomers thunk:', error);
+      throw new Error('Failed to fetch customers');
+  }
 });
 
 const customerSlice = createSlice({
@@ -23,6 +28,7 @@ const customerSlice = createSlice({
       })
       .addCase(fetchCustomers.fulfilled, (state, action) => {
         state.loading = false;
+        console.log('Action Payload (Customers):', action.payload);  // Log the payload
         state.customers = action.payload;
       })
       .addCase(fetchCustomers.rejected, (state, action) => {

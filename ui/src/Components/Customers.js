@@ -7,10 +7,10 @@ import { useNavigate, Link } from 'react-router-dom'
 import DataTable from 'react-data-table-component'
 import { Slide, toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
-// import { fetchCustomers, deleteCustomer } from '../redux/customerActions';
+//import { fetchCustomers, deleteCustomer } from '../redux/customerActions';
 import { fetchCustomers } from '../redux/customerSlice'; // Import the thunk
 import SideNav from '../Pages/SideNav'
-import {CustomerDeleteApiById} from '../Axos'
+import { CustomerDeleteApiById } from '../Axios'
 
 
 const Customers = () => {
@@ -20,45 +20,70 @@ const Customers = () => {
     const { customers, loading, error } = useSelector(state => state.customers); // Access Redux state
     const [users, setUsers] = useState([]);
     const [search, setSearch] = useState("");
-    const [filteredData, setFilteredData] = useState();
-    
+    const [filteredData, setFilteredData] = useState([]);
+
+    // const fetchCustomers=()=>{
+    //     CustomerGetApi()
+    //     .then(response=>{
+    //         console.log("fetchCustomers",response.data)
+    //         setUsers(response.data);
+    //         return response.data;
+    //     }).catch(error=>{
+    //        console.log(error)
+    //     })
+    // }
+
     // Fetch all customers on component mount
     useEffect(() => {
         dispatch(fetchCustomers());
     }, [dispatch]);
 
+    console.log('Customers from Redux state:', customers);
+
     const handleEdit = (customerId) => {
         navigate(`/CustomersRegistration`, { state: { customerId } });
     };
-    useEffect(() => {
-        // Filter the products based on the search query
-        const result = customers.filter((customer) =>
-            customer.customerName.toLowerCase().includes(search.toLowerCase())
-        );
-        setFilteredData(result);
-    }, [search, customers]);
     const onDelete = async (customerId) => {
         try {
-             const response =await CustomerDeleteApiById(customerId)
-              dispatch(fetchCustomers()); // Refresh the customer list after delete
-              toast.error(response.data.data, {
+            // Make a DELETE request to the API with the given ID
+            const response = await CustomerDeleteApiById(customerId)
+            dispatch(fetchCustomers());  // Dispatch action to refetch products
+            toast.success('Customer deleted successfully', {  //Notification status
                 position: 'top-right',
                 transition: Slide,
                 hideProgressBar: true,
                 theme: "colored",
-                autoClose: 1000,
-              });
+                autoClose: 1000, // Close the toast after 1 seconds
+            });
+            console.log(response);
+            console.log(response.data.data);
         } catch (error) {
-          console.log('error', error);
+            // Log any errors that occur
+            console.error(error.response);
+            if (error.response && error.response.data) {
+                console.error('Server Error Message:', error.response.data);
+            }
         }
-      };
-      
+    }
     const paginationComponentOptions = {
         noRowsPerPage: true,
     }
+    useEffect(() => {
+        if (customers && Array.isArray(customers)) {
+            const result = customers.filter((customer) =>
+                customer.customerName.toLowerCase().includes(search.toLowerCase()) ||
+                customer.mobileNumber?.toString().includes(search)
+            );
+            setFilteredData(result);
+        }
+        else {
+            setFilteredData([]);
+        }
+    }, [search, customers]);
+    console.log("this is from filtered data", filteredData);
     const columns = [
         {
-            name: " CustomerId",
+            name: " customerId",
             selector: (row) => row.customerId,
         },
         {
@@ -71,36 +96,29 @@ const Customers = () => {
         },
         {
             name: "Contact",
-            selector: (row) => row.mobileNumber,
+            selector: (row) => row.mobile,
         },
         {
-            name: "Mail-customerId",
+            name: "customerEmai-Id",
             selector: (row) => row.email,
         },
         {
             name: "Action",
-            cell: (row) => <div> <button className="btn btn-sm mr-2" style={{ backgroundColor: "transparent" }} onClick={() => handleEdit(row.customer_customerId)}><PencilSquare size={22} color='#2255a4' /></button>
-                <button className="btn btn-sm " style={{ backgroundColor: "transparent" }} onClick={() =>onDelete (row.customer_customerId)}><XSquareFill size={22} color='#da542e' /></button>
+            cell: (row) => <div> <button className="btn btn-sm mr-2" style={{ backgroundColor: "transparent" }} onClick={() => handleEdit(row.customerId)}><PencilSquare size={22} color='#2255a4' /></button>
+                <button className="btn btn-sm " style={{ backgroundColor: "transparent" }} onClick={() => onDelete(row.customerId)}><XSquareFill size={22} color='#da542e' /></button>
             </div>
 
         }
     ]
-    // useEffect(() => {
-    //     const result = users.filter((data) => {
-    //         return data.customer.toLowerCase().match(search.toLowerCase())
+    // if (loading) {
+    //     return <div>Loading...</div>;
+    // }
 
-    //     });
-    //     setFilteredData(result);
-    // }, [search])
-    if (loading) {
-        return <div>Loading...</div>;
-      }
-    
-      if (error) {
-        return <div>Error: {error}</div>;
-      }
+    // if (error) {
+    //     return <div>Error: {error}</div>;
+    // }
     return (
-        <div customerId="main-wrapper" data-scustomerIdebartype="mini-scustomerIdebar">
+        <div id="main-wrapper" data-scustomerIdebartype="mini-scustomerIdebar">
             <TopNav />
             <SideNav />
             <div className="page-breadcrumb" style={{ wcustomerIdth: "78%", marginLeft: "280px", marginTop: "25px" }}>
@@ -134,6 +152,7 @@ const Customers = () => {
                                     onChange={(e) => setSearch(e.target.value)}
                                 />
                                 <div className="table-responsive">
+                                    {console.log("Data passed to DataTable:", filteredData)}
                                     <DataTable
                                         columns={columns}
                                         data={filteredData}

@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { useLocation,useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Slide, toast } from 'react-toastify';
+import { ValidateOtp } from '../Axios';
 
 const Otp = () => {
     const [load, setLoad] = useState(false)
@@ -11,8 +12,9 @@ const Otp = () => {
     const { register, handleSubmit,formState: { errors } } = useForm();
    //fetching Login page email input to Otp page input field 
      const location=useLocation();    
-    const onSubmit = (data) => {       
-        axios.post('http://122.175.43.71:8001/api/verifyotp', data)
+    const onSubmit = (data) => {   
+        setLoad(true)  // Show loading spinner when submitting OTP  
+        ValidateOtp(data) 
             .then((response) => {
                 if (response.status === 200) {
                     toast.success(response.data, {
@@ -35,9 +37,7 @@ const Otp = () => {
                         hideProgressBar: true,
                         transition: Slide,
                     });
-                    navigate('/')
                     throw new Error('Invalid credentials');
-
                 }
             })
             .catch((error) => {
@@ -65,15 +65,14 @@ const Otp = () => {
                 {/* Preloader - style you can find in spinners.css */}
                 {/* ============================================================== */}
 
-
-                {load ? (
+                {load && (
                     <div className="preloader">
                         <div className="lds-ripple">
                             <div className="lds-pos" />
                             <div className="lds-pos" />
                         </div>
                     </div>
-                ) : ""}
+                )}
                 {/* ============================================================== */}
                 {/* Login box.scss */}
                 {/* ============================================================== */}
@@ -92,8 +91,8 @@ const Otp = () => {
                                         </div>
                                         <div className="input-group ">
                                             <input className="form-control" name="email" type='text' id="email"  placeholder="Enter Email"
-                                            defaultValue={location.state?.email} readOnly
-                                                {...register("email", {
+                                            defaultValue={location.state?.companyEmail} readOnly
+                                                {...register("companyEmail", {
                                                     required: "Email is Required",
                                                     pattern: {
                                                         value: /^[^@ ]+@[^@ ]+\.[^@ .]{2,}$/,
@@ -102,7 +101,7 @@ const Otp = () => {
                                                 })}
                                             />
                                         </div>
-                                        {errors.email && ((<p className="errorsMsg mt-1" >{errors.email.message}</p>))}
+                                        {errors.companyEmail && ((<p className="errorsMsg mt-1" >{errors.companyEmail.message}</p>))}
                                         <div>
                                             <label style={{ color: "orange" }}>Enter OTP</label>
                                         </div>

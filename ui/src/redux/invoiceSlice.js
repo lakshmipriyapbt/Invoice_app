@@ -1,14 +1,16 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import { InvoiceGetApi } from '../Axios';
 
-// Async thunk to fetch invoices from the API
-export const fetchInvoices = createAsyncThunk(
-  'invoices/fetchInvoices',
-  async () => {
-    const response = await axios.get('http://localhost:8002/invoice/invoice/all');
-    return response.data.data;  // Assuming the data is in response.data.data
+export const fetchInvoices = createAsyncThunk('invoices/fetchInvoices', async () => {
+  try {
+      const response = await InvoiceGetApi();  // Call the Customer API
+      console.log('Fetched Invoices:', response.data.data);  // Log the customers data (make sure it's an array)
+      return response.data.data;  // Return the data
+  } catch (error) {
+      console.error('Error in fetchInvoices thunk:', error);
+      throw new Error('Failed to fetch Invoices');
   }
-);
+});
 
 const invoiceSlice = createSlice({
   name: 'invoices',
@@ -17,11 +19,7 @@ const invoiceSlice = createSlice({
     loading: false,
     error: null
   },
-  reducers: {
-    setInvoices: (state, action) => {
-      state.invoices = action.payload;
-    }
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(fetchInvoices.pending, (state) => {
@@ -37,7 +35,5 @@ const invoiceSlice = createSlice({
       });
   }
 });
-
-export const { setInvoices } = invoiceSlice.actions;
 
 export default invoiceSlice.reducer;

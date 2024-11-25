@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useForm } from 'react-hook-form'
 import { useLocation, useNavigate } from "react-router-dom";
@@ -7,85 +8,74 @@ import TopNav from '../Pages/TopNav'
 import SideNav from '../Pages/SideNav'
 import Footer from "../Pages/Footer"
 import { Slide, toast } from 'react-toastify';
-import {ProdcutPutApiById,ProductGetApiById,ProductPostApi} from '../Axos'
- 
+import { ProductPostApi, ProdcutPutApiById, ProductGetApiById } from "../Axios";
+
 const Products = () => {
     const [existing, setExisting] = useState([])
-    const { register, handleSubmit, reset, trigger, formState: { errors } } = useForm();
+    const [update, setUpdate] = useState([])
+    const [load,setLoad]=useState(false)
+    const { register, handleSubmit, reset,setValue,trigger, formState: { errors } } = useForm();
     const navigate = useNavigate();
     const location = useLocation();
-    const Products = () => {
-        const [existing, setExisting] = useState([]);
-        const { register, handleSubmit, reset, formState: { errors } } = useForm();
-        const navigate = useNavigate();
-        const location = useLocation();
-      
-        // Handle form submission
-        const onSubmit = async (data) => {
-          try {
-            if (location && location.state && location.state.id) {
-              // Update product if ID exists in location.state
-              const res = await ProdcutPutApiById(location.state.id, data);
-              toast.success('Updated Successfully', {
-                position: 'top-right',
-                transition: Slide,
-                hideProgressBar: true,
-                theme: "colored",
-                autoClose: 1000,
-              });
-              console.log(res.data.data);
-              setExisting(res.data.data);
-              navigate('/productview');
-            } else {
-              // Create new product if no ID in location.state
-              const response = await ProductPostApi(data, { headers: { 'Content-Type': 'application/json' } });
-              toast.success('Registered Successfully', {
-                position: 'top-right',
-                transition: Slide,
-                hideProgressBar: true,
-                theme: "colored",
-                autoClose: 1000,
-              });
-              console.log(response.data);
-              console.log(data);
-              navigate('/productview');
-            }
-          } catch (error) {
-            toast.error('An error occurred while saving the product', {
+    const onSubmit = async(data) => {
+            try{
+                setLoad(true); // Show loader while making the request
+              if (location && location.state && location.state.productId) {
+                const res = await ProdcutPutApiById(location.state.productId, data);
+                    toast.success(res.data.data, {  //Notification status
+                      position: 'top-right',
+                      autoClose: 1000, // Close the toast after 1 seconds
+                    });
+                    navigate('/productview')
+                    console.log(res.data.data);
+                    setUpdate(res.data.data);
+              } else {
+                const response = await ProductPostApi(data);
+                    toast.success('Data Saved Successfully', {  //Notification status
+                      position: 'top-right',
+                      autoClose: 1000, // Close the toast after 1 seconds
+                    });
+                    console.log(response.data);
+                    console.log(data);
+                    navigate('/productview')
+                  }
+          
+                }
+         catch (error) {
+            toast.error('Invalid Credentials', {  //Notification status
               position: 'top-right',
-              transition: Slide,
-              hideProgressBar: true,
-              theme: "colored",
-              autoClose: 1000,
+              autoClose: 1000, // Close the toast after 1 seconds
             });
-            console.error('Error occurred:', error);
-          }
-        };
-      
-
-        useEffect(() => {
-          const fetchProductData = async () => {
-            try {
-              if (location && location.state && location.state.id) {
-                const response = await ProductGetApiById(location.state.id);
-                console.log(response.data);
-                reset(response.data.data);  // Populate form with fetched data
-              }
-            } catch (error) {
-              console.error('Error fetching product data:', error);
-              toast.error('Error fetching product data', {
-                position: 'top-right',
-                transition: Slide,
-                hideProgressBar: true,
-                theme: "colored",
-                autoClose: 1000,
-              });
+            console.log('error occured',error);
+      }
+      finally{
+        setLoad(false) // hide the loader after the request in completes
+      }
+    }
+    useEffect(() => {
+        const fetchProductsData = async () => {
+            // Ensure that productId exists in the state
+            if (location?.state?.productId) {
+                try {
+                    const response = await ProductGetApiById(location.state.productId);
+                    reset(response.data); // Populate form with customer data
+                    setUpdate(response.data); // Store fetched data in update state
+                    console.log(response.data.productId);
+                } catch (error) {
+                    toast.error('Error fetching customer data', {
+                        position: 'top-right',
+                        autoClose: 1000,
+                    });
+                    console.error('Error fetching customer data:', error);
+                }
+            } else {
+                // Handle case where no productId is passed (new registration)
+                console.log('No productId found, starting new registration');
             }
-          };
-      
-          fetchProductData();
-        }, [location, reset]);
-    
+        };
+        fetchProductsData();
+    }, [location, reset]);
+
     const allowNumbersDecimals = (e) => {
         if (!/[0-9.]/.test(e.key)) {
             e.preventDefault();
@@ -96,30 +86,27 @@ const Products = () => {
             e.preventDefault();
         }
     }
-    const productnameValidation = (value) => {
-        const regex = /^[A-Za-z\s]+$/;
-        if (!regex.test(value)) {
-          return "ProductName can only contain letters and spaces.";
-        }
-        if (value.length < 3) {
-          return "ProductName must be at least 3 characters long.";
-        }
-        if (value.length > 60) {
-          return "ProductName must not exceed 60 characters.";
-        }
-        return true;
-      };
-      const preventNumbers = (e) => {
-        if (/[0-9]/.test(e.key)) {
-          e.preventDefault();
-        }
-      }
-      const preventNonNumericCharacters = (e) => {
+    const preventNonNumericCharacters = (e) => {
         if (!/[0-9]/.test(e.key)) {
-          e.preventDefault();
+            e.preventDefault();
         }
-      }
-
+    }
+    const handleInputChange = async (e, triggerField, allowSpecialChars = false) => {
+        let value = e.target.value;
+        value = value.trimStart();
+        value = value.replace(/ {2,}/g, ' ');
+        if (value && value.length > 0) {
+            value = value.charAt(0).toUpperCase() + value.slice(1);
+        }
+        value = value.replace(/(\s[a-z])/g, (match) => match.toUpperCase());
+        if (allowSpecialChars) {
+            value = value.replace(/[^a-zA-Z0-9\s\/\-,]/g, '');  // Allow /, -, and ,
+        } else {
+            value = value.replace(/[^a-zA-Z0-9\s]/g, '');  // Only allow alphanumeric characters and spaces
+        }
+        setValue(triggerField, value);
+        await trigger(triggerField);
+    };
 
     return (
         <div id="main-wrapper" data-sidebartype="mini-sidebar">
@@ -149,44 +136,37 @@ const Products = () => {
                                 <div className="card-body">
                                     <h4 className="card-title">Product Info</h4>
                                     <div className="form-group row mt-5">
-                                        <label htmlFor="product_name" className="col-sm-3 text-right control-label col-form-label">Product Name</label>
+                                        <label htmlFor="productName" className="col-sm-3 text-right control-label col-form-label">Product Name</label>
                                         <div className="col-sm-9">
-                                            <input type="text" className="form-control" name="product_name" id="product_name" placeholder="Enter Product Name Here"
-                                                {...register("product_name", {
+                                            <input type="text" className="form-control" name="productName" id="productName" placeholder="Enter Product Name Here"
+                                                {...register("productName", {
                                                     required: 'Product Name is required.',
-                                                    validate: (value) => {
-                                                        const trimmedValue = value.trim();
-                                                        const productnameValidationResult = productnameValidation(trimmedValue); // Call the validation function
-                                                        if (productnameValidationResult !== true) {
-                                                          return productnameValidationResult; // Return error message if validation fails
-                                                        }
-                                                        // Check that the trimmed value has at least one character,and allows one space after the first character.
-                                                        return /^(\S+ ?)$/.test(trimmedValue);
-                                                      },
-                                                    onChange: async (e) => {
-                                                        const trimmedValue = e.target.value.trimStart(); // Trim leading whitespace
-                                                        e.target.value = trimmedValue.replace(/ {2,}/g, ' '); // Replace multiple spaces with a single space
-                                                        let value = e.target.value;
-                                                        if (value && value.length > 0) {
-                                                            value = value.charAt(0).toUpperCase() + value.slice(1);
-                                                        }
-                                                        // Capitalize letters after spaces
-                                                        value = value.replace(/(\s[a-z])/g, (match) => match.toUpperCase());
-                                                        e.target.value = value;
-                                                        await trigger("product_name"); // Trigger validation
+                                                    minLength: {
+                                                        value: 3,
+                                                        message: "productName must be at least 3 characters long"
+                                                    },
+                                                    maxLength: {
+                                                        value: 60,
+                                                        message: "productName must not exceed 60 characters."
                                                     },
                                                 })}
-                                                onKeyPress={preventNumbers}
+                                                onChange={(e) => handleInputChange(e, "productName")}
+                                                onKeyPress={(e) => {
+                                                    if (/[0-9]/.test(e.key)) {
+                                                        e.preventDefault();
+                                                    }
+                                                }
+                                                }
                                             />
                                         </div>
-                                        {errors.product_name && (<p className="errorsMsg" id="errorMsg"> {errors.product_name.message} </p>)}
+                                        {errors.productName && (<p className="errorsMsg" id="errorMsg"> {errors.productName.message} </p>)}
                                     </div>
 
                                     <div className="form-group row">
                                         <label htmlFor="productcost" className="col-sm-3 text-right control-label col-form-label">Product Cost</label>
                                         <div className="col-sm-9">
-                                            <input type="text" className="form-control" name="product_cost" id="product_cost" placeholder="Enter Price"
-                                                {...register("product_cost", {
+                                            <input type="text" className="form-control" name="productCost" id="productCost" placeholder="Enter Price"
+                                                {...register("productCost", {
                                                     required: 'Product Cost is required',
                                                     pattern: {
                                                         value: /^[0-9]{1,8}(\.[0-9]{1,2})?$/,
@@ -194,99 +174,60 @@ const Products = () => {
                                                     },
                                                     onChange: async (e) => {
                                                         e.target.value = e.target.value.trim(); // Trim whitespace
-                                                        await trigger("product_cost"); // Trigger validation
+                                                        await trigger("productCost"); // Trigger validation
                                                     },
                                                 })}
                                                 onKeyPress={allowNumbersDecimals}
-                                              />
+                                            />
                                         </div>
-                                        {errors.product_cost && (<p className="errorsMsg" id="errorMsg">{errors.product_cost.message}</p>)}
+                                        {errors.productCost && (<p className="errorsMsg" id="errorMsg"> {errors.productCost.message}</p>)}
                                     </div>
                                     <div className="form-group row">
-                                        <label htmlFor="hsn_no" className="col-sm-3 text-right control-label col-form-label">HSN No</label>
+                                        <label htmlFor="hsnNo" className="col-sm-3 text-right control-label col-form-label">HSN No</label>
                                         <div className="col-sm-9">
-                                            <input type="text" className="form-control" name="hsn_no" id="hsn_no" placeholder="Enter HSN-no"
-                                                {...register("hsn_no", {
+                                            <input type="text" className="form-control" name="hsnNo" id="hsnNo" placeholder="Enter HSN-no"
+                                                {...register("hsnNo", {
                                                     required: 'HSN Number is required.',
                                                     pattern: {
-                                                        value: /^[0-9]{6}$/,
-                                                        message: 'HSN should be a 6-digit number.',
+                                                        value: /^[0-9]{4}$/,
+                                                        message: 'HSN should be a 4-digit number.',
                                                     },
                                                     onChange: async (e) => {
                                                         e.target.value = e.target.value.trim(); // Trim whitespace
-                                                        await trigger("hsn_no"); // Trigger validation
+                                                        await trigger("hsnNo"); // Trigger validation
                                                     },
                                                 })}
                                                 onKeyPress={preventNonNumericCharacters}
-                                              />
-                           
+                                            />
+
                                         </div>
-                                        {errors.hsn_no && (<p className="errorsMsg" id="errorMsg">{errors.hsn_no.message}</p>)}
+                                        {errors.hsnNo && (<p className="errorsMsg" id="errorMsg"> {errors.hsnNo.message} </p>)}
+                                    
                                     </div>
                                     <div className="form-group row">
-                                        <label htmlFor="cgst" className="col-sm-3 text-right control-label col-form-label">CGST</label>
+                                        <label htmlFor="gst" className="col-sm-3 text-right control-label col-form-label">GST</label>
                                         <div className="col-sm-9">
-                                            <input type="text" className="form-control" name="cgst" id="cgst" placeholder="Enter Cgst "
-                                                {...register("cgst", {
-                                                    required: 'Enter CGST%',
+                                            <input type="text" className="form-control" name="gst" id="gst" placeholder="Enter Cgst "
+                                                {...register("gst", {
+                                                    required: 'Enter GST%',
                                                     pattern: {
                                                         value: /^[0-9]{1,2}(\.[0-9]{1,2})?$/,
-                                                        message: 'Enter a valid CGST percentage (e.g., 9 or 9.00) and Percentage must be less than 100%',
+                                                        message: 'Enter a valid GST percentage (e.g., 9 or 9.00) and Percentage must be less than 100%',
                                                     },
                                                     onChange: async (e) => {
                                                         e.target.value = e.target.value.trim(); // Trim whitespace
-                                                        await trigger("cgst"); // Trigger validation
+                                                        await trigger("gst"); // Trigger validation
                                                     },
                                                 })}
                                                 onKeyPress={allowNumbersDecimals}
-                                             />
+                                            />
                                         </div>
-                                        {errors.cgst && (<p className="errorsMsg" id="errorMsg">{errors.cgst.message}</p>)}
-                                    </div>
-                                    <div className="form-group row">
-                                        <label htmlFor="sgst" className="col-sm-3 text-right control-label col-form-label">SGST</label>
-                                        <div className="col-sm-9">
-                                            <input type="text" className="form-control" name="sgst" id="sgst" placeholder="Enter SGST"
-                                                {...register("sgst", {
-                                                    required: 'Enter SGST%',
-                                                    pattern: {
-                                                        value: /^[0-9]{1,2}(\.[0-9]{1,2})?$/,
-                                                        message: 'Enter a valid SGST percentage (e.g., 9 or 9.00) and Percentage must be less than 100%',
-                                                    },
-                                                    onChange: async (e) => {
-                                                        e.target.value = e.target.value.trim(); // Trim whitespace
-                                                        await trigger("sgst"); // Trigger validation
-                                                    },
-                                                })}
-                                                onKeyPress={allowNumbersDecimals}
-                                           />
-                                        </div>
-                                        {errors.sgst && (<p className="errorsMsg" id="errorMsg">{errors.sgst.message}</p>)}
-                                    </div>
-                                    <div className="form-group row">
-                                        <label htmlFor="igst" className="col-sm-3 text-right control-label col-form-label">IGST</label>
-                                        <div className="col-sm-9">
-                                            <input type="text" className="form-control" name="igst" id="igst" placeholder="Enter IGST"
-                                                {...register("igst", {
-                                                    required: 'Enter IGST%',
-                                                    pattern: {
-                                                        value: /^[0-9]{1,2}(\.[0-9]{1,2})?$/,
-                                                        message: 'Enter a valid IGST percentage (e.g., 9 or 9.00) and Percentage must be less than 100% ',
-                                                    },
-                                                    onChange: async (e) => {
-                                                        e.target.value = e.target.value.trim(); // Trim whitespace
-                                                        await trigger("igst"); // Trigger validation
-                                                    },
-                                                })}
-                                                onKeyPress={allowNumbersDecimals}
-                                            />                  
-                                        </div>
-                                        {errors.igst && (<p className="errorsMsg" id="errorMsg">{errors.igst.message}</p>)}
+                                        {errors.gst && (<p className="errorsMsg" id="errorMsg"> {errors.gst.message}</p>)}
                                     </div>
                                 </div>
                                 <div className="border-top">
                                     <div className="card-body">
-                                        <button type="submit" className="btn btn-primary" style={{ marginLeft: "440px" }}>Submit</button>
+                                        <button type="submit" className="btn btn-primary" style={{ marginLeft: "440px" }} disabled={load}>Submit</button>
                                     </div>
                                 </div>
                             </form>
@@ -298,8 +239,6 @@ const Products = () => {
         </div>
     )
 }
-}
 
 
-
-export default Products;
+export default Products

@@ -32,7 +32,7 @@ const SideNav = () => {
                 <nav className="sidebar-nav">
                     <ul id="sidebarnav" className="p-t-30">
                         {/* {user && user.userRole && user.userRole.includes("admin") && ( */}
-                            <>
+                            {/* <>
                                 <li
                                     className={`sidebar-item ${location.pathname === "/main" ? "active" : ""
                                         }`}
@@ -96,7 +96,7 @@ const SideNav = () => {
                                         </li>
                                     </ul>
                                 </li>
-                            </>
+                            </> */}
                         {/* )} */}
                         {role === 'admin' && (
                             <>                    
@@ -104,14 +104,14 @@ const SideNav = () => {
                                 <li className="sidebar-item ml-2"> <NavLink activeclassname='active' className="sidebar-link waves-effect waves-dark sidebar-link" to={'/Usersviews'} aria-expanded="false"><PersonFill size={20} /><span className="hide-menu ml-2">company view</span></NavLink></li>
                             </>
                          )}
-                        {role === 'Employee' && (
+                        {/* {role === 'Employee' && ( */}
                             <>
                                 <li className="sidebar-item ml-2"> <NavLink exact='true' activeclassname='active' className="sidebar-link waves-effect waves-dark sidebar-link" to={'/main'} aria-expanded="false"><Columns size={20} /><span className="hide-menu ml-2" >Dashboard</span></NavLink></li>
                                 <li className="sidebar-item ml-2"> <NavLink activeclassname='active' className="sidebar-link waves-effect waves-dark sidebar-link" to={'/Customers'} aria-expanded="false"><PeopleFill size={20} /><span className="hide-menu ml-2">Customers</span></NavLink></li>
                                 <li className="sidebar-item ml-2"> <NavLink activeclassname='active' className="sidebar-link waves-effect waves-dark sidebar-link" to={'/productview'} aria-expanded="false"><Stack size={20} /><span className="hide-menu ml-2">Products</span></NavLink></li>
                                 <li className="sidebar-item ml-2"> <NavLink activeclassname='active' className="sidebar-link waves-effect waves-dark sidebar-link" to={'/Invoices'} aria-expanded="false"><Receipt size={20} /><span className="hide-menu ml-2">Invoice</span></NavLink></li>
                             </>
-                        )}
+                        {/* )} */}
                     </ul>
                 </nav>
                 {/* End Sidebar navigation */}

@@ -3,7 +3,6 @@ import './App.css';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Main from './Pages/Main';
 import Dash from './Pages/Dash';
-import Products from './Components/Products'
 import ProductViews from './Components/ProductsViews';
 import Customers from './Components/Customers';
 import CustomersRegistration from './Components/CustomersRegistration';
@@ -18,6 +17,7 @@ import TopNav from './Pages/TopNav';
 import Modal from './Pages/modalotp'
 import Login from './Pages/Login';
 import CompanyLogin from './Pages/CompanyLogin';
+import Products from './Components/Products';
 //import ProtectedRoutes from './Pages/Auth/ProtectedRoutes';
 
 const App = () => {
@@ -30,7 +30,7 @@ const App = () => {
       <Route path='/main' element={<Main />}></Route>
       <Route path='/dashboard' element={<Dash />}></Route>
       <Route path='/Customers' element={<Customers />}></Route>
-      <Route path='/productsRegistration' element={<Products />}></Route>
+      <Route path='/productsRegistration' element={<Products/>}></Route>
       <Route path='/productview' element={<ProductViews />}></Route>
       <Route path='/CustomersRegistration' element={<CustomersRegistration />}></Route>
       <Route path='/UserRegistration' element={<UserRegistration />}></Route>
