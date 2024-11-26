@@ -7,7 +7,6 @@ import { useNavigate, Link } from 'react-router-dom'
 import DataTable from 'react-data-table-component'
 import { Slide, toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
-//import { fetchCustomers, deleteCustomer } from '../redux/customerActions';
 import { fetchCustomers } from '../redux/customerSlice'; // Import the thunk
 import SideNav from '../Pages/SideNav'
 import { CustomerDeleteApiById } from '../Axios'
@@ -16,22 +15,10 @@ import { CustomerDeleteApiById } from '../Axios'
 const Customers = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    // const customers = useSelector((state) => state.customers.customers);
     const { customers, loading, error } = useSelector(state => state.customers); // Access Redux state
     const [users, setUsers] = useState([]);
     const [search, setSearch] = useState("");
     const [filteredData, setFilteredData] = useState([]);
-
-    // const fetchCustomers=()=>{
-    //     CustomerGetApi()
-    //     .then(response=>{
-    //         console.log("fetchCustomers",response.data)
-    //         setUsers(response.data);
-    //         return response.data;
-    //     }).catch(error=>{
-    //        console.log(error)
-    //     })
-    // }
 
     // Fetch all customers on component mount
     useEffect(() => {
@@ -48,7 +35,7 @@ const Customers = () => {
             // Make a DELETE request to the API with the given ID
             const response = await CustomerDeleteApiById(customerId)
             dispatch(fetchCustomers());  // Dispatch action to refetch products
-            toast.success('Customer deleted successfully', {  //Notification status
+            toast.error('Customer deleted successfully', {  //Notification status
                 position: 'top-right',
                 transition: Slide,
                 hideProgressBar: true,
@@ -71,8 +58,8 @@ const Customers = () => {
     useEffect(() => {
         if (customers && Array.isArray(customers)) {
             const result = customers.filter((customer) =>
-                customer.customerName.toLowerCase().includes(search.toLowerCase()) ||
-                customer.mobileNumber?.toString().includes(search)
+                customer.customerName.toLowerCase().includes(search.toLowerCase())
+                
             );
             setFilteredData(result);
         }
@@ -96,7 +83,7 @@ const Customers = () => {
         },
         {
             name: "Contact",
-            selector: (row) => row.mobile,
+            selector: (row) => row.mobileNumber,
         },
         {
             name: "customerEmai-Id",

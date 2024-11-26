@@ -27,7 +27,7 @@ const invoiceSlice = createSlice({
       })
       .addCase(fetchInvoices.fulfilled, (state, action) => {
         state.loading = false;
-        state.invoices = action.payload;
+        state.invoices = action.payload || [];;
       })
       .addCase(fetchInvoices.rejected, (state, action) => {
         state.loading = false;

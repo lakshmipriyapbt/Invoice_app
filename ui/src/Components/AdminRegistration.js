@@ -17,16 +17,16 @@ const AdminRegistration = () => {
   const onSubmit = async (data) => {
     const formData = new FormData();
     formData.append("userName", data.userName);
-    formData.append("email", data.email);
+    formData.append("companyEmail", data.companyEmail);
     formData.append("password", data.password)
     formData.append("phone", data.phone);
     formData.append("companyName", data.companyName);
-    formData.append("service", data.service)
+    formData.append("serviceName", data.serviceName)
     formData.append("pan", data.pan);
     formData.append("gstNumber", data.gstNumber);
     formData.append("gender", data.gender);
     formData.append("stampAndSign",data.signAndStamp)
-    formData.append("bankAccount", data.bankAccount);
+    formData.append("accountNumber", data.accountNumber);
     formData.append("bankName", data.bankName);
     formData.append("branch", data.branch);
     formData.append("ifscCode", data.ifscCode);
@@ -53,12 +53,12 @@ const AdminRegistration = () => {
     });
     }
   };
-  // custom validation function for email
-  const emailValidation = (value) => {
+  // custom validation function for companyEmail
+  const companyEmailValidation = (value) => {
     if (/[A-Z]/.test(value)) {
-      return "Email cannot contain uppercase letters";
+      return "companyEmail cannot contain uppercase letters";
     }
-    return /^[a-z]([a-z0-9._-]*[a-z0-9])?@[a-z]([a-z0-9.-]*[a-z0-9])?\.(com|in|net|gov|org|edu)$/.test(value) || "Invalid Email format";
+    return /^[a-z]([a-z0-9._-]*[a-z0-9])?@[a-z]([a-z0-9.-]*[a-z0-9])?\.(com|in|net|gov|org|edu)$/.test(value) || "Invalid companyEmail format";
   };
   // Prevent input of non-numeric characters
   const preventNonNumericCharacters = (e) => {
@@ -152,14 +152,14 @@ const AdminRegistration = () => {
                       {errors.userName && <p className='errorsMsg '>{errors.userName.message}</p>}
                     </div>
                     <div className="form-group col-md-6">
-                      <label htmlFor="email" className="col-sm-4 text-left control-label col-form-label">Email</label>
-                      <input type="email" className="form-control" name="email" id="email" placeholder="Enter Email Id"
-                        {...register("email", {
-                          required: "Email is Required",
-                          validate: emailValidation, // Custom validation function
+                      <label htmlFor="companyEmail" className="col-sm-4 text-left control-label col-form-label">companyEmail</label>
+                      <input type="companyEmail" className="form-control" name="companyEmail" id="companyEmail" placeholder="Enter companyEmail Id"
+                        {...register("companyEmail", {
+                          required: "companyEmail is Required",
+                          validate: companyEmailValidation, // Custom validation function
                           onChange: async (e) => {
                             e.target.value = e.target.value.trim(); // Trim whitespace
-                            await trigger("email"); // Trigger validation
+                            await trigger("companyEmail"); // Trigger validation
                           },
                         })}
                         onKeyPress={(e)=>{
@@ -168,7 +168,7 @@ const AdminRegistration = () => {
                           }
                         }}
                       />
-                      {errors.email && <p className="errorsMsg">{errors.email.message}</p>}
+                      {errors.companyEmail && <p className="errorsMsg">{errors.companyEmail.message}</p>}
                     </div>
                   </div>
                   <div className="form-row">
@@ -232,14 +232,14 @@ const AdminRegistration = () => {
                       {errors.company && <p className='errorsMsg '>{errors.company.message}</p>}
                     </div>
                     <div className="form-group col-md-6">
-                      <label htmlFor="service" className="col-sm-4 text-left control-label col-form-label">Service Name</label>
-                      <input type="text" className="form-control" name="service" id="service" placeholder="Enter Service Name"
-                        {...register("service", {
-                          required: "Service Name is Required",
+                      <label htmlFor="serviceName" className="col-sm-4 text-left control-label col-form-label">serviceName Name</label>
+                      <input type="text" className="form-control" name="serviceName" id="serviceName" placeholder="Enter serviceName Name"
+                        {...register("serviceName", {
+                          required: "serviceName Name is Required",
                           onChange: async (e) => {
                             const trimmedValue = e.target.value.trimStart(); // Trim whitespace
                             e.target.value = trimmedValue.replace(/ {2,}/g, ' ');
-                            await trigger("service"); // Trigger validation
+                            await trigger("serviceName"); // Trigger validation
                           },
                         })}
                         onKeyPress={(e)=>{
@@ -251,7 +251,7 @@ const AdminRegistration = () => {
                           }
                         }}
                       />
-                      {errors.service && <p className='errorsMsg '>{errors.service.message}</p>}
+                      {errors.serviceName && <p className='errorsMsg '>{errors.serviceName.message}</p>}
                     </div>
                   </div>
                   <div className='form-row'>
@@ -352,9 +352,9 @@ const AdminRegistration = () => {
                   <h3 className="card-title " style={{ marginLeft: "10px", marginTop: "15px" }}>Bank Details</h3>
                   <div className='form-row mt-4'>
                     <div className="form-group col-md-6">
-                      <label htmlFor="bankaccount" className="col-sm-4 text-left control-label col-form-label">Bank Account</label>
-                      <input type="text" className="form-control" name="bankAccount" id="bankAccount" placeholder="Enter Bank Account Number"
-                        {...register("bankAccount", {
+                      <label htmlFor="accountNumber" className="col-sm-4 text-left control-label col-form-label">Bank Account</label>
+                      <input type="text" className="form-control" name="accountNumber" id="accountNumber" placeholder="Enter Bank Account Number"
+                        {...register("accountNumber", {
                           required: "Account Number is Required",
                           minLength: {
                             value: 9,
@@ -366,12 +366,12 @@ const AdminRegistration = () => {
                           },
                           onChange: async (e) => {
                             e.target.value = e.target.value.trim(); // Trim whitespace
-                            await trigger("bankAccount"); // Trigger validation
+                            await trigger("accountNumber"); // Trigger validation
                           },
                         })}
                         onKeyPress={preventNonNumericCharacters}
                       />
-                      {errors.bankAccount && (<p className='errorsMsg'>{errors.bankAccount.message}</p>)}
+                      {errors.accountNumber && (<p className='errorsMsg'>{errors.accountNumber.message}</p>)}
                     </div>
                     <div className="form-group col-md-6">
                       <label htmlFor="bankname" className="col-sm-4 text-left control-label col-form-label">Bank Name</label>

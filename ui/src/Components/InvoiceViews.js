@@ -207,7 +207,8 @@ const InvoiceViews = () => {
     };
     // Update filtered data when invoices or search changes
     useEffect(() => {
-        const result = invoices.filter((invoice) =>
+        console.log('Invoices:', invoices);
+        const result = (invoices || []).filter((invoice) =>
             invoice.customerName.toLowerCase().includes(search.toLowerCase())
         );
         setFilteredData(result);

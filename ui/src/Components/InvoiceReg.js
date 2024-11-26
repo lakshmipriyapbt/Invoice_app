@@ -38,25 +38,11 @@ const InvoiceReg = () => {
 
   console.log("customer", customer);
   console.log("formattedProducts", formattedProducts)
-  // useEffect(() => {
-  //   dispatch(fetchCustomers());
-  //   dispatch(fetchAllProducts());
-  // }, [dispatch]);
 
-
-  // useEffect(() => {
-  //   // Map the customers data to the format expected by react-select
-  //   const customerOptions = customers.map((customer) => ({
-  //     value: customer.customerId, // This will be the value of the option
-  //     label: customer.customerName, // This will be the displayed text
-  //   }));
-
-
-
-  //   setCustomer(customerOptions);
-  //   // setFormattedProducts(productOptions);
-  // }, [customers]); // Update when customers data changes
-
+  useEffect(() => {
+    dispatch(fetchCustomers());
+    dispatch(fetchAllProducts());
+  }, [dispatch]);
 
   useEffect(() => {
     const productOptions = Array.isArray(products) ? products.map((product) => ({
@@ -97,22 +83,6 @@ const InvoiceReg = () => {
   }, [customers]);
 
   console.log("this is from customers options ", customer);
-
-  // const handleProductChange = (selectedProductId, index) => {
-  //   const selectedProduct = formattedProducts.find((product) => product.productId === selectedProductId);
-  //   if (selectedProduct) {
-  //     // Update the product info based on the selected product
-  //     const updatedProductsInfo = [...productsInfo];
-  //     updatedProductsInfo[index].hsnNo = selectedProduct.hsnNo;
-  //     updatedProductsInfo[index].productCost = selectedProduct.productCost;
-  //     setProductsInfo(updatedProductsInfo);
-
-  //     // Update form values for hsnNo and productCost as well
-  //     setValue(`productsInfo[${index}].productId`, selectedProduct.productId);
-  //     setValue(`productsInfo[${index}].hsnNo`, selectedProduct.hsnNo);
-  //     setValue(`productsInfo[${index}].productCost`, selectedProduct.productCost);
-  //   }
-  // };
 
   const handleProductChange = (selectedValue, index) => {
     // Find the selected product

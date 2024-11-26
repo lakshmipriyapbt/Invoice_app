@@ -92,22 +92,24 @@ const InvoicePdf = ({ showPreview, setShowPreview }) => {
                     <thead>
                       <tr>
                         <th className="text-center">#</th>
+                        <th className="text-left">ProductName</th>
                         <th className="text-left">HSN-no</th>
+                        <th className="text-left">PurchasedDate</th>
                         <th className="text-left">Quantity</th>
-                        <th className="text-left">GST (%)</th>
                         <th className="text-left">Unit Cost (₹)</th>
                         <th className="text-left">Total Amount(₹)</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {invoiceData.orderDetails && invoiceData.orderDetails.map((item, index) => (
+                      {invoiceData.orderRequests && invoiceData.orderRequests.map((item, index) => (
                         <tr key={index}>
                           <td className="text-center">{index + 1}</td>
+                          <td className="text-left">{item.productName}</td>
                           <td className="text-left">{item.hsnNo}</td>
+                          <td className="text-left">{item.purchaseDate}</td>
                           <td className="text-left">{item.quantity}</td>
-                          <td className="text-left">{item.gst}</td>
-                          <td className="text-left">{item.cost}</td>
-                          <td className="text-left">{item.totalCost}</td>
+                          <td className="text-left">{item.unitCost}</td>
+                          <td className="text-left">{item.quantity * item.unitCost}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -117,7 +119,7 @@ const InvoicePdf = ({ showPreview, setShowPreview }) => {
 
               {/* Total Amount Section */}
               <div className="col-md-12">
-                <table className="table pull-right text-right">
+                <table className="table pull-right text-left">
                   <tr>
                     <th><b>GST ({invoiceData.gst || 0}%):</b></th>
                     <td>₹{((invoiceData.totalAmount || 0) * (invoiceData.gst || 0)) / 100}</td>
@@ -142,12 +144,12 @@ const InvoicePdf = ({ showPreview, setShowPreview }) => {
                       <th>Account Number</th>
                       <td>{invoiceData.bankAccount}</td>
                       <th>GST Number</th>
-                      <td>{invoiceData.gstNumber}</td>
+                      <td>{invoiceData.gstNo}</td>
                     </tr>
                     <tr>
                       <th>IFSC Code</th>
                       <td>{invoiceData.ifscCode}</td>
-                      <td></td>
+                      <th></th>
                       <td></td>
                     </tr>
                   </table>
