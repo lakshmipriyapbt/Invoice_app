@@ -172,9 +172,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import SideNav from "../Pages/SideNav";
 import TopNav from "../Pages/TopNav";
 import Footer from "../Pages/Footer";
-import { ProductDeleteApiById } from '../Axios';
-import { fetchAllProducts } from "../redux/productSlice";
-import { selectProducts, selectProductsLoading, selectProductsError } from '../redux/store';  // Adjust the import path
+import { fetchAllProducts } from "../redux/ProductSlice";
+import { selectProducts, selectProductsLoading, selectProductsError } from '../redux/Store';  // Adjust the import path
+import { ProdcutDeleteApiById } from "../Axios";
 
 const Product = () => {
   const [search, setSearch] = useState('');
@@ -203,7 +203,7 @@ const Product = () => {
   const deleteData = async (productId) => {
     try {
       // Make a DELETE request to the API with the given ID
-      const response = await ProductDeleteApiById(productId);
+      const response = await ProdcutDeleteApiById(productId);
       dispatch(fetchAllProducts());  // Dispatch action to refetch products
       toast.error(response.data.data, {  // Notification status
         position: 'top-right',

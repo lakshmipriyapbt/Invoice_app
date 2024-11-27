@@ -1,6 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import customerReducer from './CustomerSlice';
-import productsReducer from './ProductSlice'
+import productsReducer from './ProductSlice';
 import invoiceReducer from "./InvoiceSlice"
 // Configure the store with both reducers
 export const store = configureStore({

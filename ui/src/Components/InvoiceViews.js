@@ -159,12 +159,13 @@ import TopNav from '../Pages/TopNav';
 import SideNav from '../Pages/SideNav';
 import Footer from '../Pages/Footer';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchInvoices } from '../redux/invoiceSlice'; // Adjust import as per your file structure
+ // Adjust import as per your file structure
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, SendFill, XSquareFill } from 'react-bootstrap-icons';
 import DataTable from 'react-data-table-component';
 import { Slide, toast } from 'react-toastify';
 import { InvoiceDeleteApiById } from '../Axios';
+import { fetchInvoices } from '../redux/InvoiceSlice';
 
 const InvoiceViews = () => {
     const [currentPage, setCurrentPage] = useState(1);

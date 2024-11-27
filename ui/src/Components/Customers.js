@@ -7,9 +7,10 @@ import { useNavigate, Link } from 'react-router-dom'
 import DataTable from 'react-data-table-component'
 import { Slide, toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchCustomers } from '../redux/customerSlice'; // Import the thunk
+ // Import the thunk
 import SideNav from '../Pages/SideNav'
 import { CustomerDeleteApiById } from '../Axios'
+import { fetchCustomers } from '../redux/CustomerSlice'
 
 
 const Customers = () => {
@@ -157,4 +158,4 @@ const Customers = () => {
     )
 }
 
-export default Customers
+export default Customers;

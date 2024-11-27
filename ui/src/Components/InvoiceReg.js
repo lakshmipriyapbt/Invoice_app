@@ -12,9 +12,9 @@ import InvoicePreview from './InvoicePreview';
 import { Slide } from 'react-toastify';
 import Select from 'react-select'
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchCustomers } from '../redux/customerSlice';  // Import the fetchCustomers action
-import { fetchAllProducts } from '../redux/productSlice'; // Import the fetchAllProducts action
-import { selectProducts, selectCustomers } from '../redux/store'; // Selectors for loading states
+import { fetchCustomers } from '../redux/CustomerSlice';  // Import the fetchCustomers action
+import { fetchAllProducts } from '../redux/ProductSlice'; // Import the fetchAllProducts action
+import { selectProducts,selectCustomers } from '../redux/Store'; // Selectors for loading states
 
 
 

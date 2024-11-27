@@ -4,11 +4,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Bounce, toast } from "react-toastify";
 import { Modal, ModalBody, ModalHeader, ModalTitle } from "react-bootstrap";
 import { jwtDecode } from "jwt-decode";
-import { CompanyloginApi, ValidateCompanyOtp } from "../Axios";
 import Loader from "../Loader";
 import { Eye, EyeSlash } from "react-bootstrap-icons";
+import { UserloginApi, ValidateUserOtp } from "../Axios";
 
-const CompanyLogin = () => {
+const UserLogin = () => {
   const {
     register,
     handleSubmit,
@@ -16,7 +16,7 @@ const CompanyLogin = () => {
     reset,
   } = useForm({
     defaultValues: {
-      companyEmail: "",
+      useremail: "",
       password: "",
       otp: "",
     },
@@ -31,10 +31,6 @@ const CompanyLogin = () => {
     return true;
   };
 
-  const togglePasswordVisiblity = () => {
-    setPasswordShown(!passwordShown);
-  };
-
   // const { setAuthUser } = useAuth();
   const { company } = useParams();
   const navigate = useNavigate();
@@ -46,6 +42,10 @@ const CompanyLogin = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [otpTimeLimit, setOtpTimeLimit] = useState(56);
   const [otpExpired, setOtpExpired] = useState(false);
+
+  const togglePasswordVisiblity = () => {
+    setPasswordShown(!passwordShown);
+  };
 
   useEffect(() => {
     localStorage.setItem("company", company);
@@ -65,12 +65,12 @@ const CompanyLogin = () => {
 
   const sendOtp = (data) => {
     const payload = {
-      companyEmail: data.companyEmail,
+      useremail: data.useremail,
       password: data.password,
     };
 
     setLoading(true);
-    CompanyloginApi(data)
+    UserloginApi(data)
       .then((response) => {
         const token = response.data?.token;
         if (token) {
@@ -104,12 +104,12 @@ const CompanyLogin = () => {
 
   const verifyOtpAndCompanyLogin = (data) => {
     const payload = {
-      companyEmail: data.companyEmail,
+      useremail: data.useremail,
       otp: data.otp,
       company: company,
     };
     setLoading(true);
-    ValidateCompanyOtp(payload)
+    ValidateUserOtp(payload)
       .then((response) => {
         setLoading(false);
         toast.success("Login Successful", {
@@ -226,7 +226,7 @@ const CompanyLogin = () => {
               <span className="db"><img src="assets/images/pathbreaker_logo.png" style={{ height: "80px", width: "300px", marginBottom: "18px" }} alt="logo" /></span>
             </div>
             <div className="newLoginRightSecSelectLogin">
-              <div className="loginBtn" style={{ textAlign: "center" }}><span>Continue with Company login</span></div>
+              <div className="loginBtn" style={{ textAlign: "center" }}><span>Continue with User login</span></div>
             </div>
             <form onSubmit={handleSubmit(onSubmit)}>
               <div className="row p-b-30">
@@ -235,14 +235,14 @@ const CompanyLogin = () => {
                     <label style={{ color: "orange" }}>Email Id</label>
                   </div>
                   <input class="form-control"
-                    type="companyEmail"
+                    type="useremail"
                     name="email"
                     placeholder="Email Id"
                     autoComplete="off"
                     onInput={toInputLowerCase}
                     onKeyDown={handleEmailChange}
                     readOnly={otpSent}
-                    {...register("companyEmail", {
+                    {...register("useremail", {
                       required: "Email Id is Required.",
                       pattern: {
                         value: /^(?![0-9]+@)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|in|org|net|edu|gov)$/,
@@ -250,7 +250,7 @@ const CompanyLogin = () => {
                       },
                     })}
                   />
-                  {errors.companyEmail && <p className="errorsMsg">{errors.companyEmail.message}</p>}
+                  {errors.useremail && <p className="errorsMsg">{errors.useremail.message}</p>}
                 </div>
               </div>
               {!otpSent && (
@@ -276,15 +276,14 @@ const CompanyLogin = () => {
                           })}
                         />
                         <div className="input-group-append">
-                        <span className="input-group-text" onClick={togglePasswordVisiblity} style={{ cursor: 'pointer' }}>
+                          <span className="input-group-text" onClick={togglePasswordVisiblity} style={{ cursor: 'pointer' }}>
                             {passwordShown ? <Eye size={20} /> : <EyeSlash size={20} />}
                           </span>
-                        </div>
-                      </div>
+                        </div>                      </div>
                       {errors.password && <p className="errorsMsg">{errors.password.message}</p>}
                       <span toggle="#password-field" class="bi bi-eye-fill field-icon toggle-password"></span>
                       <small>
-                        <a href="/companyForgotPassword">Forgot Password?</a>
+                        <a href="/userForgotPassword">Forgot Password?</a>
                       </small>
                     </div>
                   </div>
@@ -345,4 +344,4 @@ const CompanyLogin = () => {
   );
 };
 
-export default CompanyLogin;
+export default UserLogin;
