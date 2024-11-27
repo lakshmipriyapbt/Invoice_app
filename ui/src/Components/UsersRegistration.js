@@ -114,18 +114,18 @@ const UserRegistration = (props) => {
                                     <div className='form row mt-4'>
                                         <div className="form-group col-md-6">
                                             <label htmlFor="fname" className="col-sm-4 text-left control-label col-form-label">User Name</label>
-                                            <input type="text" className="form-control" name="username" id="username" placeholder=" Enter User Name"
-                                                {...register("username", {
+                                            <input type="text" className="form-control" name="userName" id="userName" placeholder=" Enter User Name"
+                                                {...register("userName", {
                                                     required: "User Name is Required.",
                                                 })}
                                             />
-                                            {errors.username && (<p className='errorsMsg '>{errors.username.message}</p>)}
+                                            {errors.userName && (<p className='errorsMsg '>{errors.userName.message}</p>)}
 
                                         </div>
                                         <div className="form-group col-md-6">
                                             <label htmlFor="fname" className="col-sm-4 text-left control-label col-form-label">User Email</label>
-                                            <input type="useremail" className="form-control" name="useremail" id="useremail" placeholder=" Enter User MailId"
-                                                {...register("useremail", {
+                                            <input type="userEmail" className="form-control" name="userEmail" id="userEmail" placeholder=" Enter User MailId"
+                                                {...register("userEmail", {
                                                     required: "Enter userEmail",
                                                     pattern: {
                                                         value: /^[^@ ]+@[^@ ]+\.[^@ .]{2,}$/,
@@ -133,7 +133,7 @@ const UserRegistration = (props) => {
                                                     }
                                                 })}
                                             />
-                                            {errors.useremail && <p className="errorsMsg">{errors.useremail.message}</p>}
+                                            {errors.userEmail && <p className="errorsMsg">{errors.userEmail.message}</p>}
                                         </div>
                                     </div>
                                     <div className='form row mt-4'>

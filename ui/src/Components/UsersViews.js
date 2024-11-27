@@ -73,12 +73,12 @@ const Usersview = () => {
     },
     {
       name: "User Name",
-      selector: (row) => row.username,
+      selector: (row) => row.userName,
     },
     {
       name: "User Email",
       selector: (row) => {
-        return (<div style={{ float: "left" }}>{row.useremail}</div>)
+        return (<div style={{ float: "left" }}>{row.userEmail}</div>)
       },
     },
     {

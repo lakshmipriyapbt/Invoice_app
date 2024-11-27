@@ -10,7 +10,7 @@ import { Eye, EyeSlash } from "react-bootstrap-icons";
 import { useAuth } from "../Context/AuthContext";
 
 const InvoiceLogin = () => {
-    const { register, handleSubmit, formState: { errors } } = useForm({ defaultValues: { username: "", password: "" }, mode: "onChange" });
+    const { register, handleSubmit, formState: { errors } } = useForm({ defaultValues: { userName: "", password: "" }, mode: "onChange" });
     const { setAuthUser } = useAuth();
     const navigate = useNavigate();
     const [passwordShown, setPasswordShown] = useState(false);
@@ -139,7 +139,7 @@ const InvoiceLogin = () => {
                                         autoComplete="off"
                                         onInput={toInputLowerCase}
                                         onKeyDown={handleEmailChange}
-                                        {...register("username", {
+                                        {...register("userName", {
                                             required: "Email Id is Required.",
                                             pattern: {
                                                 value: /^(?![0-9]+@)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|in|org|net|edu|gov)$/,
@@ -148,7 +148,7 @@ const InvoiceLogin = () => {
                                         })}
                                     />
                                     </div>
-                                    {errors.username && <p className="errorsMsg">{errors.username.message}</p>}
+                                    {errors.userName && <p className="errorsMsg">{errors.userName.message}</p>}
                                     <div className="input-group-prepend">
                                         <label style={{ color: "orange" }}>Password</label>
                                     </div>

@@ -3,8 +3,8 @@ import { CustomerGetApi } from '../Axios';
 export const fetchCustomers = createAsyncThunk('customers/fetchCustomers', async () => {
   try {
       const response = await CustomerGetApi();   // Call the Customer API
-      console.log('Fetched Customers data from customerSlice:', response.data);  // Log the customers data (make sure it's an array)
-      return response.data;  // Return the data
+      console.log('Fetched Customers data from customerSlice:', response.data.data);  // Log the customers data (make sure it's an array)
+      return response.data.data;  // Return the data
   } catch (error) {
       console.error('Error in fetchCustomers thunk:', error);
       throw new Error('Failed to fetch customers');
