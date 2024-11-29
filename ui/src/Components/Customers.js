@@ -10,7 +10,7 @@ import { useDispatch, useSelector } from 'react-redux';
  // Import the thunk
 import SideNav from '../Pages/SideNav'
 import { CustomerDeleteApiById } from '../Axios'
-import { fetchCustomers } from '../redux/CustomerSlice'
+import { fetchCustomers } from '../redux/customerSlice'
 
 
 const Customers = () => {
@@ -84,7 +84,7 @@ const Customers = () => {
         },
         {
             name: "Contact",
-            selector: (row) => row.mobileNumber,
+            selector: (row) => row.mobileNumber ,
         },
         {
             name: "customerEmai-Id",

@@ -7,7 +7,10 @@ import { XSquareFill, PencilSquare } from 'react-bootstrap-icons'
 import axios from 'axios'
 import DataTable from 'react-data-table-component'
 import { Slide, toast } from 'react-toastify';
-import { UserDeleteApiById, UsersGetApi } from '../Axios'
+import { UserDeleteApiById} from '../Axios'
+import { useDispatch, useSelector } from 'react-redux'
+import { fetchUsers } from '../redux/userSlice'
+import { selectUsers, selectUsersLoading } from '../redux/store'
 
 
 const Usersview = () => {
@@ -18,44 +21,54 @@ const Usersview = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const Navigate = useNavigate();
-  const getUser = () => {
-    UsersGetApi()
-      .then((response) => {
-        console.log(response.data);
-        setAPIData(response.data);
-        setFilteredData(response.data);
-      })
-  }
+  const dispatch = useDispatch();
+  // Access Redux state
+  const users = useSelector(selectUsers);
+  const loading = useSelector(selectUsersLoading);
+  
+
   useEffect(() => {
-    getUser();
-  }, [])
-  const getData = (userId) => {
+    dispatch(fetchUsers()); // Fetch users when component loads
+  }, [dispatch]);
+
+  console.log("users from userSlice " , users);
+ 
+  const handleEdit = (userId) => {
     Navigate(`/UserRegistration`, { state: { userId } })  //deleteuser/
   }
   const onDelete = async (userId) => {
     try {
-      // Make a DELETE request to the API with the given ID
-      UserDeleteApiById(userId)
-        .then((response) => {
-          getUser();
-          toast.error(response.data, {  //Notification status
+        // Make a DELETE request to the API with the given ID
+        const response = await UserDeleteApiById(userId)
+        dispatch(fetchUsers());  // Dispatch action to refetch products
+        toast.error('User deleted successfully', {  //Notification status
             position: 'top-right',
             transition: Slide,
             hideProgressBar: true,
             theme: "colored",
             autoClose: 1000, // Close the toast after 1 seconds
-          });
-          console.log(response);
-          console.log(response.data);
-        })
+        });
+        console.log(response);
+        console.log(response.data.data);
     } catch (error) {
-      // Log any errors that occur
-      console.error(error.response);
-      if (error.response && error.response.data) {
-        console.error('Server Error Message:', error.response.data);
-      }
+        // Log any errors that occur
+        console.error(error.response);
+        if (error.response && error.response.data) {
+            console.error('Server Error Message:', error.response.data);
+        }
     }
+}
+
+useEffect(() => {
+  if (users && Array.isArray(users)) {
+    const result = users.filter((user) =>
+      user.userName.toLowerCase().includes(search.toLowerCase())
+    );
+    setFilteredData(result);
+  } else {
+    setFilteredData([]);
   }
+}, [search, users]);
   const paginationComponentOptions = {
     noRowsPerPage: true,
   }
@@ -73,7 +86,9 @@ const Usersview = () => {
     },
     {
       name: "User Name",
-      selector: (row) => row.userName,
+      selector: (row) => {
+        return (<div className='text-right'>{row.userName}</div>)
+      },
     },
     {
       name: "User Email",
@@ -95,29 +110,13 @@ const Usersview = () => {
     // },
     {
       name: "Action",
-      cell: (row) => <div> <button className="btn btn-sm mr-2" style={{ backgroundColor: "transparent" }} onClick={() => getData(row.userId)}><PencilSquare size={22} color='#2255a4' /></button>
+      cell: (row) => <div> <button className="btn btn-sm mr-2" style={{ backgroundColor: "transparent" }} onClick={() => handleEdit(row.userId)}><PencilSquare size={22} color='#2255a4' /></button>
         <button className="btn btn-sm " style={{ backgroundColor: "transparent" }} onClick={() => onDelete(row.userId)}><XSquareFill size={22} color='#da542e' /></button>
       </div>
 
     }
   ]
-  // useEffect(() => {
-  //   const result = APIData.filter((data) => {
-  //     return data.username.toLowerCase().match(search.toLowerCase())
-
-  //   });
-  //   setFilteredData(result);
-  // }, [search])
-  // const tableCustomStyles = {
-  //   headCells: {
-  //     style: {
-  //       fontSize: '15px',
-  //       fontWeight: 'bold',
-  //       justifyContent: 'left',
-  //     },
-  //   },
-  // }
-
+  
   return (
     <div id="main-wrapper" data-sidebartype="mini-sidebar">
       <TopNav />

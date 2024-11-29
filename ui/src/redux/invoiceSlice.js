@@ -3,8 +3,8 @@ import { InvoiceGetApi } from '../Axios';
 export const fetchInvoices = createAsyncThunk('invoices/fetchInvoices', async () => {
   try {
       const response = await InvoiceGetApi();  // Call the Customer API
-      console.log('Fetched Invoices:', response.data);  // Log the customers data (make sure it's an array)
-      return response.data;  // Return the data
+      console.log('Fetched Invoices:', response.data.data);  // Log the customers data (make sure it's an array)
+      return response.data.data;  // Return the data
   } catch (error) {
       console.error('Error in fetchInvoices thunk:', error);
       throw new Error('Failed to fetch Invoices');

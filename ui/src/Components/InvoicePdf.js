@@ -72,10 +72,10 @@ const InvoicePdf = ({ showPreview, setShowPreview }) => {
                   <address>
                     <h6 style={{ fontSize: "smaller" }}>Billed To,</h6>
                     <h4 className="font-small">{invoiceData.customerName}</h4>
-                    <h6 className="m-l-30">{invoiceData.email}</h6>
+                    <h6 className="m-l-30">Email Id: {invoiceData.email}</h6>
                     <h6 className="m-l-30">Contact No: {invoiceData.phone}</h6>
-                    <h6 className="m-l-30">GST: {invoiceData.gstNumber}</h6>
-                    <h6 className="m-l-30">{invoiceData.address}</h6>
+                    <h6 className="m-l-30">GST: {invoiceData.gstNo}</h6>
+                    <h6 className="m-l-30">{invoiceData.Address}</h6>
                   </address>
                 </div>
               </div>
@@ -94,10 +94,10 @@ const InvoicePdf = ({ showPreview, setShowPreview }) => {
                         <th className="text-center">#</th>
                         <th className="text-left">ProductName</th>
                         <th className="text-left">HSN-no</th>
-                        <th className="text-left">PurchasedDate</th>
+                        <th className="text-left">Purchase Date</th>
                         <th className="text-left">Quantity</th>
                         <th className="text-left">Unit Cost (₹)</th>
-                        <th className="text-left">Total Amount(₹)</th>
+                        <th className="text-left">Total Cost(₹)</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -109,7 +109,7 @@ const InvoicePdf = ({ showPreview, setShowPreview }) => {
                           <td className="text-left">{item.purchaseDate}</td>
                           <td className="text-left">{item.quantity}</td>
                           <td className="text-left">{item.unitCost}</td>
-                          <td className="text-left">{item.quantity * item.unitCost}</td>
+                          <td className="text-left">{item.totalCost}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -119,41 +119,53 @@ const InvoicePdf = ({ showPreview, setShowPreview }) => {
 
               {/* Total Amount Section */}
               <div className="col-md-12">
-                <table className="table pull-right text-left">
-                  <tr>
-                    <th><b>GST ({invoiceData.gst || 0}%):</b></th>
-                    <td>₹{((invoiceData.totalAmount || 0) * (invoiceData.gst || 0)) / 100}</td>
-                  </tr>
-                  <tr>
-                    <th><b>Grand Total :</b></th>
-                    <td>₹{invoiceData.totalAmount}</td>
-                  </tr>
-                </table>
                 <div className="table-responsive">
                   <table className="table">
                     <tr>
                       <th colSpan="12" style={{ fontSize: "medium" }}>Bank Details</th>
                     </tr>
                     <tr>
-                      <th>Bank Name</th>
-                      <td>{invoiceData.bankName}</td>
-                      <th>Pan Number</th>
-                      <td>{invoiceData.pan}</td>
+                      <td>Bank Name: {invoiceData.bankName}</td>
+                      <td>Pan Number: {invoiceData.pan}</td>
                     </tr>
                     <tr>
-                      <th>Account Number</th>
-                      <td>{invoiceData.bankAccount}</td>
-                      <th>GST Number</th>
-                      <td>{invoiceData.gstNo}</td>
+                      <td>Account Number: {invoiceData.bankAccount}</td>
+                      <td>GST Number: {invoiceData.gstNo}</td>
                     </tr>
                     <tr>
-                      <th>IFSC Code</th>
-                      <td>{invoiceData.ifscCode}</td>
-                      <th></th>
-                      <td></td>
+                      <td>IFSC Code: {invoiceData.ifscCode}</td>
+                      <td>Branch: {invoiceData.branch}</td>
                     </tr>
                   </table>
                 </div>
+                {/* Additional Table Below Bank Details */}
+                <div className="table-responsive">
+                  <table className="table">
+                    <tbody>
+                      <tr>
+                        <th>Total Amount</th>
+                        <td>{invoiceData.totalAmount}</td>
+                      </tr>
+                      <tr>
+                        <th>SGST(9%)</th>
+                        <td>{invoiceData.sGST}</td>
+                      </tr>
+                      <tr>
+                        <th>CGST(9%)</th>
+                        <td>{invoiceData.cGst}</td>
+                      </tr>
+                      <tr>
+                        <th>IGST(18%)</th>
+                        <td>{invoiceData.iGst}</td>
+                      </tr>
+                      <tr>
+                        <th>Grand Total</th>
+                        <td>{invoiceData.grandTotal}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
               </div>
             </div>
           </div>

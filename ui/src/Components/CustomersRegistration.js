@@ -1,85 +1,72 @@
-import React, { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
-import axios from 'axios'
-import TopNav from '../Pages/TopNav'
-import SideNav from '../Pages/SideNav'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
-import Footer from '../Pages/Footer'
+import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import TopNav from '../Pages/TopNav';
+import SideNav from '../Pages/SideNav';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import Footer from '../Pages/Footer';
 import { toast } from 'react-toastify';
-import { CustomerPostApi, CustomerPatchApiById, CustomerGetApiById } from '../Axios';
+import { CustomerGetApiById, CustomerPatchApiById, CustomerPostApi } from '../Axios';
 
 const CustomersRegistration = () => {
   const [show, setShow] = useState("gst");
-  const [update, setUpdate] = useState([])
-  const [load,setLoad]=useState(false)
-  // const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const { register, handleSubmit, reset,setValue, trigger, formState: { errors } } = useForm();
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [update, setUpdate] = useState([]);
+  const { register, handleSubmit, reset, trigger, setValue, formState: { errors } } = useForm();
 
-  const onSubmit = async(data) => {
-    try{
-      setLoad(true); // Show loader while making the request
+  const onSubmit = (data) => {
     if (location && location.state && location.state.customerId) {
-      const res = await CustomerPatchApiById(location.state.customerId, data);
-          toast.success(res.data.data, {  //Notification status
+      CustomerPatchApiById(location.state.customerId, data)
+        .then((res) => {
+          toast.success(res.data.data, {
             position: 'top-right',
-            autoClose: 1000, // Close the toast after 1 seconds
+            autoClose: 1000,
           });
-          navigate('/Customers')
-          console.log(res.data.data);
           setUpdate(res.data.data);
-    } else {
-      const response = await CustomerPostApi(data);
-          toast.success('Data Saved Successfully', {  //Notification status
-            position: 'top-right',
-            autoClose: 1000, // Close the toast after 1 seconds
-          });
-          console.log(response.data);
-          console.log(data);
-          navigate('/Customers')
-        }
-      } catch (error) {
-          toast.error('Invalid Credentials', {  //Notification status
-            position: 'top-right',
-            autoClose: 1000, // Close the toast after 1 seconds
-          });
-          console.log('error occured',error);
-    }
-    finally{
-      setLoad(false) // hide the loader after the request in completes
-    }
-  };
-  useEffect(() => {
-  const fetchCustomerData = async () => {
-    // Ensure that customerId exists in the state
-    if (location?.state?.customerId) {
-      try {
-        const response = await CustomerGetApiById(location.state.customerId);
-        reset(response.data); // Populate form with customer data
-        setUpdate(response.data); // Store fetched data in update state
-        console.log(response.data.customerId);
-      } catch (error) {
-        toast.error('Error fetching customer data', {
-          position: 'top-right',
-          autoClose: 1000,
+          navigate('/Customers');
+        })
+        .catch((error) => {
+          toast.error('Error updating customer');
+          console.log('Error updating customer:', error);
         });
-        console.error('Error fetching customer data:', error);
-      }
     } else {
-      // Handle case where no customerId is passed (new registration)
-      console.log('No customerId found, starting new registration');
+      CustomerPostApi(data)
+        .then((response) => {
+          toast.success('Customer added successfully', {
+            position: 'top-right',
+            autoClose: 1000,
+          });
+          navigate('/Customers');
+        })
+        .catch((error) => {
+          // Handle API error response
+          const errorMessage = error.response?.data?.error?.message || 'Error adding customer';
+          console.error('API Error:', errorMessage);
+          toast.error(errorMessage);
+        });
     }
   };
-  fetchCustomerData();
-}, [location, reset]);
 
+  useEffect(() => {
+    if (location && location.state && location.state.customerId) {
+      CustomerGetApiById(location.state.customerId)
+        .then((response) => {
+          console.log('Customer data:', response.data);
+          reset(response.data);
+          setIsUpdating(true);
+          setShow(response.data.gstType || "gst");
+        })
+        .catch((error) => {
+          console.error('Error fetching data:', error);
+          toast.error('Error fetching customer data.');
+        });
+    }
+  }, [location.state?.customerId, reset]);
 
-  const setGstType = async (event) => {
+  const setGstType = (event) => {
     setShow(event.target.value);
-    console.log(event.target.value);
-  }
-  // custom validation function for email
+  };
   const emailValidation = (value) => {
     if (/[A-Z]/.test(value)) {
       return "Email cannot contain uppercase letters";
@@ -112,7 +99,7 @@ const CustomersRegistration = () => {
       e.preventDefault();
     }
   }
-  const handleInputChange = async (e, triggerField,allowSpecialChars = false) => {
+  const handleInputChange = async (e, triggerField, allowSpecialChars = false) => {
     let value = e.target.value;
     value = value.trimStart();
     value = value.replace(/ {2,}/g, ' ');
@@ -128,7 +115,7 @@ const CustomersRegistration = () => {
     setValue(triggerField, value);
     await trigger(triggerField);
   };
-  
+
 
 
   return (
@@ -142,8 +129,8 @@ const CustomersRegistration = () => {
             <div className="ml-auto text-right">
               <nav aria-label="breadcrumb">
                 <ol className="breadcrumb">
-                  <li className="breadcrumb-item"><Link to={'/'}>Home</Link></li>
-                  <li className="breadcrumb-item"><Link to={'/Usersviews'}>Customers Details</Link></li>
+                  <li className="breadcrumb-item"><a href='/main'>Home</a></li>
+                  <li className="breadcrumb-item"><Link to={'/Usersviews'}>Customers</Link></li>
                   <li className="breadcrumb-item active" aria-current="page">Customers Registration</li>
                 </ol>
               </nav>
@@ -154,52 +141,50 @@ const CustomersRegistration = () => {
       <div className='container-fliuid'>
         <div className='row'>
           <div className='col-md-9 ' style={{ marginLeft: "300px", marginTop: "50px" }}>
-            <div className="card">
-              <form className="form-horizontal" onSubmit={handleSubmit(onSubmit)}>
+            <form className="form-horizontal" onSubmit={handleSubmit(onSubmit)}>
+              <div className="card">
                 <div className="card-body">
-                  <div className="form-group row">
+                  <h4 className="card-title">Customer Info</h4>
+                  {/* <div className="form-group row">
                     <label htmlFor='gstTypeGST' className="col-sm-3 text-right control-label col-form-label">Customer Type</label>
                     <div className=' form-group row' onChange={setGstType}>
-                      <input type="radio" name="gstType" id="gstType" value={"gst"} style={{ marginLeft: "150px" }} checked={show === "gst"}
-                        {...register("gstType", {
-                          required: "Please select your Type"
-                        })}
-                      />
+                      <input type="radio" name="gstType" id="gstType" value="gst" checked={show === "gst"}
+                        {...register("gstType", { required: "Please select your Type" })} />
                       <label htmlFor='gstTypeNonGST' className="text-right col-form-label ml-2">GST</label><br />
-                      <input type="radio" name="gstType" id="gstType" value={"nongst"} checked={show === "nongst"} style={{ marginLeft: "300px" }}
-                        {...register("gstType")}
-                      />
-                      <label htmlFor='gstType' className="text-right col-form-label ml-2" required>Non GST</label>
+                      <input type="radio" name="gstType" id="gstType" value="nongst" checked={show === "nongst"}
+                        {...register("gstType")} />
+                      <label htmlFor='gstType' className="text-right col-form-label ml-2">Non GST</label>
                     </div>
-                  </div>
+                  </div> */}
 
-
-                  <div className="form-group row ">
-                    <label htmlFor="customerName" className="col-sm-3 text-right control-label col-form-label">Customer Name</label>
-                    <div className="col-sm-9">
-                      <input type="text" className="form-control" id="customerName" name='customerName' placeholder="Enter Customer Name "
+                  {/* Customer Name */}
+                  <div className='form row mt-4'>
+                    <div className="form-group col-md-6">
+                      <label htmlFor="customer" className="col-sm-4 text-left control-label col-form-label">Customer Name</label>
+                      <input type="text" className="form-control" id="customerName" name="customerName" placeholder="Enter Customer Name"
                         {...register("customerName", {
                           required: "Customer name is required",
-                          minLength:{
-                            value:3,
-                            message:"CustomerName must be at least 3 characters long"
+                          minLength: {
+                            value: 3,
+                            message: "CustomerName must be at least 3 characters long"
                           },
-                          maxLength:{
-                            value:60,
-                            message:"CustomerName must not exceed 60 characters."
+                          maxLength: {
+                            value: 60,
+                            message: "CustomerName must not exceed 60 characters."
                           },
                         })}
-                        onChange={(e)=>handleInputChange(e,"customerName",false)}
+                        onChange={(e) => handleInputChange(e, "customerName", false)}
                         onKeyPress={preventNumbers}
                       />
+                      {errors.customerName && <p className='errorsMsg '>{errors.customerName.message}</p>}
                     </div>
-                    {errors.customerName && <p className='errorsMsg ' id='errorMsg'>{errors.customerName.message}</p>}
-                  </div>
-                  <div className="form-group row">
-                    <label htmlFor="email" className="col-sm-3 text-right control-label col-form-label">Email</label>
-                    <div className="col-sm-9">
-                      <input type="email" className="form-control" id="mail_id" name="mail_id" placeholder="Enter mail-id"
+
+                    {/* Email */}
+                    <div className="form-group col-md-6">
+                      <label htmlFor="email" className="col-sm-4 text-left control-label col-form-label">Email</label>
+                      <input type="email" className="form-control" id="email" name="email" placeholder="Enter mail-id"
                         {...register("email", {
+                          required: "Email is Required",
                           required: "Email is Required",
                           validate: emailValidation, // Custom validation function
                           onChange: async (e) => {
@@ -209,13 +194,14 @@ const CustomersRegistration = () => {
                         })}
                         onKeyPress={preventWhitespace}
                       />
+                      {errors.email && <p className="errorsMsg">{errors.email.message}</p>}
                     </div>
-                    {errors.email && <p className="errorsMsg" id='errorMsg'>{errors.email.message}</p>}
                   </div>
-                  <div className="form-group row">
-                    <label htmlFor="mobilenumber" className="col-sm-3 text-right control-label col-form-label">Mobile Number</label>
-                    <div className="col-sm-9">
-                      <input type="text" className="form-control" id="mobilenumber" name="mobilenumber" placeholder="Mobile Number"
+                  {/* Mobile Number */}
+                  <div className='form row'>
+                    <div className="form-group col-md-6">
+                      <label htmlFor="mobileNumber" className="col-sm-4 text-left control-label col-form-label">Mobile Number</label>
+                      <input type="text" className="form-control" id="mobileNumber" name="mobileNumber" placeholder="Mobile Number"
                         {...register("mobileNumber", {
                           required: "Enter Mobile Number",
                           pattern: {
@@ -232,14 +218,12 @@ const CustomersRegistration = () => {
                           handlePhoneChange(e);
                         }}
                       />
+                      {errors.mobileNumber && <p className='errorsMsg'>{errors.mobileNumber.message}</p>}
                     </div>
-                    {errors.mobilenumber && (<p className='errorsMsg' id='errorMsg'>{errors.mobilenumber.message}</p>)}
-                  </div>
-
-                  <div className="form-group row">
-                    <label htmlFor="address" className="col-sm-3 text-right control-label col-form-label">Address</label>
-                    <div className="col-sm-9">
-                      <textarea className="form-control" id='customer_address' name='customer_address'
+                    {/* Address */}
+                    <div className="form-group col-md-6">
+                      <label htmlFor="address" className="col-sm-4 text-left control-label col-form-label">Address</label>
+                      <textarea className="form-control" id="address" name="address"
                         {...register("address", {
                           required: "Address is Required",
                           maxLength: {
@@ -247,14 +231,15 @@ const CustomersRegistration = () => {
                             message: 'Address must be at most 250 characters long'
                           }
                         })}
-                        onChange={(e)=>handleInputChange(e,"address",true)}
+                        onChange={(e) => handleInputChange(e, "address", true)}
                       />
+                      {errors.address && <p className='errorsMsg'>{errors.address.message}</p>}
                     </div>
-                    {errors.address && <p className='errorsMsg ' id='errorMsg'>{errors.address.message}</p>}
                   </div>
-                  <div className="form-group row">
-                    <label htmlFor="state" className="col-sm-3 text-right control-label col-form-label">State</label>
-                    <div className="col-sm-9">
+                  {/* State */}
+                  <div className="form-row">
+                    <div className="form-group col-md-6">
+                      <label htmlFor="state" className="col-sm-4 text-left control-label col-form-label">State</label>
                       <input type="text" className="form-control" id="state" name="state" placeholder="Enter State"
                         {...register("state", {
                           required: "State Name is Required.",
@@ -267,17 +252,14 @@ const CustomersRegistration = () => {
                             message: "StateName must not exceed 60 digits."
                           },
                         })}
-                        onChange={(e)=>handleInputChange(e,"state",false)}
+                        onChange={(e) => handleInputChange(e, "state", false)}
                         onKeyPress={preventNumbers}
                       />
+                      {errors.state && <p className="errorsMsg">{errors.state.message}</p>}
                     </div>
-                    {errors.state && (
-                      <p className="errorsMsg" id='errorMsg'>{errors.state.message}</p>
-                    )}
-                  </div>
-                  <div className="form-group row">
-                    <label htmlFor="city" className="col-sm-3 text-right control-label col-form-label">City</label>
-                    <div className="col-sm-9">
+                    {/* City */}
+                    <div className="form-group col-md-6">
+                      <label htmlFor="city" className="col-sm-4 text-left control-label col-form-label">City</label>
                       <input type="text" className="form-control" name="city" id="city" placeholder="Enter City"
                         {...register("city", {
                           required: "City name required.",
@@ -290,19 +272,18 @@ const CustomersRegistration = () => {
                             message: "CityName must not exceed 60 digits."
                           },
                         })}
-                        onChange={(e)=>handleInputChange(e,"city",false)}
+                        onChange={(e) => handleInputChange(e, "city", false)}
                         onKeyPress={preventNumbers}
 
                       />
+                      {errors.city && <p className="errorsMsg">{errors.city.message}</p>}
                     </div>
-                    {errors.city && (
-                      <p className="errorsMsg" id='errorMsg'>{errors.city.message}</p>
-                    )}
                   </div>
-                  <div className="form-group row">
-                    <label htmlFor="pincode" className="col-sm-3 text-right control-label col-form-label">Pin Code</label>
-                    <div className="col-sm-9">
-                      <input type="text" className="form-control" id="pin_code" name="pin_code" placeholder="Enter Pin"
+                  {/* Pin Code */}
+                  <div className="form-row">
+                    <div className="form-group col-md-6">
+                      <label htmlFor="pincode" className="col-sm-4 text-left control-label col-form-label">Pin Code</label>
+                      <input type="text" className="form-control" id="pinCode" name="pinCode" placeholder="Enter Pin"
                         {...register("pinCode", {
                           required: "Enter PinCode.",
                           minLength: {
@@ -320,16 +301,14 @@ const CustomersRegistration = () => {
                         })}
                         onKeyPress={preventNonNumericCharacters}
                       />
+                      {errors.pinCode && <p className="errorsMsg">{errors.pinCode.message}</p>}
                     </div>
-                    {errors.pinCode && (
-                      <p className="errorsMsg" id='errorMsg'>{errors.pinCode.message}</p>
-                    )}
-                  </div>
-                  {show === "gst" && (
-                    <div className="form-group row">
-                      <label htmlFor="gst" className="col-sm-3 text-right control-label col-form-label">Gst No</label>
-                      <div className="col-sm-7">
-                        <input type="text" className="form-control" id="gst_number" name="gst_number" placeholder="Enter Gst Number"
+
+                    {/* GST Number (only for GST type) */}
+                    {show === "gst" && (
+                      <div className="form-group col-md-6">
+                        <label htmlFor="gst" className="col-sm-4 text-left control-label col-form-label">Gst No</label>
+                        <input type="text" className="form-control" id="gstNo" name="gstNo" placeholder="Enter Gst Number"
                           {...register("gstNo", {
                             required: "Enter GST Number",
                             pattern: {
@@ -342,16 +321,15 @@ const CustomersRegistration = () => {
                             },
                           })}
                         />
+                        {errors.gstNo && <p className="errorsMsg">{errors.gstNo.message}</p>}
                       </div>
-                      {errors.gstNo && (<p className='errorsMsg' id='errorMsg'>{errors.gstNo.message}</p>)}
-                    </div>
-                  )
-                  }
-
-                  <div className="form-group row">
-                    <label htmlFor="stateCode" className="col-sm-3 text-right control-label col-form-label">State Code</label>
-                    <div className="col-sm-9">
-                      <input type="text" className="form-control" id="state_code" name="state_code" placeholder="Enter Pin"
+                    )}
+                  </div>
+                  {/* State Code */}
+                  <div className="form-row">
+                    <div className="form-group col-md-6">
+                      <label htmlFor="stateCode" className="col-sm-4 text-left control-label col-form-label">State Code</label>
+                      <input type="text" className="form-control" id="stateCode" name="stateCode" placeholder="Enter Pin"
                         {...register("stateCode", {
                           required: "Enter StateCode.",
                           minLength: {
@@ -369,28 +347,62 @@ const CustomersRegistration = () => {
                         })}
                         onKeyPress={preventNonNumericCharacters}
                       />
+                      {errors.stateCode && <p className="errorsMsg">{errors.stateCode.message}</p>}
                     </div>
-                    {errors.stateCode && (
-                      <p className="errorsMsg" id='errorMsg'>{errors.stateCode.message}</p>
-                    )}
                   </div>
                 </div>
-
-
-                <div className="border-top">
-                  <div className="card-body">
-                    <button type="submit" className="btn btn-primary" style={{ marginLeft: "450px" }} disabled={load}>{load? 'submitting...': 'submit'}</button>
-                  </div>
+              </div>
+              {/* <div className="border-top">
+                <div className="card-body ">
+                  <button
+                    className="btn btn-secondary btn-md mr-2"
+                    style={{ marginLeft: "50%"}}
+                    type="button"
+                    onClick={() => reset()} // Reset form fields to initial values
+                  >
+                    Reset
+                  </button>
+                  <button
+                    className={
+                      isUpdating
+                        ? "btn btn-danger bt-lg"
+                        : "btn btn-primary bt-lg"
+                    }
+                    style={{ marginLeft: "90%" }}
+                    type="submit"
+                  >
+                    {isUpdating ? "Update Customer" : "Add Customer"}
+                  </button>
                 </div>
-              </form>
-
-            </div>
+              </div> */}
+              <div className="border-top">
+                <div className="card-body d-flex justify-content-end">
+                  <button
+                    className="btn btn-secondary btn-md mr-2"
+                    type="button"
+                    onClick={() => reset()} // Reset form fields to initial values
+                  >
+                    Reset
+                  </button>
+                  <button
+                    className={
+                      isUpdating
+                        ? "btn btn-danger bt-lg"
+                        : "btn btn-primary bt-lg"
+                    }
+                    type="submit"
+                  >
+                    {isUpdating ? "Update Customer" : "Add Customer"}
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
-      </div>
+      </div >
       <Footer />
-    </div>
-  )
-}
+    </div >
+  );
+};
 
-export default CustomersRegistration
+export default CustomersRegistration;

@@ -13,7 +13,7 @@ const UserRegistration = (props) => {
     const navigate = useNavigate();
     const [data, setData] = useState([])
     const [isUpdating, setIsUpdating] = useState(false);
-    const { register, handleSubmit, reset, control, formState: { errors } } = useForm();
+    const { register, handleSubmit, reset,setValue,trigger, control, formState: { errors } } = useForm();
     const location = useLocation();
 
     const [passwordShown, setPasswordShown] = useState(false);
@@ -27,6 +27,7 @@ const UserRegistration = (props) => {
         { value: "Admin", label: "Admin", id: "Admin" },
         { value: "Employee", label: "Employee", id: "Employee" }
     ]
+    
     const onSubmit = (data) => {
         delete data.role.value;
         delete data.role.label;
@@ -84,6 +85,62 @@ const UserRegistration = (props) => {
                 });
         }
     }, [])
+    const handleInputChange = async (e, triggerField, allowSpecialChars = false) => {
+        let value = e.target.value;
+        value = value.trimStart();
+        value = value.replace(/ {2,}/g, ' ');
+        if (value && value.length > 0) {
+          value = value.charAt(0).toUpperCase() + value.slice(1);
+        }
+        value = value.replace(/(\s[a-z])/g, (match) => match.toUpperCase());
+        if (allowSpecialChars) {
+          value = value.replace(/[^a-zA-Z0-9\s\/\-,]/g, '');  // Allow /, -, and ,
+        } else {
+          value = value.replace(/[^a-zA-Z0-9\s]/g, '');  // Only allow alphanumeric characters and spaces
+        }
+        setValue(triggerField, value);
+        await trigger(triggerField);
+      };
+      const preventNumbers = (e) => {
+        if (/[0-9]/.test(e.key)) {
+          e.preventDefault();
+        }
+      }
+      const preventSpacesInEmail = (e)=>{
+        if(e.key === ' '){
+            e.preventDefault();
+        }
+      }
+      // custom validation function for companyEmail
+  const userEmailValidation = (value) => {
+    if (/[A-Z]/.test(value)) {
+      return "Email cannot contain uppercase letters";
+    }
+    return /^[a-z]([a-z0-9._-]*[a-z0-9])?@[a-z]([a-z0-9.-]*[a-z0-9])?\.(com|in|net|gov|org|edu)$/.test(value) || "Invalid Email format.  Only .com, .in, .org, .net, .edu, .gov are allowed.";
+  };
+  const validatePassword = (value) => {
+    const errors = [];
+    if (!/(?=.*[0-9])/.test(value)) {
+        errors.push("at least one digit");
+    }
+    if (!/(?=.*[a-z])/.test(value)) {
+        errors.push("at least one lowercase letter");
+    }
+    if (!/(?=.*[A-Z])/.test(value)) {
+        errors.push("at least one uppercase letter");
+    }
+    if (!/(?=.*\W)/.test(value)) {
+        errors.push("at least one special character");
+    }
+    if (value.includes(" ")) {
+        errors.push("no spaces");
+    }
+    if (errors.length > 0) {
+        return `Password must contain ${errors.join(", ")}.`;
+    }
+    return true;
+};
+
     return (
         <div id="main-wrapper" data-sidebartype="mini-sidebar">
             <SideNav />
@@ -116,9 +173,19 @@ const UserRegistration = (props) => {
                                             <label htmlFor="fname" className="col-sm-4 text-left control-label col-form-label">User Name</label>
                                             <input type="text" className="form-control" name="userName" id="userName" placeholder=" Enter User Name"
                                                 {...register("userName", {
-                                                    required: "User Name is Required.",
-                                                })}
-                                            />
+                                                    required: "UserName is required",
+                                                    minLength: {
+                                                      value: 3,
+                                                      message: "UserName must be at least 3 characters long"
+                                                    },
+                                                    maxLength: {
+                                                      value: 60,
+                                                      message: "UserName must not exceed 60 characters."
+                                                    },
+                                                  })}
+                                                  onChange={(e) => handleInputChange(e, "userName", false)}
+                                                  onKeyPress={preventNumbers}
+                                                />
                                             {errors.userName && (<p className='errorsMsg '>{errors.userName.message}</p>)}
 
                                         </div>
@@ -126,12 +193,14 @@ const UserRegistration = (props) => {
                                             <label htmlFor="fname" className="col-sm-4 text-left control-label col-form-label">User Email</label>
                                             <input type="userEmail" className="form-control" name="userEmail" id="userEmail" placeholder=" Enter User MailId"
                                                 {...register("userEmail", {
-                                                    required: "Enter userEmail",
-                                                    pattern: {
-                                                        value: /^[^@ ]+@[^@ ]+\.[^@ .]{2,}$/,
-                                                        message: "Invalid Email"
-                                                    }
+                                                    required: "Email is Required",
+                                                    validate: userEmailValidation, // Custom validation function
+                                                    onChange: async (e) => {
+                                                      e.target.value = e.target.value.trim(); // Trim whitespace
+                                                      await trigger("userEmail"); // Trigger validation
+                                                    },
                                                 })}
+                                                onKeyPress={preventSpacesInEmail}
                                             />
                                             {errors.userEmail && <p className="errorsMsg">{errors.userEmail.message}</p>}
                                         </div>
@@ -166,10 +235,19 @@ const UserRegistration = (props) => {
                                                     type={passwordShown ? "text" : "password"}
                                                     {...register("password", {
                                                         required: "Enter Password",
-                                                        pattern: {
-                                                            value: /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.* ).{8,16}$/,
-                                                            message: "Invalid Password"
-                                                        }
+                                                        minLength: {
+                                                            value:8,
+                                                            message:"Password must be at least 8 characters long"
+                                                        },
+                                                        maxLength:{
+                                                            value:16,
+                                                            message:"Password must be at most 16 characters long"
+                                                        },
+                                                        onChange: async (e) => {
+                                                            e.target.value = e.target.value.trim(); // Trim whitespace
+                                                            await trigger("password"); // Trigger validation
+                                                          },
+                                                          validate:validatePassword
                                                     })}
                                                 />
                                                 <i onClick={togglePasswordVisiblity}> {passwordShown ? (
@@ -183,17 +261,27 @@ const UserRegistration = (props) => {
                                     </div>
                                 </div>
                             </div>
-                            <button
-                                className={
-                                    isUpdating
-                                        ? "btn btn-danger bt-lg"
-                                        : "btn btn-primary bt-lg"
-                                }
-                                style={{ marginLeft: "90%" }}
-                                type="submit"
-                            >
-                                {isUpdating ? "Update User" : "Add User"}
-                            </button>
+                            <div className="border-top">
+                                <div className="card-body d-flex justify-content-end">
+                                    <button
+                                        className="btn btn-secondary btn-md mr-2"
+                                        type="button"
+                                        onClick={() => reset()} // Reset form fields to initial values
+                                    >
+                                        Reset
+                                    </button>
+                                    <button
+                                        className={
+                                            isUpdating
+                                                ? "btn btn-danger bt-lg"
+                                                : "btn btn-primary bt-lg"
+                                        }
+                                        type="submit"
+                                    >
+                                        {isUpdating ? "Update User" : "Add User"}
+                                    </button>
+                                </div>
+                            </div>
                         </form>
                     </div>
                 </div>

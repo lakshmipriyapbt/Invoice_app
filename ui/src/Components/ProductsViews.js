@@ -172,8 +172,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import SideNav from "../Pages/SideNav";
 import TopNav from "../Pages/TopNav";
 import Footer from "../Pages/Footer";
-import { fetchAllProducts } from "../redux/ProductSlice";
-import { selectProducts, selectProductsLoading, selectProductsError } from '../redux/Store';  // Adjust the import path
+import { fetchAllProducts } from "../redux/productSlice";
+import { selectProducts, selectProductsLoading, selectProductsError } from '../redux/store'; 
 import { ProdcutDeleteApiById } from "../Axios";
 
 const Product = () => {

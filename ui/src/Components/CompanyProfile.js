@@ -37,15 +37,15 @@ const CompanyProfile = () => {
                     setIsUpdating(true);
 
                     // Prepopulate the form with the fetched data
-                    setValue('username', companyData.username);
-                    setValue('companyemail', companyData.companyemail);
+                    setValue('userName', companyData.userName);
+                    setValue('companyEmail', companyData.companyEmail);
                     setValue('phone', companyData.phone);
                     setValue('companyName', companyData.companyName);
                     setValue('serviceName', companyData.serviceName);
                     setValue('pan', companyData.pan);
                     setValue('gstNumber', companyData.gstNumber);
                     setValue('gender', companyData.gender);
-                    setValue('bankAccount', companyData.bankAccount);
+                    setValue('accountNumber', companyData.accountNumber);
                     setValue('bankName', companyData.bankName);
                     setValue('branch', companyData.branch);
                     setValue('ifscCode', companyData.ifscCode);
@@ -69,8 +69,8 @@ const CompanyProfile = () => {
 
     const onSubmit = async (data) => {
         const formData = new FormData();
-        formData.append("username", data.username);
-        formData.append("companyemail", data.companyemail);
+        formData.append("userName", data.userName);
+        formData.append("companyEmail", data.companyEmail);
         formData.append("password", data.password);
         formData.append("phone", data.phone);
         formData.append("companyName", data.companyName);
@@ -86,7 +86,7 @@ const CompanyProfile = () => {
             console.log("No file selected");  // Handle case when no file is selected
         }
 
-        formData.append("bankAccount", data.bankAccount);
+        formData.append("accountNumber", data.accountNumber);
         formData.append("bankName", data.bankName);
         formData.append("branch", data.branch);
         formData.append("ifscCode", data.ifscCode);
@@ -202,32 +202,32 @@ const CompanyProfile = () => {
                                     <div className='form row mt-4'>
                                         <div className="form-group col-md-6">
                                             <label htmlFor="fname" className="col-sm-4 text-left control-label col-form-label">User Name</label>
-                                            <input type="text" className="form-control" name="username" id="username" placeholder="Enter User Name Name"
-                                                {...register("username", {
+                                            <input type="text" className="form-control" name="userName" id="userName" placeholder="Enter User Name Name"
+                                                {...register("userName", {
                                                     required: "User Name is Required",
                                                     minLength: {
                                                         value: 3,
-                                                        message: "Username must be at least 3 characters long"
+                                                        message: "userName must be at least 3 characters long"
                                                     },
                                                     maxLength: {
                                                         value: 60,
-                                                        message: "Username must not exceed 60 characters."
+                                                        message: "userName must not exceed 60 characters."
                                                     },
                                                 })}
-                                                onChange={(e) => handleInputChange(e, "username")}
+                                                onChange={(e) => handleInputChange(e, "userName")}
                                                 onKeyPress={preventNonAlphabets}
                                             />
-                                            {errors.username && <p className='errorsMsg '>{errors.username.message}</p>}
+                                            {errors.userName && <p className='errorsMsg '>{errors.userName.message}</p>}
                                         </div>
                                         <div className="form-group col-md-6">
-                                            <label htmlFor="companyemail" className="col-sm-4 text-left control-label col-form-label">Email</label>
-                                            <input type="email" className="form-control" name="companyemail" id="companyemail" placeholder="Enter Email Id"
-                                                {...register("companyemail", {
+                                            <label htmlFor="companyEmail" className="col-sm-4 text-left control-label col-form-label">Email</label>
+                                            <input type="email" className="form-control" name="companyEmail" id="companyEmail" placeholder="Enter Email Id"
+                                                {...register("companyEmail", {
                                                     required: "Email is Required",
                                                     validate: emailValidation, // Custom validation function
                                                     onChange: async (e) => {
                                                         e.target.value = e.target.value.trim(); // Trim whitespace
-                                                        await trigger("companyemail"); // Trigger validation
+                                                        await trigger("companyEmail"); // Trigger validation
                                                     },
                                                 })}
                                                 onKeyPress={(e) => {
@@ -236,7 +236,7 @@ const CompanyProfile = () => {
                                                     }
                                                 }}
                                             />
-                                            {errors.companyemail && <p className="errorsMsg">{errors.companyemail.message}</p>}
+                                            {errors.companyEmail && <p className="errorsMsg">{errors.companyEmail.message}</p>}
                                         </div>
                                     </div>
                                     <div className='form row'>
@@ -448,9 +448,9 @@ const CompanyProfile = () => {
                                     <h3 className="card-title " style={{ marginLeft: "10px", marginTop: "15px" }}>Bank Details</h3>
                                     <div className='form-row mt-4'>
                                         <div className="form-group col-md-6">
-                                            <label htmlFor="bankaccount" className="col-sm-4 text-left control-label col-form-label">Bank Account</label>
-                                            <input type="text" className="form-control" name="bankAccount" id="bankAccount" placeholder="Enter Bank Account Number"
-                                                {...register("bankAccount", {
+                                            <label htmlFor="accountNumber" className="col-sm-4 text-left control-label col-form-label">Bank Account</label>
+                                            <input type="text" className="form-control" name="accountNumber" id="accountNumber" placeholder="Enter Bank Account Number"
+                                                {...register("accountNumber", {
                                                     required: "Account Number is Required",
                                                     minLength: {
                                                         value: 9,
@@ -462,12 +462,12 @@ const CompanyProfile = () => {
                                                     },
                                                     onChange: async (e) => {
                                                         e.target.value = e.target.value.trim(); // Trim whitespace
-                                                        await trigger("bankAccount"); // Trigger validation
+                                                        await trigger("accountNumber"); // Trigger validation
                                                     },
                                                 })}
                                                 onKeyPress={preventNonNumericCharacters}
                                             />
-                                            {errors.bankAccount && (<p className='errorsMsg'>{errors.bankAccount.message}</p>)}
+                                            {errors.accountNumber && (<p className='errorsMsg'>{errors.accountNumber.message}</p>)}
                                         </div>
                                         <div className="form-group col-md-6">
                                             <label htmlFor="bankname" className="col-sm-4 text-left control-label col-form-label">Bank Name</label>

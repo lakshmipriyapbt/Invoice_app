@@ -136,10 +136,7 @@ h6 {
 }
 
 p {
-<<<<<<< HEAD
     margin-left: 5px;
-=======
->>>>>>> main
     margin-top: 0;
     margin-bottom: 1rem
 }
@@ -4073,12 +4070,7 @@ input[type=submit].btn-block {
 .dropdown-item {
     display: block;
     width: 100%;
-<<<<<<< HEAD
     padding: 0.65rem 1rem;
-=======
-    /* padding: 0.65rem 1rem; */
-    padding: 5px;
->>>>>>> main
     clear: both;
     font-weight: 400;
     color: #212529;
@@ -6620,10 +6612,6 @@ button.close {
     pointer-events: auto;
     background-color: #fff;
     background-clip: padding-box;
-<<<<<<< HEAD
-=======
-    padding: 20px;
->>>>>>> main
     border: 1px solid rgba(0, 0, 0, 0.2);
     border-radius: 2px;
     outline: 0
@@ -11680,11 +11668,7 @@ ul.list-style-none li a:hover {
 .card .card-title {
     position: relative;
     font-weight: 600;
-<<<<<<< HEAD
     margin-bottom: 10px,
-=======
-    margin-bottom: 10px
->>>>>>> main
 }
 
 .card .card-actions {

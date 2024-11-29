@@ -12,9 +12,9 @@ import InvoicePreview from './InvoicePreview';
 import { Slide } from 'react-toastify';
 import Select from 'react-select'
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchCustomers } from '../redux/CustomerSlice';  // Import the fetchCustomers action
-import { fetchAllProducts } from '../redux/ProductSlice'; // Import the fetchAllProducts action
-import { selectProducts,selectCustomers } from '../redux/Store'; // Selectors for loading states
+import { fetchCustomers } from '../redux/customerSlice';  // Import the fetchCustomers action
+import { fetchAllProducts } from '../redux/productSlice'; // Import the fetchAllProducts action
+import { selectProducts,selectCustomers } from '../redux/store'; // Selectors for loading states
 
 
 
@@ -110,8 +110,6 @@ const InvoiceReg = () => {
     }
   };
   
-  
-
   // Function to set default invoice date
   const getDefaultInvoiceDate = () => {
     return moment().format('YYYY-MM-DD');
@@ -206,9 +204,13 @@ const InvoiceReg = () => {
     updatedProducts.splice(index, 1);
     setProductsInfo(updatedProducts);
   };
+
+  const allowNumbersOnly = (e) => {
+    if (!/^[1-9\s]*$/.test(e.key)) {
+      e.preventDefault();
+    }
+  };
   
-
-
   return (
     <div id="main-wrapper" data-sidebartype="mini-sidebar">
       <TopNav />
@@ -287,6 +289,7 @@ const InvoiceReg = () => {
                         {...register("purchaseOrder", {
                           required: 'Enter Purchase Order'
                         })}
+                        onKeyPress={allowNumbersOnly}
                       />
                     </div>
                     {errors.purchaseOrder && (<p className="errorsMsg">{errors.purchaseOrder.message}</p>)}
@@ -365,7 +368,10 @@ const InvoiceReg = () => {
                               )}
                               <label htmlFor="quantity" className="text-right control-label col-form-label">Quantity</label>
                               <input className="form-control" id="quantity" name="quantity" type="number"
-                                {...register(`productsInfo[${index}][quantity]`, { required: 'true' })}
+                                {...register(`productsInfo[${index}][quantity]`, {
+                                   required: 'Quantity is required', 
+                                   })}
+                                   onKeyPress={allowNumbersOnly}
                               />
                             </div>
                             <div className="form-group row col-sm-2 ml-2">
