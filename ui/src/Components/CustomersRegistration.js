@@ -67,57 +67,68 @@ const CustomersRegistration = () => {
   const setGstType = (event) => {
     setShow(event.target.value);
   };
-  const emailValidation = (value) => {
-    if (/[A-Z]/.test(value)) {
-      return "Email cannot contain uppercase letters";
+ 
+  const validateField = (value, type) => {
+    switch (type) {
+      case 'email':
+        const emailRegex = /^(?![0-9]+@)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|in|org|net|edu|gov)$/;
+        if (/[A-Z]/.test(value)) return "Email cannot contain uppercase letters";  // Ensure no uppercase letters in email
+        return emailRegex.test(value) || "Invalid Email format";
+
+      case 'mobile':
+        return /^[6-9][0-9]{9}$/.test(value) || "Mobile Number must start with 6-9 and be exactly 10 digits long";
+
+      case 'pincode':
+        return /^\d{6}$/.test(value) || "PinCode must be exactly 6 digits";
+
+      case 'gst':
+        return /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][0-9][Z][A-Z0-9]$/.test(value) || "Invalid GST Number format. It should be 15 characters long and follow the pattern: 22AAAAA0000A1Z5.";
+
+      case 'stateCode':
+        return /^[0-9]{1,2}$/.test(value) || "State Code must be a numeric value (1-2 digits)";
+
+      default:
+        return true;
     }
-    return /^[a-z]([a-z0-9._-]*[a-z0-9])?@[a-z]([a-z0-9.-]*[a-z0-9])?\.(com|in|net|gov|org|edu)$/.test(value) || "Invalid Email format";
-  };
-  const preventWhitespace = (e) => {
-    if (e.key === ' ') {
-      e.preventDefault();
-    }
-  };
-  const preventNonNumericCharacters = (e) => {
-    if (!/[0-9]/.test(e.key)) {
-      e.preventDefault();
-    }
-  }
-  const handlePhoneChange = (e) => {
-    const value = e.target.value;
-    // Allow only the first digit to be 6-9
-    if (value.length === 0 && /^[0-5]$/.test(e.key)) {
-      e.preventDefault();
-    }
-    // Prevent entering more than 10 digits
-    if (value.length >= 10) {
-      e.preventDefault();
-    }
-  };
-  const preventNumbers = (e) => {
-    if (/[0-9]/.test(e.key)) {
-      e.preventDefault();
-    }
-  }
-  const handleInputChange = async (e, triggerField, allowSpecialChars = false) => {
-    let value = e.target.value;
-    value = value.trimStart();
-    value = value.replace(/ {2,}/g, ' ');
-    if (value && value.length > 0) {
-      value = value.charAt(0).toUpperCase() + value.slice(1);
-    }
-    value = value.replace(/(\s[a-z])/g, (match) => match.toUpperCase());
-    if (allowSpecialChars) {
-      value = value.replace(/[^a-zA-Z0-9\s\/\-,]/g, '');  // Allow /, -, and ,
-    } else {
-      value = value.replace(/[^a-zA-Z0-9\s]/g, '');  // Only allow alphanumeric characters and spaces
-    }
-    setValue(triggerField, value);
-    await trigger(triggerField);
   };
 
-
-
+  const preventInvalidInput = (e, type) => {
+    const key = e.key;
+    
+    // Alphanumeric check for customerName, state, city fields (no special characters allowed except spaces)
+    if (type === 'alpha' && /[^a-zA-Z\s]/.test(key)) {
+      e.preventDefault();
+    }
+  
+    // Address-specific special characters: only allow &, /, and ,
+    if (type === 'address' && !/[a-zA-Z0-9\s&,\/]/.test(key)) {
+      e.preventDefault();
+    }
+  
+    // Numeric check for fields that should only allow numbers
+    if (type === 'numeric' && !/^[0-9]$/.test(key)) {
+      e.preventDefault();
+    }
+  
+    // Prevent spaces (if any additional validation is needed)
+    if (type === 'whitespace' && key === ' ') {
+      e.preventDefault();
+    }
+  };
+  
+  // Capitalize the first letter of each word expect email
+  const handleInputChange = (e, fieldName) => {
+    let value = e.target.value.trimStart().replace(/ {2,}/g, ' ');  // Remove leading spaces and extra spaces
+    
+    if (fieldName !== "email") {
+      value = value.replace(/\b\w/g, (char) => char.toUpperCase());  // Capitalize first letter after space
+    }
+  
+    setValue(fieldName, value);
+    trigger(fieldName);  // Trigger validation
+  };
+  
+  
   return (
     <div id="main-wrapper" data-sidebartype="mini-sidebar">
       <TopNav />
@@ -166,15 +177,15 @@ const CustomersRegistration = () => {
                           required: "Customer name is required",
                           minLength: {
                             value: 3,
-                            message: "CustomerName must be at least 3 characters long"
+                            message: "Customer Name must be at least 3 characters long"
                           },
                           maxLength: {
                             value: 60,
-                            message: "CustomerName must not exceed 60 characters."
+                            message: "Customer Name must not exceed 60 characters."
                           },
                         })}
-                        onChange={(e) => handleInputChange(e, "customerName", false)}
-                        onKeyPress={preventNumbers}
+                        onChange={(e) => handleInputChange(e, "customerName")}
+                        onKeyPress={(e) => preventInvalidInput(e, 'alpha')}
                       />
                       {errors.customerName && <p className='errorsMsg '>{errors.customerName.message}</p>}
                     </div>
@@ -185,14 +196,10 @@ const CustomersRegistration = () => {
                       <input type="email" className="form-control" id="email" name="email" placeholder="Enter mail-id"
                         {...register("email", {
                           required: "Email is Required",
-                          required: "Email is Required",
-                          validate: emailValidation, // Custom validation function
-                          onChange: async (e) => {
-                            e.target.value = e.target.value.trim(); // Trim whitespace
-                            await trigger("email"); // Trigger validation
-                          },
+                          validate: (value) => validateField(value, 'email')
                         })}
-                        onKeyPress={preventWhitespace}
+                        onChange={(e)=>handleInputChange(e,"email")}
+                        onKeyPress={(e) => preventInvalidInput(e, 'whitespace')}
                       />
                       {errors.email && <p className="errorsMsg">{errors.email.message}</p>}
                     </div>
@@ -203,25 +210,116 @@ const CustomersRegistration = () => {
                       <label htmlFor="mobileNumber" className="col-sm-4 text-left control-label col-form-label">Mobile Number</label>
                       <input type="text" className="form-control" id="mobileNumber" name="mobileNumber" placeholder="Mobile Number"
                         {...register("mobileNumber", {
-                          required: "Enter Mobile Number",
-                          pattern: {
-                            value: /^[6-9][0-9]{9}$/,
-                            message: 'Enter valid Mobile Number',
-                          },
-                          onChange: async (e) => {
-                            e.target.value = e.target.value.trim(); // Trim whitespace
-                            await trigger("mobileNumber"); // Trigger validation
-                          },
+                          required: "Enter Mobile Number", validate: (value) => validateField(value, 'mobile')
                         })}
-                        onKeyPress={(e) => {
-                          preventNonNumericCharacters(e);
-                          handlePhoneChange(e);
-                        }}
+                        onChange={(e)=>handleInputChange(e,"mobileNumber")}
+                        onKeyPress={(e) => preventInvalidInput(e, 'numeric')}
                       />
                       {errors.mobileNumber && <p className='errorsMsg'>{errors.mobileNumber.message}</p>}
                     </div>
-                    {/* Address */}
                     <div className="form-group col-md-6">
+                      <label htmlFor="state" className="col-sm-4 text-left control-label col-form-label">State</label>
+                      <input type="text" className="form-control" id="state" name="state" placeholder="Enter State"
+                        {...register("state", {
+                          required: "State Name is Required.",
+                          minLength: {
+                            value: 3,
+                            message: "State Name must be at least 3 characters long"
+                          },
+                          maxLength: {
+                            value: 60,
+                            message: "State Name must not exceed 60 digits."
+                          },
+                        })}
+                        onChange={(e) => handleInputChange(e, "state")}
+                        onKeyPress={(e) => preventInvalidInput(e, 'alpha')}
+                      />
+                      {errors.state && <p className="errorsMsg">{errors.state.message}</p>}
+                    </div>
+                  </div>
+                  {/* State */}
+                  <div className="form-row">
+                    {/* City */}
+                    <div className="form-group col-md-6">
+                      <label htmlFor="city" className="col-sm-4 text-left control-label col-form-label">City</label>
+                      <input type="text" className="form-control" name="city" id="city" placeholder="Enter City"
+                        {...register("city", {
+                          required: "City Name required.",
+                          minLength: {
+                            value: 3,
+                            message: "City Name must be at least 3 characters long"
+                          },
+                          maxLength: {
+                            value: 60,
+                            message: "City Name must not exceed 60 digits."
+                          },
+                        })}
+                        onChange={(e) => handleInputChange(e, "city")}
+                        onKeyPress={(e) => preventInvalidInput(e, 'alpha')}
+                      />
+                      {errors.city && <p className="errorsMsg">{errors.city.message}</p>}
+                    </div>
+                    <div className="form-group col-md-6">
+                      <label htmlFor="pincode" className="col-sm-4 text-left control-label col-form-label">Pin Code</label>
+                      <input type="text" className="form-control" id="pinCode" name="pinCode" placeholder="Enter Pin"
+                        {...register("pinCode", {
+                          required: "Enter PinCode.",
+                          validate: (value) => validateField(value, 'pincode'),
+                        })}
+                        onChange={(e) => handleInputChange(e, "pinCode")}
+                        onKeyPress={(e) => preventInvalidInput(e, 'numeric')}
+                      />
+                      {errors.pinCode && <p className="errorsMsg">{errors.pinCode.message}</p>}
+                    </div>
+                  </div>
+                  {/* Pin Code */}
+                  <div className="form-row">
+                    {/* GST Number (only for GST type) */}
+                    {show === "gst" && (
+                      <div className="form-group col-md-6">
+                        <label htmlFor="gst" className="col-sm-4 text-left control-label col-form-label">Gst No</label>
+                        <input type="text" className="form-control" id="gstNo" name="gstNo" placeholder="Enter Gst Number"
+                          {...register("gstNo", {
+                            required: "Enter GST Number", validate: (value) => validateField(value, 'gst'),
+                            maxLength:{
+                              value:5,
+                              message:"GST Number should be 15 characters long"
+                            }
+                          })}
+                          onChange={(e) => handleInputChange(e, "gstNo")}
+                          onKeyPress={(e) => preventInvalidInput(e, 'alpha')}
+                          onInput={(e) => {
+                            e.target.value = e.target.value.toUpperCase(); // Convert to uppercase
+                          }}
+                        />
+                        {errors.gstNo && <p className="errorsMsg">{errors.gstNo.message}</p>}
+                      </div>
+                    )}
+                    <div className="form-group col-md-6">
+                      <label htmlFor="stateCode" className="col-sm-4 text-left control-label col-form-label">State Code</label>
+                      <input type="text" className="form-control" id="stateCode" name="stateCode" placeholder="Enter Pin"
+                        {...register("stateCode", {
+                          required: "Enter State Code.",
+                          minLength: {
+                            value: 2,
+                            message: "State Code must be exactly 2 digits. "
+                          },
+                          maxLength: {
+                            value: 2,
+                            message: "State Code must not exceed 2 digits."
+                          },
+                          validate: (value) => validateField(value, 'stateCode')
+                        })}
+                        onChange={(e) => handleInputChange(e, "stateCode")}
+                        onKeyPress={(e) => preventInvalidInput(e, 'numeric')}
+                      />
+                      {errors.stateCode && <p className="errorsMsg">{errors.stateCode.message}</p>}
+                    </div>
+
+                  </div>
+                  {/* State Code */}
+                  <div className="form-row">
+                  <div className="form-group col-md-6">
                       <label htmlFor="address" className="col-sm-4 text-left control-label col-form-label">Address</label>
                       <textarea className="form-control" id="address" name="address"
                         {...register("address", {
@@ -231,150 +329,14 @@ const CustomersRegistration = () => {
                             message: 'Address must be at most 250 characters long'
                           }
                         })}
-                        onChange={(e) => handleInputChange(e, "address", true)}
+                        onChange={(e) => handleInputChange(e, "address")}
+                        onKeyPress={(e) => preventInvalidInput(e, 'address')}
                       />
                       {errors.address && <p className='errorsMsg'>{errors.address.message}</p>}
                     </div>
                   </div>
-                  {/* State */}
-                  <div className="form-row">
-                    <div className="form-group col-md-6">
-                      <label htmlFor="state" className="col-sm-4 text-left control-label col-form-label">State</label>
-                      <input type="text" className="form-control" id="state" name="state" placeholder="Enter State"
-                        {...register("state", {
-                          required: "State Name is Required.",
-                          minLength: {
-                            value: 3,
-                            message: "StateName must be at least 3 characters long"
-                          },
-                          maxLength: {
-                            value: 60,
-                            message: "StateName must not exceed 60 digits."
-                          },
-                        })}
-                        onChange={(e) => handleInputChange(e, "state", false)}
-                        onKeyPress={preventNumbers}
-                      />
-                      {errors.state && <p className="errorsMsg">{errors.state.message}</p>}
-                    </div>
-                    {/* City */}
-                    <div className="form-group col-md-6">
-                      <label htmlFor="city" className="col-sm-4 text-left control-label col-form-label">City</label>
-                      <input type="text" className="form-control" name="city" id="city" placeholder="Enter City"
-                        {...register("city", {
-                          required: "City name required.",
-                          minLength: {
-                            value: 3,
-                            message: "CityName must be at least 3 characters long"
-                          },
-                          maxLength: {
-                            value: 60,
-                            message: "CityName must not exceed 60 digits."
-                          },
-                        })}
-                        onChange={(e) => handleInputChange(e, "city", false)}
-                        onKeyPress={preventNumbers}
-
-                      />
-                      {errors.city && <p className="errorsMsg">{errors.city.message}</p>}
-                    </div>
-                  </div>
-                  {/* Pin Code */}
-                  <div className="form-row">
-                    <div className="form-group col-md-6">
-                      <label htmlFor="pincode" className="col-sm-4 text-left control-label col-form-label">Pin Code</label>
-                      <input type="text" className="form-control" id="pinCode" name="pinCode" placeholder="Enter Pin"
-                        {...register("pinCode", {
-                          required: "Enter PinCode.",
-                          minLength: {
-                            value: 6,
-                            message: "PinCode must be exactly 6 digits."
-                          },
-                          maxLength: {
-                            value: 6,
-                            message: "PinCode must not exceed 6 digits."
-                          },
-                          onChange: async (e) => {
-                            e.target.value = e.target.value.trim(); // Trim whitespace
-                            await trigger("pinCode"); // Trigger validation
-                          },
-                        })}
-                        onKeyPress={preventNonNumericCharacters}
-                      />
-                      {errors.pinCode && <p className="errorsMsg">{errors.pinCode.message}</p>}
-                    </div>
-
-                    {/* GST Number (only for GST type) */}
-                    {show === "gst" && (
-                      <div className="form-group col-md-6">
-                        <label htmlFor="gst" className="col-sm-4 text-left control-label col-form-label">Gst No</label>
-                        <input type="text" className="form-control" id="gstNo" name="gstNo" placeholder="Enter Gst Number"
-                          {...register("gstNo", {
-                            required: "Enter GST Number",
-                            pattern: {
-                              value: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][0-9]{1}[Z][A-Z0-9]$/,
-                              message: "Invalid GST Number format. It should be in the format: 12ABCDE1234FZ1"
-                            },
-                            onChange: async (e) => {
-                              e.target.value = e.target.value.toUpperCase().trim(); // Trim whitespace
-                              await trigger("gstNo"); // Trigger validation
-                            },
-                          })}
-                        />
-                        {errors.gstNo && <p className="errorsMsg">{errors.gstNo.message}</p>}
-                      </div>
-                    )}
-                  </div>
-                  {/* State Code */}
-                  <div className="form-row">
-                    <div className="form-group col-md-6">
-                      <label htmlFor="stateCode" className="col-sm-4 text-left control-label col-form-label">State Code</label>
-                      <input type="text" className="form-control" id="stateCode" name="stateCode" placeholder="Enter Pin"
-                        {...register("stateCode", {
-                          required: "Enter StateCode.",
-                          minLength: {
-                            value: 2,
-                            message: "StateCode must be exactly 2 digits. "
-                          },
-                          maxLength: {
-                            value: 2,
-                            message: "StateCode must not exceed 6 digits."
-                          },
-                          onChange: async (e) => {
-                            e.target.value = e.target.value.trim(); // Trim whitespace
-                            await trigger("stateCode"); // Trigger validation
-                          },
-                        })}
-                        onKeyPress={preventNonNumericCharacters}
-                      />
-                      {errors.stateCode && <p className="errorsMsg">{errors.stateCode.message}</p>}
-                    </div>
-                  </div>
                 </div>
               </div>
-              {/* <div className="border-top">
-                <div className="card-body ">
-                  <button
-                    className="btn btn-secondary btn-md mr-2"
-                    style={{ marginLeft: "50%"}}
-                    type="button"
-                    onClick={() => reset()} // Reset form fields to initial values
-                  >
-                    Reset
-                  </button>
-                  <button
-                    className={
-                      isUpdating
-                        ? "btn btn-danger bt-lg"
-                        : "btn btn-primary bt-lg"
-                    }
-                    style={{ marginLeft: "90%" }}
-                    type="submit"
-                  >
-                    {isUpdating ? "Update Customer" : "Add Customer"}
-                  </button>
-                </div>
-              </div> */}
               <div className="border-top">
                 <div className="card-body d-flex justify-content-end">
                   <button

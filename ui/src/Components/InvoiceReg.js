@@ -109,7 +109,7 @@ const InvoiceReg = () => {
       console.log("Updated Products Info: ", updatedProductsInfo); // Debugging log
     }
   };
-  
+
   // Function to set default invoice date
   const getDefaultInvoiceDate = () => {
     return moment().format('YYYY-MM-DD');

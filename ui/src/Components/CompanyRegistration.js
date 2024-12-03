@@ -145,14 +145,6 @@ const CompanyRegistration = () => {
       e.preventDefault();
     }
   };
-
-  // const emailValidation = (value) => {
-  //   const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  //   if (!emailPattern.test(value)) {
-  //     return "Please enter a valid email address.";
-  //   }
-  //   return true;
-  // };
   const EmailValidation = (value) => {
     if (/[A-Z]/.test(value)) {
         return "Email cannot contain uppercase letters";

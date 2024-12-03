@@ -13,21 +13,26 @@ const UserRegistration = (props) => {
     const navigate = useNavigate();
     const [data, setData] = useState([])
     const [isUpdating, setIsUpdating] = useState(false);
-    const { register, handleSubmit, reset,setValue,trigger, control, formState: { errors } } = useForm();
+    const { register, handleSubmit, reset, setValue, trigger, control, formState: { errors } } = useForm();
     const location = useLocation();
 
     const [passwordShown, setPasswordShown] = useState(false);
     const togglePasswordVisiblity = () => {
         setPasswordShown(!passwordShown);
     };
-    const handlePasswordChange = (e) => {
-        setPasswordShown(e.target.value);
+     const handlePasswordChange = (e) => {
+        const passwordValue = e.target.value;
+        setPasswordShown(passwordValue); // Update the password visibility state
+
+        // Update the form's password field and trigger validation
+        setValue("password", passwordValue); 
+        trigger("password"); // Trigger validation for password
     };
     const role = [
         { value: "Admin", label: "Admin", id: "Admin" },
         { value: "Employee", label: "Employee", id: "Employee" }
     ]
-    
+
     const onSubmit = (data) => {
         delete data.role.value;
         delete data.role.label;
@@ -85,61 +90,51 @@ const UserRegistration = (props) => {
                 });
         }
     }, [])
-    const handleInputChange = async (e, triggerField, allowSpecialChars = false) => {
-        let value = e.target.value;
-        value = value.trimStart();
-        value = value.replace(/ {2,}/g, ' ');
-        if (value && value.length > 0) {
-          value = value.charAt(0).toUpperCase() + value.slice(1);
+    
+    const validateField = (value, type) => {
+        switch (type) {
+            case 'email':
+                const emailRegex = /^(?![0-9]+@)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|in|org|net|edu|gov)$/;
+                if (/[A-Z]/.test(value)) return "Email cannot contain uppercase letters";
+                return emailRegex.test(value) || "Invalid Email format";
+    
+            case 'userName':
+                return value.length >= 3 && value.length <= 60 || "User name must be between 3 and 60 characters";
+    
+            case 'password':
+                // Check for password length
+                if (value.length < 8) {
+                    return "Password must be at least 8 characters long";
+                }
+                const errors = [];
+
+                if (!/(?=.*[0-9])/.test(value)) errors.push("at least one digit");
+                if (!/(?=.*[a-z])/.test(value)) errors.push("at least one lowercase letter");
+                if (!/(?=.*[A-Z])/.test(value)) errors.push("at least one uppercase letter");
+                if (!/(?=.*\W)/.test(value)) errors.push("at least one special character");
+                if (/\s/.test(value)) errors.push("no spaces allowed");
+                // If there are any errors, return the corresponding message
+                return errors.length === 0 || `Password must contain ${errors.join(", ")}.`;
+    
+            default:
+                return true;
         }
-        value = value.replace(/(\s[a-z])/g, (match) => match.toUpperCase());
-        if (allowSpecialChars) {
-          value = value.replace(/[^a-zA-Z0-9\s\/\-,]/g, '');  // Allow /, -, and ,
-        } else {
-          value = value.replace(/[^a-zA-Z0-9\s]/g, '');  // Only allow alphanumeric characters and spaces
+    };
+    
+    const handleInputChange = (e, fieldName) => {
+        let value = e.target.value.trimStart().replace(/ {2,}/g, ' ');
+        if (fieldName !== "userEmail") {
+            value = value.replace(/\b\w/g, (char) => char.toUpperCase());
         }
-        setValue(triggerField, value);
-        await trigger(triggerField);
-      };
-      const preventNumbers = (e) => {
-        if (/[0-9]/.test(e.key)) {
-          e.preventDefault();
-        }
-      }
-      const preventSpacesInEmail = (e)=>{
-        if(e.key === ' '){
-            e.preventDefault();
-        }
-      }
-      // custom validation function for companyEmail
-  const userEmailValidation = (value) => {
-    if (/[A-Z]/.test(value)) {
-      return "Email cannot contain uppercase letters";
-    }
-    return /^[a-z]([a-z0-9._-]*[a-z0-9])?@[a-z]([a-z0-9.-]*[a-z0-9])?\.(com|in|net|gov|org|edu)$/.test(value) || "Invalid Email format.  Only .com, .in, .org, .net, .edu, .gov are allowed.";
-  };
-  const validatePassword = (value) => {
-    const errors = [];
-    if (!/(?=.*[0-9])/.test(value)) {
-        errors.push("at least one digit");
-    }
-    if (!/(?=.*[a-z])/.test(value)) {
-        errors.push("at least one lowercase letter");
-    }
-    if (!/(?=.*[A-Z])/.test(value)) {
-        errors.push("at least one uppercase letter");
-    }
-    if (!/(?=.*\W)/.test(value)) {
-        errors.push("at least one special character");
-    }
-    if (value.includes(" ")) {
-        errors.push("no spaces");
-    }
-    if (errors.length > 0) {
-        return `Password must contain ${errors.join(", ")}.`;
-    }
-    return true;
-};
+        setValue(fieldName, value);
+        trigger(fieldName);
+    };
+
+    const preventInvalidInput = (e, type) => {
+        const key = e.key;
+        if (type === 'alpha' && /[^a-zA-Z\s]/.test(key)) e.preventDefault();
+        if (type === 'whitespace' && key === ' ') e.preventDefault();
+    };
 
     return (
         <div id="main-wrapper" data-sidebartype="mini-sidebar">
@@ -167,25 +162,18 @@ const UserRegistration = (props) => {
                         <form className="form-horizontal" onSubmit={handleSubmit(onSubmit)}>
                             <div className="card">
                                 <div className="card-body">
-                                <h4 className="card-title">User Info</h4>
+                                    <h4 className="card-title">User Info</h4>
                                     <div className='form row mt-4'>
                                         <div className="form-group col-md-6">
                                             <label htmlFor="fname" className="col-sm-4 text-left control-label col-form-label">User Name</label>
                                             <input type="text" className="form-control" name="userName" id="userName" placeholder=" Enter User Name"
                                                 {...register("userName", {
-                                                    required: "UserName is required",
-                                                    minLength: {
-                                                      value: 3,
-                                                      message: "UserName must be at least 3 characters long"
-                                                    },
-                                                    maxLength: {
-                                                      value: 60,
-                                                      message: "UserName must not exceed 60 characters."
-                                                    },
-                                                  })}
-                                                  onChange={(e) => handleInputChange(e, "userName", false)}
-                                                  onKeyPress={preventNumbers}
-                                                />
+                                                    required: "User Name is required",
+                                                    validate: (value) => validateField(value, 'userName'),
+                                                })}
+                                                onChange={(e) => handleInputChange(e, "userName")}
+                                                onKeyPress={(e) => preventInvalidInput(e, 'alpha')}
+                                            />
                                             {errors.userName && (<p className='errorsMsg '>{errors.userName.message}</p>)}
 
                                         </div>
@@ -194,13 +182,10 @@ const UserRegistration = (props) => {
                                             <input type="userEmail" className="form-control" name="userEmail" id="userEmail" placeholder=" Enter User MailId"
                                                 {...register("userEmail", {
                                                     required: "Email is Required",
-                                                    validate: userEmailValidation, // Custom validation function
-                                                    onChange: async (e) => {
-                                                      e.target.value = e.target.value.trim(); // Trim whitespace
-                                                      await trigger("userEmail"); // Trigger validation
-                                                    },
+                                                    validate: (value) => validateField(value, 'email'),
                                                 })}
-                                                onKeyPress={preventSpacesInEmail}
+                                                onChange={(e) => handleInputChange(e, "userEmail")}
+                                                onKeyPress={(e) => preventInvalidInput(e, 'whitespace')}
                                             />
                                             {errors.userEmail && <p className="errorsMsg">{errors.userEmail.message}</p>}
                                         </div>
@@ -231,24 +216,13 @@ const UserRegistration = (props) => {
                                             <label htmlFor="fname" className="col-sm-4 text-left control-label col-form-label">Password</label>
                                             <div className="input-group">
                                                 <input className="form-control" name="password" id="password" placeholder="Enter Password" autoComplete='off'
-                                                    onChange={handlePasswordChange}
-                                                    type={passwordShown ? "text" : "password"}
                                                     {...register("password", {
                                                         required: "Enter Password",
-                                                        minLength: {
-                                                            value:8,
-                                                            message:"Password must be at least 8 characters long"
-                                                        },
-                                                        maxLength:{
-                                                            value:16,
-                                                            message:"Password must be at most 16 characters long"
-                                                        },
-                                                        onChange: async (e) => {
-                                                            e.target.value = e.target.value.trim(); // Trim whitespace
-                                                            await trigger("password"); // Trigger validation
-                                                          },
-                                                          validate:validatePassword
+                                                        validate: (value) => validateField(value, 'password'),
                                                     })}
+                                                    onChange={handlePasswordChange}
+                                                    type={passwordShown ? "text" : "password"}
+                                                    onKeyPress={(e) => preventInvalidInput(e, 'whitespace')}
                                                 />
                                                 <i onClick={togglePasswordVisiblity}> {passwordShown ? (
                                                     <Eye size={20} />

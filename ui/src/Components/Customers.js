@@ -7,7 +7,6 @@ import { useNavigate, Link } from 'react-router-dom'
 import DataTable from 'react-data-table-component'
 import { Slide, toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
- // Import the thunk
 import SideNav from '../Pages/SideNav'
 import { CustomerDeleteApiById } from '../Axios'
 import { fetchCustomers } from '../redux/customerSlice'
@@ -106,7 +105,7 @@ const Customers = () => {
     //     return <div>Error: {error}</div>;
     // }
     return (
-        <div id="main-wrapper" data-scustomerIdebartype="mini-scustomerIdebar">
+        <div id="main-wrapper"  data-sidebartype="mini-sidebar">
             <TopNav />
             <SideNav />
             <div className="page-breadcrumb" style={{ wcustomerIdth: "78%", marginLeft: "280px", marginTop: "25px" }}>
