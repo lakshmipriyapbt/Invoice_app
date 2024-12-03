@@ -3,10 +3,10 @@ import './App.css';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Main from './Pages/Main';
 import Dash from './Pages/Dash';
-import Products from './Components/Products'
 import ProductViews from './Components/ProductsViews';
 import Customers from './Components/Customers';
 import CustomersRegistration from './Components/CustomersRegistration';
+import Products from './Components/Products'
 import UserRegistration from './Components/UsersRegistration';
 import Usersview from './Components/UsersViews';
 import InvoicePdf from './Components/InvoicePdf';

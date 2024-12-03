@@ -40,7 +40,6 @@ export const loginApi = (data) => {
             console.log(error);
         });
 };
-
 export const CompanyloginApi = (data) => {
     return axios.post(`${Login_URL}/company/login`, data)
         .then(response => {
@@ -220,7 +219,6 @@ export const ProductsGetApi = async () => {
     return axiosInstance.get("/product/all");
 };
 
-
 export const ProductPostApi = (data) => {
     return axiosInstance.post('/product', data, {
         headers: {
@@ -285,7 +283,6 @@ export const UserPostApi = (data) => {
         }
     });
 }
-
 export const UserGetApiById = (userId) => {
     const company = localStorage.getItem("companyName")
     return axiosInstance.get(`/user/${userId}`)
@@ -297,7 +294,6 @@ export const UserGetApiById = (userId) => {
             throw error;
         });
 }
-
 export const UserDeleteApiById = (userId) => {
     const company = localStorage.getItem("companyName")
     return axiosInstance.delete(`/user/${userId}`)
@@ -309,7 +305,6 @@ export const UserDeleteApiById = (userId) => {
             throw error;
         });
 }
-
 export const UserPatchApiById = (userId, data) => {
     return axiosInstance.patch(`/user/${userId}`, data)
 };

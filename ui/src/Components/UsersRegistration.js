@@ -13,20 +13,26 @@ const UserRegistration = (props) => {
     const navigate = useNavigate();
     const [data, setData] = useState([])
     const [isUpdating, setIsUpdating] = useState(false);
-    const { register, handleSubmit, reset, control, formState: { errors } } = useForm();
+    const { register, handleSubmit, reset, setValue, trigger, control, formState: { errors } } = useForm();
     const location = useLocation();
 
     const [passwordShown, setPasswordShown] = useState(false);
     const togglePasswordVisiblity = () => {
         setPasswordShown(!passwordShown);
     };
-    const handlePasswordChange = (e) => {
-        setPasswordShown(e.target.value);
+     const handlePasswordChange = (e) => {
+        const passwordValue = e.target.value;
+        setPasswordShown(passwordValue); // Update the password visibility state
+
+        // Update the form's password field and trigger validation
+        setValue("password", passwordValue); 
+        trigger("password"); // Trigger validation for password
     };
     const role = [
         { value: "Admin", label: "Admin", id: "Admin" },
         { value: "Employee", label: "Employee", id: "Employee" }
     ]
+
     const onSubmit = (data) => {
         delete data.role.value;
         delete data.role.label;
@@ -84,6 +90,51 @@ const UserRegistration = (props) => {
                 });
         }
     }, [])
+    
+    const validateField = (value, type) => {
+        switch (type) {
+            case 'email':
+                const emailRegex = /^(?![0-9]+@)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|in|org|net|edu|gov)$/;
+                if (/[A-Z]/.test(value)) return "Email cannot contain uppercase letters";
+                return emailRegex.test(value) || "Invalid Email format";
+    
+            case 'userName':
+                return value.length >= 3 && value.length <= 60 || "User name must be between 3 and 60 characters";
+    
+            case 'password':
+                // Check for password length
+                if (value.length < 8) {
+                    return "Password must be at least 8 characters long";
+                }
+                const errors = [];
+
+                if (!/(?=.*[0-9])/.test(value)) errors.push("at least one digit");
+                if (!/(?=.*[a-z])/.test(value)) errors.push("at least one lowercase letter");
+                if (!/(?=.*[A-Z])/.test(value)) errors.push("at least one uppercase letter");
+                if (!/(?=.*\W)/.test(value)) errors.push("at least one special character");
+                if (/\s/.test(value)) errors.push("no spaces allowed");
+                // If there are any errors, return the corresponding message
+                return errors.length === 0 || `Password must contain ${errors.join(", ")}.`;
+    
+            default:
+                return true;
+        }
+    };
+    
+    const handleInputChange = (e, fieldName) => {
+        let value = e.target.value.trimStart().replace(/ {2,}/g, ' ');
+        if (fieldName !== "userEmail") {
+            value = value.replace(/\b\w/g, (char) => char.toUpperCase());
+        }
+        setValue(fieldName, value);
+        trigger(fieldName);
+    };
+
+    const preventInvalidInput = (e, type) => {
+        const key = e.key;
+        if (type === 'alpha' && /[^a-zA-Z\s]/.test(key)) e.preventDefault();
+        if (type === 'whitespace' && key === ' ') e.preventDefault();
+    };
 
     return (
         <div id="main-wrapper" data-sidebartype="mini-sidebar">
@@ -111,30 +162,32 @@ const UserRegistration = (props) => {
                         <form className="form-horizontal" onSubmit={handleSubmit(onSubmit)}>
                             <div className="card">
                                 <div className="card-body">
-                                <h4 className="card-title">User Info</h4>
+                                    <h4 className="card-title">User Info</h4>
                                     <div className='form row mt-4'>
                                         <div className="form-group col-md-6">
                                             <label htmlFor="fname" className="col-sm-4 text-left control-label col-form-label">User Name</label>
-                                            <input type="text" className="form-control" name="username" id="username" placeholder=" Enter User Name"
-                                                {...register("username", {
-                                                    required: "User Name is Required.",
+                                            <input type="text" className="form-control" name="userName" id="userName" placeholder=" Enter User Name"
+                                                {...register("userName", {
+                                                    required: "User Name is required",
+                                                    validate: (value) => validateField(value, 'userName'),
                                                 })}
+                                                onChange={(e) => handleInputChange(e, "userName")}
+                                                onKeyPress={(e) => preventInvalidInput(e, 'alpha')}
                                             />
-                                            {errors.username && (<p className='errorsMsg '>{errors.username.message}</p>)}
+                                            {errors.userName && (<p className='errorsMsg '>{errors.userName.message}</p>)}
 
                                         </div>
                                         <div className="form-group col-md-6">
                                             <label htmlFor="fname" className="col-sm-4 text-left control-label col-form-label">User Email</label>
-                                            <input type="useremail" className="form-control" name="useremail" id="useremail" placeholder=" Enter User MailId"
-                                                {...register("useremail", {
-                                                    required: "Enter userEmail",
-                                                    pattern: {
-                                                        value: /^[^@ ]+@[^@ ]+\.[^@ .]{2,}$/,
-                                                        message: "Invalid Email"
-                                                    }
+                                            <input type="userEmail" className="form-control" name="userEmail" id="userEmail" placeholder=" Enter User MailId"
+                                                {...register("userEmail", {
+                                                    required: "Email is Required",
+                                                    validate: (value) => validateField(value, 'email'),
                                                 })}
+                                                onChange={(e) => handleInputChange(e, "userEmail")}
+                                                onKeyPress={(e) => preventInvalidInput(e, 'whitespace')}
                                             />
-                                            {errors.useremail && <p className="errorsMsg">{errors.useremail.message}</p>}
+                                            {errors.userEmail && <p className="errorsMsg">{errors.userEmail.message}</p>}
                                         </div>
                                     </div>
                                     <div className='form row mt-4'>
@@ -163,15 +216,13 @@ const UserRegistration = (props) => {
                                             <label htmlFor="fname" className="col-sm-4 text-left control-label col-form-label">Password</label>
                                             <div className="input-group">
                                                 <input className="form-control" name="password" id="password" placeholder="Enter Password" autoComplete='off'
-                                                    onChange={handlePasswordChange}
-                                                    type={passwordShown ? "text" : "password"}
                                                     {...register("password", {
                                                         required: "Enter Password",
-                                                        pattern: {
-                                                            value: /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.* ).{8,16}$/,
-                                                            message: "Invalid Password"
-                                                        }
+                                                        validate: (value) => validateField(value, 'password'),
                                                     })}
+                                                    onChange={handlePasswordChange}
+                                                    type={passwordShown ? "text" : "password"}
+                                                    onKeyPress={(e) => preventInvalidInput(e, 'whitespace')}
                                                 />
                                                 <i onClick={togglePasswordVisiblity}> {passwordShown ? (
                                                     <Eye size={20} />
@@ -184,17 +235,27 @@ const UserRegistration = (props) => {
                                     </div>
                                 </div>
                             </div>
-                            <button
-                                className={
-                                    isUpdating
-                                        ? "btn btn-danger bt-lg"
-                                        : "btn btn-primary bt-lg"
-                                }
-                                style={{ marginLeft: "90%" }}
-                                type="submit"
-                            >
-                                {isUpdating ? "Update User" : "Add User"}
-                            </button>
+                            <div className="border-top">
+                                <div className="card-body d-flex justify-content-end">
+                                    <button
+                                        className="btn btn-secondary btn-md mr-2"
+                                        type="button"
+                                        onClick={() => reset()} // Reset form fields to initial values
+                                    >
+                                        Reset
+                                    </button>
+                                    <button
+                                        className={
+                                            isUpdating
+                                                ? "btn btn-danger bt-lg"
+                                                : "btn btn-primary bt-lg"
+                                        }
+                                        type="submit"
+                                    >
+                                        {isUpdating ? "Update User" : "Add User"}
+                                    </button>
+                                </div>
+                            </div>
                         </form>
                     </div>
                 </div>

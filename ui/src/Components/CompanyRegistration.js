@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { CompanyRegistrationApi, companyUpdateByIdApi, companyViewByIdApi } from '../Axios';
@@ -9,13 +9,14 @@ import Footer from '../Pages/Footer';
 import { Eye, EyeSlash } from 'react-bootstrap-icons';
 
 const CompanyRegistration = () => {
-  const { register, handleSubmit, formState: { errors }, control, trigger, setValue } = useForm();
+  const { register, handleSubmit, formState: { errors }, control, trigger, setValue,reset } = useForm();
   const [selectedFile, setSelectedFile] = useState(null);
   const [companyId, setCompanyId] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [passwordShown, setPasswordShown] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const fileInputRef = useRef(); // To reference the file input
   
   const togglePasswordVisiblity = () => {
     setPasswordShown(!passwordShown);
@@ -34,15 +35,15 @@ const CompanyRegistration = () => {
           const companyData = response.data;
           setIsUpdating(true);
           // Prepopulate the form with the fetched data
-          setValue('username', companyData.username);
-          setValue('companyemail', companyData.companyemail);
+          setValue('userName', companyData.userName);
+          setValue('companyEmail', companyData.companyEmail);
           setValue('phone', companyData.phone);
           setValue('companyName', companyData.companyName);
           setValue('serviceName', companyData.serviceName);
           setValue('pan', companyData.pan);
           setValue('gstNumber', companyData.gstNumber);
           setValue('gender', companyData.gender);
-          setValue('bankAccount', companyData.bankAccount);
+          setValue('accountNumber', companyData.accountNumber);
           setValue('bankName', companyData.bankName);
           setValue('branch', companyData.branch);
           setValue('ifscCode', companyData.ifscCode);
@@ -66,8 +67,8 @@ const CompanyRegistration = () => {
 
   const onSubmit = async (data) => {
     const formData = new FormData();
-    formData.append("username", data.username);
-    formData.append("companyemail", data.companyemail);
+    formData.append("userName", data.userName);
+    formData.append("companyEmail", data.companyEmail);
     formData.append("password", data.password);
     formData.append("phone", data.phone);
     formData.append("companyName", data.companyName);
@@ -83,7 +84,7 @@ const CompanyRegistration = () => {
       console.log("No file selected");  // Handle case when no file is selected
     }
 
-    formData.append("bankAccount", data.bankAccount);
+    formData.append("accountNumber", data.accountNumber);
     formData.append("bankName", data.bankName);
     formData.append("branch", data.branch);
     formData.append("ifscCode", data.ifscCode);
@@ -144,14 +145,12 @@ const CompanyRegistration = () => {
       e.preventDefault();
     }
   };
-
-  const emailValidation = (value) => {
-    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!emailPattern.test(value)) {
-      return "Please enter a valid email address.";
+  const EmailValidation = (value) => {
+    if (/[A-Z]/.test(value)) {
+        return "Email cannot contain uppercase letters";
     }
-    return true;
-  };
+    return /^[a-z]([a-z0-9._-]*[a-z0-9])?@[a-z]([a-z0-9.-]*[a-z0-9])?\.(com|in|net|gov|org|edu)$/.test(value) || "Invalid Email format";
+};
 
   const handleInputChange = async (e, triggerField, allowSpecialChars = false) => {
     let value = e.target.value;
@@ -203,35 +202,38 @@ const CompanyRegistration = () => {
               <div className="card">
                 <div className="card-body">
                 <h4 className="card-title">Company Info</h4>
-                  <div className='form row mt-4'>
+                <div className='form row'>
                     <div className="form-group col-md-6">
                       <label htmlFor="fname" className="col-sm-4 text-left control-label col-form-label">User Name</label>
-                      <input type="text" className="form-control" name="username" id="username" placeholder="Enter User Name Name"
-                        {...register("username", {
+                      <div className="input-group">
+                      <input type="text" className="form-control" name="userName" id="userName" placeholder="Enter User Name Name"
+                        {...register("userName", {
                           required: "User Name is Required",
                           minLength: {
                             value: 3,
-                            message: "Username must be at least 3 characters long"
+                            message: "userName must be at least 3 characters long"
                           },
                           maxLength: {
                             value: 60,
-                            message: "Username must not exceed 60 characters."
+                            message: "userName must not exceed 60 characters."
                           },
                         })}
-                        onChange={(e) => handleInputChange(e, "username")}
+                        onChange={(e) => handleInputChange(e, "userName")}
                         onKeyPress={preventNonAlphabets}
                       />
-                      {errors.username && <p className='errorsMsg '>{errors.username.message}</p>}
+                      </div>
+                      {errors.userName && <p className='errorsMsg '>{errors.userName.message}</p>}
                     </div>
                     <div className="form-group col-md-6">
-                      <label htmlFor="companyemail" className="col-sm-4 text-left control-label col-form-label">Email</label>
-                      <input type="email" className="form-control" name="companyemail" id="companyemail" placeholder="Enter Email Id"
-                        {...register("companyemail", {
+                      <label htmlFor="companyEmail" className="col-sm-4 text-left control-label col-form-label">Email</label>
+                      <div className="input-group">
+                      <input type="email" className="form-control" name="companyEmail" id="companyEmail" placeholder="Enter Email Id"
+                        {...register("companyEmail", {
                           required: "Email is Required",
-                          validate: emailValidation, // Custom validation function
+                          validate: EmailValidation, // Custom validation function
                           onChange: async (e) => {
                             e.target.value = e.target.value.trim(); // Trim whitespace
-                            await trigger("companyemail"); // Trigger validation
+                            await trigger("companyEmail"); // Trigger validation
                           },
                         })}
                         onKeyPress={(e) => {
@@ -240,7 +242,8 @@ const CompanyRegistration = () => {
                           }
                         }}
                       />
-                      {errors.companyemail && <p className="errorsMsg">{errors.companyemail.message}</p>}
+                      </div>
+                      {errors.companyEmail && <p className="errorsMsg">{errors.companyEmail.message}</p>}
                     </div>
                   </div>
                   <div className='form row'>
@@ -314,6 +317,14 @@ const CompanyRegistration = () => {
                       <input type="text" className="form-control" name="companyName" id="companyName" placeholder="Enter Company Name"
                         {...register("companyName", {
                           required: "Company Name is Required",
+                          minLength:{
+                            value:3,
+                            message:"Company Name must be at least 3 characters long"
+                          },
+                          maxLength:{
+                            value:60,
+                            message:"Company Name must not exceed 60 characters."
+                          },
                         })}
                         onChange={(e) => handleInputChange(e, "companyName", false)}
                         onKeyPress={preventNonAlphabets}
@@ -325,6 +336,14 @@ const CompanyRegistration = () => {
                       <input type="text" className="form-control" name="serviceName" id="serviceName" placeholder="Enter Service Name"
                         {...register("serviceName", {
                           required: "Service Name is Required",
+                          minLength:{
+                            value:3,
+                            message:"Service Name must be at least 3 characters long"
+                          },
+                          maxLength:{
+                            value:60,
+                            message:"Service Name must not exceed 60 characters."
+                          },
                           onChange: async (e) => {
                             const trimmedValue = e.target.value.trimStart(); // Trim whitespace
                             e.target.value = trimmedValue.replace(/ {2,}/g, ' ');
@@ -417,12 +436,14 @@ const CompanyRegistration = () => {
                         <Controller
                           name="stampAndSign"
                           control={control}
+                          defaultValue={selectedFile || null} // Set the default value to the existing file
                           render={({ field }) => (
                             <div>
                               <input
                                 type="file"
                                 className="custom-file-input"
                                 id="stampAndSign"
+                                ref={fileInputRef} // Reference for clearing the input
                                 onChange={(e) => {
                                   const file = e.target.files[0];
                                   if (file) {
@@ -431,6 +452,8 @@ const CompanyRegistration = () => {
                                     field.onChange(fileName);
                                     console.log("Selected file:", fileName);
                                   } else {
+                                    setSelectedFile(null); // Clear state if no file is selected
+                                    field.onChange(null); // Pass null to the Controller's field
                                     console.log('No file selected');
                                   }
                                 }}
@@ -440,7 +463,9 @@ const CompanyRegistration = () => {
                               </label>
                             </div>
                           )}
-                          rules={{ required: "Upload a Stamp" }}
+                          rules={{
+                            required: selectedFile ? false : "Please upload a stamp and signature", // Validation only if no file exists
+                          }}
                         />
                         {errors.stampAndSign && <p className="errorsMsg">{errors.stampAndSign.message}</p>}
                       </div>
@@ -448,15 +473,15 @@ const CompanyRegistration = () => {
                   </div>
                 </div>
               </div>
-
+    
               <div className="card">
                 <div className="card-body">
                   <h3 className="card-title " style={{ marginLeft: "10px", marginTop: "15px" }}>Bank Details</h3>
                   <div className='form-row mt-4'>
                     <div className="form-group col-md-6">
-                      <label htmlFor="bankaccount" className="col-sm-4 text-left control-label col-form-label">Bank Account</label>
-                      <input type="text" className="form-control" name="bankAccount" id="bankAccount" placeholder="Enter Bank Account Number"
-                        {...register("bankAccount", {
+                      <label htmlFor="accountNumber" className="col-sm-4 text-left control-label col-form-label">Bank Account</label>
+                      <input type="text" className="form-control" name="accountNumber" id="accountNumber" placeholder="Enter Bank Account Number"
+                        {...register("accountNumber", {
                           required: "Account Number is Required",
                           minLength: {
                             value: 9,
@@ -468,18 +493,26 @@ const CompanyRegistration = () => {
                           },
                           onChange: async (e) => {
                             e.target.value = e.target.value.trim(); // Trim whitespace
-                            await trigger("bankAccount"); // Trigger validation
+                            await trigger("accountNumber"); // Trigger validation
                           },
                         })}
                         onKeyPress={preventNonNumericCharacters}
                       />
-                      {errors.bankAccount && (<p className='errorsMsg'>{errors.bankAccount.message}</p>)}
+                      {errors.accountNumber && (<p className='errorsMsg'>{errors.accountNumber.message}</p>)}
                     </div>
                     <div className="form-group col-md-6">
                       <label htmlFor="bankname" className="col-sm-4 text-left control-label col-form-label">Bank Name</label>
                       <input type="text" className="form-control" name="bankName" id="bankName" placeholder="Enter Bank Name"
                         {...register("bankName", {
                           required: "Bank Name is Required",
+                          minLength:{
+                            value:3,
+                            message:"Bank Name must be at least 3 characters long"
+                          },
+                          maxLength:{
+                            value:60,
+                            message:"Bank Name must not exceed 60 characters."
+                          }
                         })}
                         onChange={(e) => handleInputChange(e, "bankName", false)}
                         onKeyPress={preventNonAlphabets}
@@ -493,6 +526,14 @@ const CompanyRegistration = () => {
                       <input type="text" className="form-control" name="branch" id="branch" placeholder="Enter Branch Name"
                         {...register("branch", {
                           required: "Branch Name is Required",
+                          minLength:{
+                            value:3,
+                            message:"Branch Name must be at least 3 characters long"
+                          },
+                          maxLength:{
+                            value:60,
+                            message:"Branch Name must not exceed 60 characters."
+                          }
                         })}
                         onChange={(e) => handleInputChange(e, "branch", false)}
                         onKeyPress={preventNonAlphabets}
@@ -518,7 +559,7 @@ const CompanyRegistration = () => {
                           },
                           onChange: async (e) => {
                             e.target.value = e.target.value.trim(); // trim validations
-                            await trigger("ifsc");  // trigger validation
+                            await trigger("ifscCode");  // trigger validation
                           }
                         })}
                       />
@@ -531,6 +572,14 @@ const CompanyRegistration = () => {
                       <input type="text" className="form-control" name="state" id="state" placeholder="Enter State"
                         {...register("state", {
                           required: "State Name is Required",
+                          minLength:{
+                            value:3,
+                            message:"State Name must be at least 3 characters long"
+                          },
+                          maxLength:{
+                            value:60,
+                            message:"State Name must not exceed 60 characters."
+                          }
                         })}
                         onChange={(e) => handleInputChange(e, "state", false)}
                         onKeyPress={preventNonAlphabets}
@@ -542,6 +591,10 @@ const CompanyRegistration = () => {
                       < textarea rows="3" cols="5" className="form-control" name="address" id="address" placeholder="Enter Address"
                         {...register("address", {
                           required: "Address is Required",
+                          minLength:{
+                            value:3,
+                            message:"Address must be at least 3 characters long"
+                          },
                           maxLength: {
                             value: 250,
                             message: 'Address must be at most 250 characters long'
@@ -554,7 +607,7 @@ const CompanyRegistration = () => {
                   </div>
                 </div>
               </div>
-              <div className="border-top">
+              {/* <div className="border-top">
                 <div className="card-body">
                   <button
                     className={
@@ -563,6 +616,31 @@ const CompanyRegistration = () => {
                         : "btn btn-primary bt-lg"
                     }
                     style={{ marginLeft: "85%" }}
+                    type="submit"
+                  >
+                    {isUpdating ? "Update Company" : "Add Company"}
+                  </button>
+                </div>
+              </div> */}
+              <div className="border-top">
+                <div className="card-body d-flex justify-content-end">
+                  <button
+                    className="btn btn-secondary btn-md mr-2"
+                    type="button"
+                    onClick={() => {
+                      reset() // Reset form fields to initial values
+                      setSelectedFile(null); // Clear selected file state
+                      if (fileInputRef.current) fileInputRef.current.value = ""; // Clear file input field
+                    }}
+                  >
+                    Reset
+                  </button>
+                  <button
+                    className={
+                      isUpdating
+                        ? "btn btn-danger bt-lg"
+                        : "btn btn-primary bt-lg"
+                    }
                     type="submit"
                   >
                     {isUpdating ? "Update Company" : "Add Company"}
@@ -578,3 +656,5 @@ const CompanyRegistration = () => {
   )
 }
 export default CompanyRegistration;
+
+

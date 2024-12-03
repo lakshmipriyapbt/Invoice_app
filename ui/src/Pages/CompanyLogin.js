@@ -16,7 +16,7 @@ const CompanyLogin = () => {
     reset,
   } = useForm({
     defaultValues: {
-      companyemail: "",
+      companyEmail: "",
       password: "",
       otp: "",
     },
@@ -65,7 +65,7 @@ const CompanyLogin = () => {
 
   const sendOtp = (data) => {
     const payload = {
-      companyemail: data.companyemail,
+      companyEmail: data.companyEmail,
       password: data.password,
     };
 
@@ -104,7 +104,7 @@ const CompanyLogin = () => {
 
   const verifyOtpAndCompanyLogin = (data) => {
     const payload = {
-      companyemail: data.companyemail,
+      companyEmail: data.companyEmail,
       otp: data.otp,
       company: company,
     };
@@ -235,14 +235,14 @@ const CompanyLogin = () => {
                     <label style={{ color: "orange" }}>Email Id</label>
                   </div>
                   <input class="form-control"
-                    type="companyemail"
+                    type="companyEmail"
                     name="email"
                     placeholder="Email Id"
                     autoComplete="off"
                     onInput={toInputLowerCase}
                     onKeyDown={handleEmailChange}
                     readOnly={otpSent}
-                    {...register("companyemail", {
+                    {...register("companyEmail", {
                       required: "Email Id is Required.",
                       pattern: {
                         value: /^(?![0-9]+@)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|in|org|net|edu|gov)$/,
@@ -250,7 +250,7 @@ const CompanyLogin = () => {
                       },
                     })}
                   />
-                  {errors.companyemail && <p className="errorsMsg">{errors.companyemail.message}</p>}
+                  {errors.companyEmail && <p className="errorsMsg">{errors.companyEmail.message}</p>}
                 </div>
               </div>
               {!otpSent && (

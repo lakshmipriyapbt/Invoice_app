@@ -9,7 +9,7 @@ import { Slide, toast } from 'react-toastify';
 import { ProdcutPutApiById, ProductGetApiById, ProductPostApi } from "../Axios";
 
 const Products = () => {
-    const { register, handleSubmit, reset, formState: { errors } } = useForm();
+    const { register, handleSubmit, reset, trigger, setValue, formState: { errors } } = useForm();
     const [productData, setProductData] = useState(null);
     const [isUpdating, setIsUpdating] = useState(false);
     const navigate = useNavigate();
@@ -74,6 +74,83 @@ const Products = () => {
         }
     }, [productData, reset]);
 
+    const validateField = (value, type) => {
+        switch (type) {
+
+            case 'productName':
+                return value.length >= 3 && value.length <= 60 || "Product name must be between 3 and 60 characters";
+
+            case 'productCost':
+                return /^[0-9]{1,8}(\.[0-9]{1,2})?$/.test(value) || "Product cost must be a valid number (max 8 digits before decimal, e.g., 99999999.99)";
+
+            case 'hsnNo':
+                return /^[0-9]{4}$/.test(value) || "HSN number must be exactly 4 digits";
+
+            case 'gst':
+                return /^[0-9]{1,2}(\.[0-9]{1,2})?$/.test(value) && parseFloat(value) < 100 || "GST must be a valid number less than 100%";
+            default:
+                return true;
+        }
+    };
+    const preventInvalidInput = (e, type) => {
+        const key = e.key;
+        const inputValue = e.target.value;
+    
+        if (type === 'alpha' && /[^a-zA-Z\s]/.test(key)) {
+            e.preventDefault();
+        }
+        // Numeric check for fields that should only allow numbers
+        if (type === 'numeric' && !/^[0-9]$/.test(key)) {
+            e.preventDefault();
+        }
+        if (type === 'decimal') {
+            // Prevent invalid decimal input
+            if (!/^[0-9.]$/.test(key)) {
+                e.preventDefault();
+            }
+            // Prevent multiple dots
+            if (key === '.' && inputValue.includes('.')) {
+                e.preventDefault();
+            }
+        }
+        // Prevent spaces (if any additional validation is needed)
+        if (type === 'whitespace' && key === ' ') {
+            e.preventDefault();
+        }
+    };
+    const handleInputChange = (e, fieldName) => {
+        let value = e.target.value;
+    
+        // Remove leading and trailing spaces
+        value = value.trimStart().replace(/ {2,}/g, ' ');
+    
+        if (fieldName === 'productName') {
+            // Capitalize the first letter of each word
+            value = value.replace(/\b\w/g, (char) => char.toUpperCase());
+        } else if (fieldName === 'productCost' || fieldName === 'gst') {
+            // Ensure only numeric or decimal input
+            value = value.replace(/[^0-9.]/g, '');
+    
+            // Disallow multiple leading zeros unless followed by a decimal
+            if (value.startsWith('0') && value.length > 1 && value[1] !== '.') {
+                value = value.replace(/^0+/, '0'); // Retain only a single leading zero
+            }
+    
+            // Prevent multiple decimals
+            const parts = value.split('.');
+            if (parts.length > 2) {
+                value = parts[0] + '.' + parts.slice(1).join('');
+            }
+        } else if (fieldName === 'hsnNo') {
+            // Ensure only numeric input for HSN
+            value = value.replace(/[^0-9]/g, '');
+        }
+    
+        // Set value and trigger validation
+        setValue(fieldName, value);
+        trigger(fieldName); // Validate the updated field
+    };
+    
     return (
         <div id="main-wrapper" data-sidebartype="mini-sidebar">
             <TopNav />
@@ -112,7 +189,12 @@ const Products = () => {
                                                 name="productName"
                                                 id="productName"
                                                 placeholder="Enter Product Name Here"
-                                                {...register("productName", { required: 'Enter Product Name' })}
+                                                {...register("productName", {
+                                                    required: 'Product Name is required.',
+                                                    validate: (value) => validateField(value, 'productName')
+                                                })}
+                                                onChange={(e) => handleInputChange(e, "productName")}
+                                                onKeyPress={(e) => preventInvalidInput(e, 'alpha')}
                                             />
                                             {errors.productName && <p className="errorsMsg">{errors.productName.message}</p>}
                                         </div>
@@ -126,7 +208,12 @@ const Products = () => {
                                                 name="productCost"
                                                 id="productCost"
                                                 placeholder="Enter Price"
-                                                {...register("productCost", { required: 'Enter Product Cost' })}
+                                                {...register("productCost", {
+                                                    required: 'Product Cost is required',
+                                                    validate: (value) => validateField(value, 'productCost')
+                                                })}
+                                                onChange={(e) => handleInputChange(e, "productCost")}
+                                                onKeyPress={(e) => preventInvalidInput(e, 'decimal')}
                                             />
                                             {errors.productCost && <p className="errorsMsg">{errors.productCost.message}</p>}
                                         </div>
@@ -141,7 +228,12 @@ const Products = () => {
                                                 name="hsnNo"
                                                 id="hsnNo"
                                                 placeholder="Enter HSN-no"
-                                                {...register("hsnNo", { required: 'Enter HSN Number' })}
+                                                {...register("hsnNo", {
+                                                    required: 'HSN Number is required.',
+                                                    validate: (value) => validateField(value, 'hsnNo')
+                                                })}
+                                                onChange={(e) => handleInputChange(e, "hsnNo")}
+                                                onKeyPress={(e) => preventInvalidInput(e, 'numeric')}
                                             />
                                             {errors.hsnNo && <p className="errorsMsg">{errors.hsnNo.message}</p>}
                                         </div>
@@ -155,7 +247,12 @@ const Products = () => {
                                                 name="gst"
                                                 id="gst"
                                                 placeholder="Enter CGST"
-                                                {...register("gst", { required: 'Enter GST' })}
+                                                {...register("gst", {
+                                                    required: 'Enter GST%',
+                                                    validate: (value) => validateField(value, 'gst')
+                                                })}
+                                                onChange={(e) => handleInputChange(e, "gst")}
+                                                onKeyPress={(e) => preventInvalidInput(e, 'decimal')}
                                             />
                                             {errors.gst && <p className="errorsMsg">{errors.gst.message}</p>}
                                         </div>
@@ -163,14 +260,20 @@ const Products = () => {
                                 </div>
                             </div>
                             <div className="border-top">
-                                <div className="card-body">
+                                <div className="card-body d-flex justify-content-end">
+                                    <button
+                                        className="btn btn-secondary btn-md mr-2"
+                                        type="button"
+                                        onClick={() => reset()} // Reset form fields to initial values
+                                    >
+                                        Reset
+                                    </button>
                                     <button
                                         className={
                                             isUpdating
                                                 ? "btn btn-danger bt-lg"
                                                 : "btn btn-primary bt-lg"
                                         }
-                                        style={{ marginLeft: "90%" }}
                                         type="submit"
                                     >
                                         {isUpdating ? "Update Product" : "Add Product"}

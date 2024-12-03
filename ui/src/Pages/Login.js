@@ -4,44 +4,36 @@ import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { jwtDecode } from "jwt-decode";
 import { Modal, ModalBody, ModalHeader, ModalTitle } from "react-bootstrap";
-import { loginApi } from "../Axios";
-import Loader from "../Loader";
+import Loader from "../Loader"
 import { Eye, EyeSlash } from "react-bootstrap-icons";
-import { useAuth } from "../Context/AuthContext";
+import { loginApi } from "../Axios";
 
-const InvoiceLogin = () => {
-    const { register, handleSubmit, formState: { errors } } = useForm({ defaultValues: { userName: "", password: "" }, mode: "onChange" });
-    const { setAuthUser } = useAuth();
+const Login = () => {
+    const { register, handleSubmit,trigger, formState: { errors } } = useForm({ defaultValues: { userName: "", password: "" }, mode: "onChange" });
+    //   const { setAuthUser } = useAuth();
     const navigate = useNavigate();
     const [passwordShown, setPasswordShown] = useState(false);
     const [loading, setLoading] = useState(false);
     const [showErrorModal, setShowErrorModal] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
-
     const togglePasswordVisibility = () => {
         setPasswordShown(!passwordShown);
     };
 
-    const handleEmailChange = (e) => {
-        if (e.keyCode === 32) {
-            e.preventDefault();
-        }
-    };
-
     const onSubmit = async (data) => {
         setLoading(true); // Set loading to true when the request starts
-
         try {
-            const response = await loginApi(data);
+            const response = await loginApi(data)
             const token = response.data?.token;
-
             if (token) {
                 try {
                     const decodedToken = jwtDecode(token);
                     const { sub: userId, roles: userRole, company, employeeId } = decodedToken;
                     //   setAuthUser({ userId, userRole, company, employeeId });
+
                     toast.success("Login Successful");
-                    window.location.href = "/main";
+                    console.log("Navigating to /main");
+                    navigate("/main");
                 } catch (decodeError) {
                     setErrorMessage("Failed to decode token. Ensure token is valid.");
                     setShowErrorModal(true);
@@ -63,12 +55,15 @@ const InvoiceLogin = () => {
             setLoading(false); // Set loading to false after the request is completed
         }
     };
-
     const closeModal = () => {
         setShowErrorModal(false);
         setErrorMessage(""); // Clear error message when modal is closed
     };
-
+    const handleEmailChange = (e) => {
+        if (e.keyCode === 32) {
+            e.preventDefault();
+        }
+    };
     const validatePassword = (value) => {
         const errors = [];
         if (!/(?=.*[0-9])/.test(value)) {
@@ -86,37 +81,17 @@ const InvoiceLogin = () => {
         if (value.includes(" ")) {
             errors.push("no spaces");
         }
-
         if (errors.length > 0) {
             return `Password must contain ${errors.join(", ")}.`;
         }
         return true;
     };
-
-    const toInputLowerCase = (e) => {
-        const input = e.target;
-        let value = input.value;
-        // Remove leading spaces
-        value = value.replace(/^\s+/g, '');
-
-        // Initially disallow spaces if there are no non-space characters
-        if (!/\S/.test(value)) {
-            // If no non-space characters are present, prevent spaces
-            value = value.replace(/\s+/g, '');
-        } else {
-            // Allow spaces if there are non-space characters
-            value = value.toLowerCase();
-            value = value.replace(/^\s+/g, ''); // Remove leading spaces
-            const words = value.split(' ');
-            const capitalizedWords = words.map(word => {
-                return word.charAt(0).toLowerCase() + word.slice(1);
-            });
-            value = capitalizedWords.join(' ');
+    const EmailValidation = (value) => {
+        if (/[A-Z]/.test(value)) {
+            return "Email cannot contain uppercase letters";
         }
-        // Update input value
-        input.value = value;
+        return /^[a-z]([a-z0-9._-]*[a-z0-9])?@[a-z]([a-z0-9.-]*[a-z0-9])?\.(com|in|net|gov|org|edu)$/.test(value) || "Invalid Email format";
     };
-
     return (
         <div className="main-wrapper">
             {loading && <Loader />}
@@ -132,22 +107,20 @@ const InvoiceLogin = () => {
                                     <div className="input-group-prepend">
                                         <label style={{ color: "orange" }}>Email Id</label>
                                     </div>
-                                    <div className="input-group">
                                     <input className="form-control"
                                         type="email"
                                         placeholder="Email Id"
                                         autoComplete="off"
-                                        onInput={toInputLowerCase}
                                         onKeyDown={handleEmailChange}
                                         {...register("userName", {
                                             required: "Email Id is Required.",
-                                            pattern: {
-                                                value: /^(?![0-9]+@)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|in|org|net|edu|gov)$/,
-                                                message: "Invalid email Id format. Only .com, .in, .org, .net, .edu, .gov are allowed.",
+                                            validate: EmailValidation,
+                                            onChange: async (e) => {
+                                                e.target.value = e.target.value.trim();
+                                                await trigger('userName');
                                             },
                                         })}
                                     />
-                                    </div>
                                     {errors.userName && <p className="errorsMsg">{errors.userName.message}</p>}
                                     <div className="input-group-prepend">
                                         <label style={{ color: "orange" }}>Password</label>
@@ -165,11 +138,13 @@ const InvoiceLogin = () => {
                                                 validate: validatePassword,
                                             })}
                                         />
-                                        <div className="input-group-append">
-                                            <span className="input-group-text" onClick={togglePasswordVisibility} style={{ cursor: 'pointer' }}>
-                                                {passwordShown ? <Eye size={20} /> : <EyeSlash size={20} />}
-                                            </span>
-                                        </div>
+                                        <span
+                                            onClick={togglePasswordVisibility}
+                                            style={{ cursor: 'pointer', marginLeft: '10px', marginTop: '7px' }}
+                                            aria-label={passwordShown ? "Hide password" : "Show password"}
+                                        >
+                                            {passwordShown ? <Eye size={20} /> : <EyeSlash size={20} />}
+                                        </span>
                                     </div>
                                     {errors.password && ((<p className="errorsMsg">{errors.password.message}</p>))}
                                 </div>
@@ -187,7 +162,6 @@ const InvoiceLogin = () => {
                     </div>
                 </div>
             </div >
-
             {/* Error Modal */}
             < Modal
                 show={showErrorModal}
@@ -206,5 +180,4 @@ const InvoiceLogin = () => {
         </div >
     );
 };
-
-export default InvoiceLogin;
+export default Login;

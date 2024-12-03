@@ -6,49 +6,63 @@ import { PencilSquare, XSquareFill } from 'react-bootstrap-icons'
 import { useNavigate, Link } from 'react-router-dom'
 import DataTable from 'react-data-table-component'
 import { Slide, toast } from 'react-toastify'
-import { companyDeleteByIdApi, companyViewApi } from '../Axios'
+import { companyDeleteByIdApi } from '../Axios'
+import { useDispatch, useSelector } from 'react-redux'
+import { selectCompanies, selectCompaniesLoading } from '../Redux/store'
+import { fetchCompanies } from '../Redux/companySlice'
 
 const CompanyView = () => {
     const navigate = useNavigate();
-    const [users, setUsers] = useState([]);
+    const dispatch = useDispatch();
+    const companies = useSelector(selectCompanies)
+    const loading = useSelector(selectCompaniesLoading)
     const [search, setSearch] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [filteredData, setFilteredData] = useState('');
-
-    const getCompanies = () => {
-        companyViewApi()
-            .then((res) => {
-                console.log(res);
-                setUsers(res.data.data);
-                setFilteredData(res.data.data);
-            })
-    }
+    const [filteredData, setFilteredData] = useState([]);
 
     useEffect(() => {
-        getCompanies();
-    }, []);
+        dispatch(fetchCompanies())
+    }, [dispatch]);
 
-    const updateData = (companyId) => {
+    const handleEdit = (companyId) => {
         navigate('/CompanyRegistration', { state: { companyId } });
     }
-
     const onDelete = async (companyId) => {
         try {
-            const response = await companyDeleteByIdApi(companyId);
-            getCompanies();
-            toast.error(response.data.data, {
-                position: 'top-right',
-                transition: Slide,
-                hideProgressBar: true,
-                theme: "colored",
-                autoClose: 1000,
-            });
-            console.log(response);
+          const response = await companyDeleteByIdApi(companyId);
+          dispatch(fetchCompanies()); // Refetch companies after deletion
+          toast.error('Company deleted successfully', {
+            position: 'top-right',
+            transition: Slide,
+            hideProgressBar: true,
+            theme: "colored",
+            autoClose: 1000,
+          });
+          console.log(response);
+          console.log(response.data.data);
         } catch (error) {
-            console.log('Error:', error);
+          console.log('Error:', error);
+          console.error(error.response);
+            if (error.response && error.response.data) {
+                console.error('Server Error Message:', error.response.data);
+            }
         }
-    }
+      };
+      // search filter
+      useEffect(() => {
+        if (companies && Array.isArray(companies)) {
+            const result = companies.filter((company) =>
+                company.companyName.toLowerCase().includes(search.toLowerCase())
+                
+            );
+            setFilteredData(result);
+        }
+        else {
+            setFilteredData([]);
+        }
+    }, [search, companies]);
+
 
     const paginationComponentOptions = {
         noRowsPerPage: true,
@@ -78,7 +92,7 @@ const CompanyView = () => {
         },
         {
             name: "Mail-Id",
-            selector: (row) => row.companyemail,
+            selector: (row) => row.companyEmail,
         },
         {
             name: "Action",
@@ -87,7 +101,7 @@ const CompanyView = () => {
                     <button
                         className="btn btn-sm mr-2"
                         style={{ backgroundColor: "transparent" }}
-                        onClick={() => updateData(row.companyId)}
+                        onClick={() => handleEdit(row.companyId)}
                     >
                         <PencilSquare size={22} color='#2255a4' />
                     </button>
@@ -115,7 +129,7 @@ const CompanyView = () => {
                             <nav aria-label="breadcrumb">
                                 <ol className="breadcrumb">
                                     <li className="breadcrumb-item"><a href='/main'>Home</a></li>
-                                    <li className="breadcrumb-item"><Link to={'/Usersviews'}>Summary</Link></li>
+                                    <li className="breadcrumb-item"><Link to={'/companyView'}>Summary</Link></li>
                                 </ol>
                             </nav>
                         </div>

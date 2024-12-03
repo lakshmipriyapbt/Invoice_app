@@ -21,8 +21,8 @@ const CompanyForgotPassword = () => {
         setLoading(true);
         try {
             const formData = {
-                companyemail: data.companyemail,
-                newpassword: data.newpassword,
+                companyEmail: data.companyEmail,
+                newPassword: data.newPassword,
                 confirmPassword: data.confirmPassword
             };
             const response = await companyForgotPassword(formData);
@@ -97,13 +97,13 @@ const CompanyForgotPassword = () => {
                                 </div>
                                 <input
                                     className="form-control"
-                                    name="companyemail"
-                                    id="companyemail"
+                                    name="companyEmail"
+                                    id="companyEmail"
                                     placeholder="Enter your Company Email Id"
                                     autoComplete="off"
                                     onInput={toInputLowerCase}
                                     onKeyDown={handleEmailChange}
-                                    {...register("companyemail", {
+                                    {...register("companyEmail", {
                                         required: "Email Id is Required.",
                                         pattern: {
                                             value: /^(?![0-9]+@)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|in|org|net|edu|gov)$/,
@@ -112,18 +112,18 @@ const CompanyForgotPassword = () => {
                                     })}
                                 />
                             </div>
-                            {errors.companyemail && <p className="errorsMsg">{errors.companyemail.message}</p>}
+                            {errors.companyEmail && <p className="errorsMsg">{errors.companyEmail.message}</p>}
                         </div>
                         <div className="form-group mt-3">
                             <label style={{ color: "orange" }}>New Password</label>
                             <div className="input-group">
                                 <input
                                     className="form-control"
-                                    name="newpassword"
-                                    id="newpassword"
+                                    name="newPassword"
+                                    id="newPassword"
                                     placeholder="Enter your new password"
                                     type={newPasswordShown ? "text" : "password"}
-                                    {...register("newpassword", {
+                                    {...register("newPassword", {
                                         required: "New Password is Required",
                                         minLength: {
                                             value: 6,
@@ -139,7 +139,7 @@ const CompanyForgotPassword = () => {
                                     {newPasswordShown ? <Eye size={20} color="#4C489D" /> : <EyeSlash size={20} color="#4C489D" />}
                                 </span>
                             </div>
-                            {errors.newpassword && <p className="errorsMsg">{errors.newpassword.message}</p>}
+                            {errors.newPassword && <p className="errorsMsg">{errors.newPassword.message}</p>}
                         </div>
                         <div className="form-group mt-3">
                             <label style={{ color: "orange" }}>Confirm Password</label>
@@ -152,7 +152,7 @@ const CompanyForgotPassword = () => {
                                     type={confirmPasswordShown ? "text" : "password"}
                                     {...register("confirmPassword", {
                                         required: "Please confirm your password",
-                                        validate: (value) => value === getValues("newpassword") || "The passwords do not match",
+                                        validate: (value) => value === getValues("newPassword") || "The passwords do not match",
                                     })}
                                 />
                                 <span className="input-group-text" onClick={toggleNewPasswordVisibility}>

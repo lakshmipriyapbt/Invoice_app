@@ -1,68 +1,80 @@
 import React, { useState, useEffect } from "react";
-import SideNav from "../Pages/SideNav";
-import TopNav from "../Pages/TopNav";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { PencilSquare, XSquareFill } from "react-bootstrap-icons";
-import Footer from "../Pages/Footer";
 import DataTable from "react-data-table-component";
 import { Slide, toast } from 'react-toastify';
-import { ProdcutDeleteApiById, ProductsGetApi } from "../Axios";
+import { useDispatch, useSelector } from 'react-redux';
+import SideNav from "../Pages/SideNav";
+import TopNav from "../Pages/TopNav";
+import Footer from "../Pages/Footer";
+import { fetchAllProducts } from "../Redux/productSlice";
+import { selectProducts, selectProductsLoading, selectProductsError } from '../Redux/store'; 
+import { ProdcutDeleteApiById } from "../Axios";
 
-const ProductsView = () => {
-  const [users, setUsers] = useState([]);
-  const [search, setSearch] = useState('')
-  const [filterData, setFilteredData] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+const Product = () => {
+  const [search, setSearch] = useState('');
+  const [filteredData, setFilteredData] = useState([]);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const getProducts = () => {
-    ProductsGetApi()
-      .then((res) => {
-        console.log(res);
-        setUsers(res.data.data);
-        setFilteredData(res.data.data);
-      })
-  }
+  // Access Redux state
+  const products = useSelector(selectProducts);
+  const loading = useSelector(selectProductsLoading);
+  const error = useSelector(selectProductsError);
+
   useEffect(() => {
-    getProducts();
-  }, []);
+    // Fetch all products when the component mounts
+    dispatch(fetchAllProducts());
+  }, [dispatch]);
+
+  useEffect(() => {
+    console.log('Products from Redux state:', products);
+  }, [products]);
+
   const updateData = (productId) => {
-    navigate('/productsRegistration', { state: { productId } })
-  }
+    navigate('/productsRegistration', { state: { productId } });
+  };
 
   const deleteData = async (productId) => {
     try {
-      ProdcutDeleteApiById(productId)
-        .then((response) => {
-          getProducts();
-          toast.error(response.data.data, {
-            position: 'top-right',
-            transition: Slide,
-            hideProgressBar: true,
-            theme: "colored",
-            autoClose: 1000,
-          });
-          console.log(response);
-          console.log(response.data.data);
-        })
+      // Make a DELETE request to the API with the given ID
+      const response = await ProdcutDeleteApiById(productId);
+      dispatch(fetchAllProducts());  // Dispatch action to refetch products
+      toast.error(response.data.data, {  // Notification status
+        position: 'top-right',
+        transition: Slide,
+        hideProgressBar: true,
+        theme: "colored",
+        autoClose: 1000, // Close the toast after 1 second
+      });
+      console.log(response);
+      console.log(response.data.data);
     } catch (error) {
+      // Log any errors that occur
       console.error(error.response);
       if (error.response && error.response.data) {
         console.error('Server Error Message:', error.response.data);
       }
     }
-  }
+  };
+
   const paginationComponentOptions = {
     noRowsPerPage: true,
-  }
+  };
+
+  useEffect(() => {
+    if (products && Array.isArray(products)) {
+      const result = products.filter((product) =>
+        product.productName.toLowerCase().includes(search.toLowerCase())
+      );
+      setFilteredData(result);
+    } else {
+      setFilteredData([]);
+    }
+  }, [search, products]);
+
   const columns = [
-    {
-      name: "S No",
-      selector: (row, index) => (currentPage - 1) * rowsPerPage + index + 1,
-      width: "70px",
-    },
     {
       name: "Product Id",
       selector: (row) => row.productId,
@@ -73,7 +85,7 @@ const ProductsView = () => {
     },
     {
       name: "Product Cost",
-      selector: (row) => row.productCost,
+      selector: (row) => row.cost
     },
     {
       name: "HSN Code",
@@ -81,18 +93,26 @@ const ProductsView = () => {
     },
     {
       name: "Action",
-      cell: (row) => <div> <button className="btn btn-sm mr-2" style={{ backgroundColor: "transparent" }} onClick={() => updateData(row.productId)}><PencilSquare size={22} color='#2255a4' /></button>
-        <button className="btn btn-sm " style={{ backgroundColor: "transparent" }} onClick={() => deleteData(row.productId)}><XSquareFill size={22} color='#da542e' /></button>
-      </div>
+      cell: (row) => (
+        <div>
+          <button className="btn btn-sm mr-2" style={{ backgroundColor: "transparent" }} onClick={() => updateData(row.productId)}>
+            <PencilSquare size={22} color='#2255a4' />
+          </button>
+          <button className="btn btn-sm" style={{ backgroundColor: "transparent" }} onClick={() => deleteData(row.productId)}>
+            <XSquareFill size={22} color='#da542e' />
+          </button>
+        </div>
+      ),
+    },
+  ];
 
-    }
-  ]
-  //  useEffect(()=>{
-  //   const result=users.filter((data)=>{
-  //       return data.product_name.toLowerCase().match(search.toLowerCase())
-  //   });
-  //   setFilteredData(result);
-  //  },[search])
+  // if (loading) {
+  //   return <div>Loading...</div>;
+  // }
+
+  // if (error) {
+  //   return <div>Error: {error}</div>;
+  // }
 
   return (
     <div id="main-wrapper" data-sidebartype="mini-sidebar">
@@ -105,7 +125,7 @@ const ProductsView = () => {
             <div className="ml-auto text-right">
               <nav aria-label="breadcrumb">
                 <ol className="breadcrumb">
-                  <li className="breadcrumb-item"><a href='/main'>Home</a></li>
+                  <li className="breadcrumb-item"><Link to={'/'}>Home</Link></li>
                   <li className="breadcrumb-item active" aria-current="page">ProductList</li>
                 </ol>
               </nav>
@@ -114,16 +134,15 @@ const ProductsView = () => {
         </div>
       </div>
 
-      <div className='container-fliuid'>
+      <div className='container-fluid'>
         <div className='row'>
           <div className='col-md-9 ' style={{ marginLeft: "300px" }}>
             <div className="card" style={{ marginTop: "50px" }}>
-              <div className="card-body col-md-12" >
-
+              <div className="card-body col-md-12">
                 <button type="button" className="btn btn-primary btn-lg " onClick={() => navigate('/productsRegistration')} style={{ marginBottom: "10px" }} >Add Product</button>
                 <input
                   className="form-control col-md-3"
-                  style={{ border: "1px soild black", borderRadius: "8px", float: "right", marginBottom: "10px" }}
+                  style={{ border: "2px soild black", borderRadius: "8px", float: "right", marginBottom: "10px" }}
                   type="text"
                   placeholder="Search..."
                   value={search}
@@ -132,13 +151,11 @@ const ProductsView = () => {
 
                 <div className="table-responsive">
                   <DataTable
-                    // className="table table-striped table-bordered"
+                    className="table table-striped table-bordered"
                     columns={columns}
-                    data={filterData}
+                    data={filteredData}
                     pagination
                     paginationComponentOptions={paginationComponentOptions}
-                    onChangePage={page => setCurrentPage(page)}
-                    onChangeRowsPerPage={perPage => setRowsPerPage(perPage)}
                   />
                 </div>
               </div>
@@ -148,8 +165,8 @@ const ProductsView = () => {
       </div>
       <Footer />
     </div>
+  );
+};
 
+export default Product;
 
-  )
-}
-export default ProductsView;
