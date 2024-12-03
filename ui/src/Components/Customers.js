@@ -9,7 +9,7 @@ import { Slide, toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
 import SideNav from '../Pages/SideNav'
 import { CustomerDeleteApiById } from '../Axios'
-import { fetchCustomers } from '../Redux/customerSlice'
+import { fetchCustomers } from '../Redux/CustomerSlice'
 
 
 const Customers = () => {

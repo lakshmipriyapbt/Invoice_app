@@ -170,48 +170,48 @@ const QuotationReg = () => {
     // }
   };
 
-  useEffect(() => {
-    CustomerGetApi()
-      .then((response) => {
-         console.log(response.data.data)
-         setCustomerData(response.data.data);
-        const Cus = response.data.data.map(list => {
-          let object = {
-            label: list.customerName,
-            value: list.customerName,
-            name: list.customerName,
-            mobile_number: list.mobileNumber,
-            customer_address: list.address,
-            gst_number: list.gstNo,
-            mail_id: list.email,
-            state: list.state,
-            pin_code: list.pinCode,
-            customer_id: list.customerId
-          }
-          return object;
-        })
-        setCustomerList(Cus);
-        console.log(Cus);
-      })
-      .catch(error => {
-        setCustomerList(error);
-      })
-  }, [])
+  // useEffect(() => {
+  //   CustomerGetApi()
+  //     .then((response) => {
+  //        console.log(response.data.data)
+  //        setCustomerData(response.data.data);
+  //       const Cus = response.data.data.map(list => {
+  //         let object = {
+  //           label: list.customerName,
+  //           value: list.customerName,
+  //           name: list.customerName,
+  //           mobile_number: list.mobileNumber,
+  //           customer_address: list.address,
+  //           gst_number: list.gstNo,
+  //           mail_id: list.email,
+  //           state: list.state,
+  //           pin_code: list.pinCode,
+  //           customer_id: list.customerId
+  //         }
+  //         return object;
+  //       })
+  //       setCustomerList(Cus);
+  //       console.log(Cus);
+  //     })
+  //     .catch(error => {
+  //       setCustomerList(error);
+  //     })
+  // }, [])
 
-  useEffect(() => {
-    ProductsGetApi()
-      .then((response) => {
-        console.log(response.data.data)
-        const Details = response.data.data.map(list => {
-          let obj = { label: list.productName, value: list.productName, hsnNo: list.hsnNo, productCost: list.productCost }
-          return (obj);
-        })
-        setProductList(Details);
-      })
-      .catch(error => {
-        setProductList(error);
-      })
-  }, [])
+  // useEffect(() => {
+  //   ProductsGetApi()
+  //     .then((response) => {
+  //       console.log(response.data.data)
+  //       const Details = response.data.data.map(list => {
+  //         let obj = { label: list.productName, value: list.productName, hsnNo: list.hsnNo, productCost: list.productCost }
+  //         return (obj);
+  //       })
+  //       setProductList(Details);
+  //     })
+  //     .catch(error => {
+  //       setProductList(error);
+  //     })
+  // }, [])
 
   // { if(showPreview) (
   //   // Render preview content here

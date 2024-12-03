@@ -8,7 +8,7 @@ import { Eye, SendFill, XSquareFill } from 'react-bootstrap-icons';
 import DataTable from 'react-data-table-component';
 import { Slide, toast } from 'react-toastify';
 import { InvoiceDeleteApiById } from '../Axios';
-import { fetchInvoices } from '../Redux/invoiceSlice';
+import { fetchInvoices } from '../Redux/InvoiceSlice';
 
 const InvoiceViews = () => {
     const [currentPage, setCurrentPage] = useState(1);
@@ -28,6 +28,8 @@ const InvoiceViews = () => {
     useEffect(() => {
         dispatch(fetchInvoices());
     }, [dispatch]);
+    
+    console.log("invoiceData from Redux ", invoices);
 
     const onUpdate = (invoiceId) => {
         console.log('Navigating with invoiceId:', invoiceId);

@@ -282,7 +282,7 @@ const CustomersRegistration = () => {
                           {...register("gstNo", {
                             required: "Enter GST Number", validate: (value) => validateField(value, 'gst'),
                             maxLength:{
-                              value:5,
+                              value:15,
                               message:"GST Number should be 15 characters long"
                             }
                           })}

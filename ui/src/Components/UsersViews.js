@@ -10,7 +10,7 @@ import { Slide, toast } from 'react-toastify';
 import { UserDeleteApiById} from '../Axios'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchUsers } from '../Redux/userSlice'
-import { selectUsers, selectUsersLoading } from '../Redux/store'
+import { selectUsers, selectUsersLoading } from '../Redux/Store'
 
 
 const Usersview = () => {

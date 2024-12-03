@@ -36,5 +36,5 @@ const companySlice = createSlice({
       });
   },
 });
-// export CompanySlice
+// export companySlice
 export default companySlice.reducer;

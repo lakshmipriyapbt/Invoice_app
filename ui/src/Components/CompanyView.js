@@ -8,7 +8,7 @@ import DataTable from 'react-data-table-component'
 import { Slide, toast } from 'react-toastify'
 import { companyDeleteByIdApi } from '../Axios'
 import { useDispatch, useSelector } from 'react-redux'
-import { selectCompanies, selectCompaniesLoading } from '../Redux/store'
+import { selectCompanies, selectCompaniesLoading } from '../Redux/Store'
 import { fetchCompanies } from '../Redux/companySlice'
 
 const CompanyView = () => {
