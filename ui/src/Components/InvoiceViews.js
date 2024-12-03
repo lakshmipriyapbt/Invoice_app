@@ -8,7 +8,7 @@ import { Eye, SendFill, XSquareFill } from 'react-bootstrap-icons';
 import DataTable from 'react-data-table-component';
 import { Slide, toast } from 'react-toastify';
 import { InvoiceDeleteApiById } from '../Axios';
-import { fetchInvoices } from '../redux/invoiceSlice';
+import { fetchInvoices } from '../Redux/invoiceSlice';
 
 const InvoiceViews = () => {
     const [currentPage, setCurrentPage] = useState(1);

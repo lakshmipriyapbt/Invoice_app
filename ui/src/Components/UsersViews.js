@@ -9,8 +9,8 @@ import DataTable from 'react-data-table-component'
 import { Slide, toast } from 'react-toastify';
 import { UserDeleteApiById} from '../Axios'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchUsers } from '../redux/userSlice'
-import { selectUsers, selectUsersLoading } from '../redux/store'
+import { fetchUsers } from '../Redux/userSlice'
+import { selectUsers, selectUsersLoading } from '../Redux/store'
 
 
 const Usersview = () => {
