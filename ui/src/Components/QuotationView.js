@@ -17,45 +17,45 @@ const QuotationView = () => {
     const [filteredData, setFilteredData] = useState('');
     const Navigate = useNavigate();
 
-    const getInvoice = () => {
-        axios.get("http://122.175.43.71:8001/api/viewinvoice")
-            .then((response) => {
-                console.log(response.data);
-                setVoice(response.data.data);
-                setFilteredData(response.data.data);
-            })
-    }
-    useEffect(() => {
-        getInvoice();
-    }, [])
+    // const getInvoice = () => {
+    //     axios.get("http://122.175.43.71:8001/api/viewinvoice")
+    //         .then((response) => {
+    //             console.log(response.data);
+    //             setVoice(response.data.data);
+    //             setFilteredData(response.data.data);
+    //         })
+    // }
+    // useEffect(() => {
+    //     getInvoice();
+    // }, [])
 
     const onUpdate = (id) => {
         Navigate('/invoiceSlip', { state: { id } })
     }
-    const onDelete = async (id) => {
-        try {
-            // Make a DELETE request to the API with the given ID
-            await axios.delete(`http://122.175.43.71:8001/api/deleteinvoice/` + id)
-                .then((response) => {
-                    getInvoice();
-                    toast.error(response.data.data, {  //Notification status
-                        position: 'top-right',
-                        transition: Slide,
-                        hideProgressBar: true,
-                        theme: "colored",
-                        autoClose: 1000, // Close the toast after 1 seconds
-                    });
-                    console.log(response);
-                    console.log(response.data.data);
-                })
-        } catch (error) {
-            // Log any errors that occur
-            console.error(error.response);
-            if (error.response && error.response.data) {
-                console.error('Server Error Message:', error.response.data);
-            }
-        }
-    }
+    // const onDelete = async (id) => {
+    //     try {
+    //         // Make a DELETE request to the API with the given ID
+    //         await axios.delete(`http://122.175.43.71:8001/api/deleteinvoice/` + id)
+    //             .then((response) => {
+    //                 getInvoice();
+    //                 toast.error(response.data.data, {  //Notification status
+    //                     position: 'top-right',
+    //                     transition: Slide,
+    //                     hideProgressBar: true,
+    //                     theme: "colored",
+    //                     autoClose: 1000, // Close the toast after 1 seconds
+    //                 });
+    //                 console.log(response);
+    //                 console.log(response.data.data);
+    //             })
+    //     } catch (error) {
+    //         // Log any errors that occur
+    //         console.error(error.response);
+    //         if (error.response && error.response.data) {
+    //             console.error('Server Error Message:', error.response.data);
+    //         }
+    //     }
+    // }
     const paginationComponentOptions = {
         RowsPerPage: '5',
         noRowsPerPage: true,
@@ -93,7 +93,7 @@ const QuotationView = () => {
             cell: (row) => <div>
                 <button className="btn btn-sm mr-2" style={{ backgroundColor: "transparent" }} ><SendFill size={22} color='darkorange' /></button>
                 <button className="btn btn-sm mr-2" style={{ backgroundColor: "transparent" }} onClick={() => onUpdate(row.invoice_id)}><Eye size={22} color='#2255a4' /></button>
-                <button className="btn btn-sm " style={{ backgroundColor: "transparent" }} onClick={() => onDelete(row.invoice_id)}><XSquareFill size={22} color='#da542e' /></button>
+                {/* <button className="btn btn-sm " style={{ backgroundColor: "transparent" }} onClick={() => onDelete(row.invoice_id)}><XSquareFill size={22} color='#da542e' /></button> */}
             </div>
 
         }

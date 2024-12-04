@@ -8,8 +8,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import SideNav from "../Pages/SideNav";
 import TopNav from "../Pages/TopNav";
 import Footer from "../Pages/Footer";
-import { fetchAllProducts } from "../Redux/productSlice";
-import { selectProducts, selectProductsLoading, selectProductsError } from '../Redux/store'; 
+import { fetchAllProducts } from "../Redux/ProductSlice";
+import { selectProducts, selectProductsLoading, selectProductsError } from '../Redux/Store'; 
 import { ProdcutDeleteApiById } from "../Axios";
 
 const Product = () => {
