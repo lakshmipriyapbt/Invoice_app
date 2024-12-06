@@ -49,8 +49,9 @@ const CompanyRegistration = () => {
           setValue('ifscCode', companyData.ifscCode);
           setValue('address', companyData.address);
           setValue('state', companyData.state);
+          setValue('accountType', companyData.accountType);
           setValue('password', companyData.password);
-          setSelectedFile(companyData.stampAndSign);
+          setSelectedFile(companyData.stampImage);
         } catch (error) {
           toast.error('Failed to load company details.', {
             position: 'top-right',
@@ -76,10 +77,11 @@ const CompanyRegistration = () => {
     formData.append("pan", data.pan);
     formData.append("gstNumber", data.gstNumber);
     formData.append("gender", data.gender);
+    formData.append("accountType", data.accountType);
 
     if (selectedFile) {
       console.log("Selected file :", selectedFile);  // For debugging, print the base64 string
-      formData.append("stampAndSign", selectedFile);  // Append the base64 string, not the file object
+      formData.append("stampImage", selectedFile);  // Append the base64 string, not the file object
     } else {
       console.log("No file selected");  // Handle case when no file is selected
     }
@@ -203,7 +205,7 @@ const CompanyRegistration = () => {
                 <div className="card-body">
                 <h4 className="card-title">Company Info</h4>
                 <div className='form row'>
-                    <div className="form-group col-md-6">
+                    <div className="form-group col-md-6" style={{paddingRight:"40px"}}>
                       <label htmlFor="fname" className="col-sm-4 text-left control-label col-form-label">User Name</label>
                       <div className="input-group">
                       <input type="text" className="form-control" name="userName" id="userName" placeholder="Enter User Name Name"
@@ -224,7 +226,7 @@ const CompanyRegistration = () => {
                       </div>
                       {errors.userName && <p className='errorsMsg '>{errors.userName.message}</p>}
                     </div>
-                    <div className="form-group col-md-6">
+                    <div className="form-group col-md-6" style={{paddingRight:"40px"}}>
                       <label htmlFor="companyEmail" className="col-sm-4 text-left control-label col-form-label">Email</label>
                       <div className="input-group">
                       <input type="email" className="form-control" name="companyEmail" id="companyEmail" placeholder="Enter Email Id"
@@ -247,7 +249,7 @@ const CompanyRegistration = () => {
                     </div>
                   </div>
                   <div className='form row'>
-                    <div className="form-group col-md-6">
+                    <div className="form-group col-md-6" style={{paddingRight:"40px"}}>
                       <label htmlFor="password" className="col-sm-4 text-left control-label col-form-label">Password</label>
                       <div className="input-group">
                         <input
@@ -430,11 +432,11 @@ const CompanyRegistration = () => {
                       </div>
                       {errors.gender && <p className="errorsMsg">{errors.gender.message}</p>}
                     </div>
-                    <div className="form-group col-md-6">
-                      <label htmlFor="stampAndSign" className="col-sm-4 text-left control-label col-form-label">Stamp & Sign</label>
+                    <div className="form-group col-md-6" style={{paddingRight:"40px"}}>
+                      <label htmlFor="stampImage" className="col-sm-4 text-left control-label col-form-label">Stamp & Sign</label>
                       <div className="custom-file">
                         <Controller
-                          name="stampAndSign"
+                          name="stampImage"
                           control={control}
                           defaultValue={selectedFile || null} // Set the default value to the existing file
                           render={({ field }) => (
@@ -442,7 +444,7 @@ const CompanyRegistration = () => {
                               <input
                                 type="file"
                                 className="custom-file-input"
-                                id="stampAndSign"
+                                id="stampImage"
                                 ref={fileInputRef} // Reference for clearing the input
                                 onChange={(e) => {
                                   const file = e.target.files[0];
@@ -458,7 +460,7 @@ const CompanyRegistration = () => {
                                   }
                                 }}
                               />
-                              <label className="custom-file-label" htmlFor="stampAndSign">
+                              <label className="custom-file-label" htmlFor="stampImage">
                                 {selectedFile || "Choose file..."}
                               </label>
                             </div>
@@ -467,7 +469,7 @@ const CompanyRegistration = () => {
                             required: selectedFile ? false : "Please upload a stamp and signature", // Validation only if no file exists
                           }}
                         />
-                        {errors.stampAndSign && <p className="errorsMsg">{errors.stampAndSign.message}</p>}
+                        {errors.stampImage && <p className="errorsMsg">{errors.stampImage.message}</p>}
                       </div>
                     </div>
                   </div>
@@ -586,6 +588,26 @@ const CompanyRegistration = () => {
                       />
                       {errors.state && <p className='errorsMsg '>{errors.state.message}</p>}
                     </div>
+                    <div className="form-group col-md-6">
+                      <label htmlFor="state" className="col-sm-4 text-left control-label col-form-label">Account Type</label>
+                      <input type="text" className="form-control" name="accountType" id="accountType" placeholder="Enter Account Type"
+                        {...register("accountType", {
+                          required: "Account type is Required",
+                          minLength:{
+                            value:3,
+                            message:"Account type must be at least 3 characters long"
+                          },
+                          maxLength: {
+                            value: 250,
+                            message: 'Account type must be at most 250 characters long'
+                          },
+                        })}
+                        onChange={(e) => handleInputChange(e, "accountType", true)}
+                      />
+                      {errors.accountType && <p className='errorsMsg '>{errors.accountType.message}</p>}
+                    </div>
+                  </div>
+                  <div className='form-row'>
                     <div className="form-group col-md-6">
                       <label htmlFor="lname" className="col-sm-4 text-left control-label col-form-label">Address</label>
                       < textarea rows="3" cols="5" className="form-control" name="address" id="address" placeholder="Enter Address"

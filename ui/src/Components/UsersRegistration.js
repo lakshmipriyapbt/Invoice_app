@@ -191,7 +191,7 @@ const UserRegistration = (props) => {
                                         </div>
                                     </div>
                                     <div className='form row mt-4'>
-                                        <div className="form-group col-md-6">
+                                        <div className="form-group col-md-6" style={{paddingRight:"40px"}}>
                                             <label htmlFor="fname" className="col-sm-4 text-left control-label col-form-label">User Role</label>
                                             <Controller
                                                 name="role"
@@ -212,7 +212,7 @@ const UserRegistration = (props) => {
                                             />
                                             {errors.role && errors.role.type === "required" && (<p className='errorsMsg '>Select User Role.</p>)}
                                         </div>
-                                        <div className="form-group col-md-6">
+                                        <div className="form-group col-md-6" style={{paddingRight:"40px"}}>
                                             <label htmlFor="fname" className="col-sm-4 text-left control-label col-form-label">Password</label>
                                             <div className="input-group">
                                                 <input className="form-control" name="password" id="password" placeholder="Enter Password" autoComplete='off'

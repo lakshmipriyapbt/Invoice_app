@@ -67,7 +67,7 @@ const CustomersRegistration = () => {
   const setGstType = (event) => {
     setShow(event.target.value);
   };
- 
+
   const validateField = (value, type) => {
     switch (type) {
       case 'email':
@@ -94,41 +94,45 @@ const CustomersRegistration = () => {
 
   const preventInvalidInput = (e, type) => {
     const key = e.key;
-    
+
     // Alphanumeric check for customerName, state, city fields (no special characters allowed except spaces)
     if (type === 'alpha' && /[^a-zA-Z\s]/.test(key)) {
       e.preventDefault();
     }
-  
+
+    if (type === 'alphaNumeric' && /[^a-zA-Z0-9\s]/.test(key)) {
+      e.preventDefault();
+    }
+
     // Address-specific special characters: only allow &, /, and ,
     if (type === 'address' && !/[a-zA-Z0-9\s&,\/]/.test(key)) {
       e.preventDefault();
     }
-  
+
     // Numeric check for fields that should only allow numbers
     if (type === 'numeric' && !/^[0-9]$/.test(key)) {
       e.preventDefault();
     }
-  
+
     // Prevent spaces (if any additional validation is needed)
     if (type === 'whitespace' && key === ' ') {
       e.preventDefault();
     }
   };
-  
+
   // Capitalize the first letter of each word expect email
   const handleInputChange = (e, fieldName) => {
     let value = e.target.value.trimStart().replace(/ {2,}/g, ' ');  // Remove leading spaces and extra spaces
-    
+
     if (fieldName !== "email") {
       value = value.replace(/\b\w/g, (char) => char.toUpperCase());  // Capitalize first letter after space
     }
-  
+
     setValue(fieldName, value);
     trigger(fieldName);  // Trigger validation
   };
-  
-  
+
+
   return (
     <div id="main-wrapper" data-sidebartype="mini-sidebar">
       <TopNav />
@@ -198,7 +202,7 @@ const CustomersRegistration = () => {
                           required: "Email is Required",
                           validate: (value) => validateField(value, 'email')
                         })}
-                        onChange={(e)=>handleInputChange(e,"email")}
+                        onChange={(e) => handleInputChange(e, "email")}
                         onKeyPress={(e) => preventInvalidInput(e, 'whitespace')}
                       />
                       {errors.email && <p className="errorsMsg">{errors.email.message}</p>}
@@ -210,9 +214,9 @@ const CustomersRegistration = () => {
                       <label htmlFor="mobileNumber" className="col-sm-4 text-left control-label col-form-label">Mobile Number</label>
                       <input type="text" className="form-control" id="mobileNumber" name="mobileNumber" placeholder="Mobile Number"
                         {...register("mobileNumber", {
-                          required: "Enter Mobile Number", validate: (value) => validateField(value, 'mobile')
+                          // required: "Enter Mobile Number", validate: (value) => validateField(value, 'mobile')
                         })}
-                        onChange={(e)=>handleInputChange(e,"mobileNumber")}
+                        onChange={(e) => handleInputChange(e, "mobileNumber")}
                         onKeyPress={(e) => preventInvalidInput(e, 'numeric')}
                       />
                       {errors.mobileNumber && <p className='errorsMsg'>{errors.mobileNumber.message}</p>}
@@ -278,16 +282,22 @@ const CustomersRegistration = () => {
                     {show === "gst" && (
                       <div className="form-group col-md-6">
                         <label htmlFor="gst" className="col-sm-4 text-left control-label col-form-label">Gst No</label>
-                        <input type="text" className="form-control" id="gstNo" name="gstNo" placeholder="Enter Gst Number"
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="gstNo"
+                          name="gstNo"
+                          placeholder="Enter Gst Number"
                           {...register("gstNo", {
-                            required: "Enter GST Number", validate: (value) => validateField(value, 'gst'),
-                            maxLength:{
-                              value:15,
-                              message:"GST Number should be 15 characters long"
-                            }
+                            validate: (value) =>
+                              !value || validateField(value, 'gst'), // Validate only if the field is not empty
+                            maxLength: {
+                              value: 15,
+                              message: "GST Number should be 15 characters long",
+                            },
                           })}
                           onChange={(e) => handleInputChange(e, "gstNo")}
-                          onKeyPress={(e) => preventInvalidInput(e, 'alpha')}
+                          onKeyPress={(e) => preventInvalidInput(e, 'alphaNumeric')}
                           onInput={(e) => {
                             e.target.value = e.target.value.toUpperCase(); // Convert to uppercase
                           }}
@@ -295,31 +305,37 @@ const CustomersRegistration = () => {
                         {errors.gstNo && <p className="errorsMsg">{errors.gstNo.message}</p>}
                       </div>
                     )}
-                    <div className="form-group col-md-6">
-                      <label htmlFor="stateCode" className="col-sm-4 text-left control-label col-form-label">State Code</label>
-                      <input type="text" className="form-control" id="stateCode" name="stateCode" placeholder="Enter Pin"
-                        {...register("stateCode", {
-                          required: "Enter State Code.",
-                          minLength: {
-                            value: 2,
-                            message: "State Code must be exactly 2 digits. "
-                          },
-                          maxLength: {
-                            value: 2,
-                            message: "State Code must not exceed 2 digits."
-                          },
-                          validate: (value) => validateField(value, 'stateCode')
-                        })}
-                        onChange={(e) => handleInputChange(e, "stateCode")}
-                        onKeyPress={(e) => preventInvalidInput(e, 'numeric')}
-                      />
-                      {errors.stateCode && <p className="errorsMsg">{errors.stateCode.message}</p>}
-                    </div>
+                 <div className="form-group col-md-6">
+  <label htmlFor="stateCode" className="col-sm-4 text-left control-label col-form-label">
+    State Code
+  </label>
+  <input
+    type="text"
+    className="form-control"
+    id="stateCode"
+    name="stateCode"
+    placeholder="Enter Pin"
+    {...register("stateCode", {
+      validate: (value) => !value || validateField(value, "stateCode"), // Validate only if the field is not empty
+      minLength: {
+        value: 2,
+        message: "State Code must be exactly 2 digits.",
+      },
+      maxLength: {
+        value: 2,
+        message: "State Code must not exceed 2 digits.",
+      },
+    })}
+    onChange={(e) => handleInputChange(e, "stateCode")}
+    onKeyPress={(e) => preventInvalidInput(e, "numeric")}
+  />
+  {errors.stateCode && <p className="errorsMsg">{errors.stateCode.message}</p>}
+</div>
 
                   </div>
                   {/* State Code */}
                   <div className="form-row">
-                  <div className="form-group col-md-6">
+                    <div className="form-group col-md-6">
                       <label htmlFor="address" className="col-sm-4 text-left control-label col-form-label">Address</label>
                       <textarea className="form-control" id="address" name="address"
                         {...register("address", {

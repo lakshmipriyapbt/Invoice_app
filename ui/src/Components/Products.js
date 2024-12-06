@@ -84,7 +84,7 @@ const Products = () => {
                 return /^[0-9]{1,8}(\.[0-9]{1,2})?$/.test(value) || "Product cost must be a valid number (max 8 digits before decimal, e.g., 99999999.99)";
 
             case 'hsnNo':
-                return /^[0-9]{4}$/.test(value) || "HSN number must be exactly 4 digits";
+                return /^[0-9]{6}$/.test(value) || "HSN number must be exactly 6 digits";
 
             case 'gst':
                 return /^[0-9]{1,2}(\.[0-9]{1,2})?$/.test(value) && parseFloat(value) < 100 || "GST must be a valid number less than 100%";
@@ -248,13 +248,32 @@ const Products = () => {
                                                 id="gst"
                                                 placeholder="Enter CGST"
                                                 {...register("gst", {
-                                                    required: 'Enter GST%',
-                                                    validate: (value) => validateField(value, 'gst')
+                                                    // required: 'Enter GST%',
+                                                    // validate: (value) => validateField(value, 'gst')
                                                 })}
                                                 onChange={(e) => handleInputChange(e, "gst")}
                                                 onKeyPress={(e) => preventInvalidInput(e, 'decimal')}
                                             />
                                             {errors.gst && <p className="errorsMsg">{errors.gst.message}</p>}
+                                        </div>
+                                    </div>
+                                    <div className='form row mt-4'>
+                                        <div className="form-group col-md-6">
+                                            <label htmlFor="hsnNo" className="col-sm-4 text-left control-label col-form-label">Service</label>
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                name="service"
+                                                id="service"
+                                                placeholder="Enter Product Service"
+                                                {...register("service", {
+                                                    required: 'Product Service is required.',
+                                                    validate: (value) => validateField(value, 'service')
+                                                })}
+                                                onChange={(e) => handleInputChange(e, "service")}
+                                                onKeyPress={(e) => preventInvalidInput(e, 'alpha')}
+                                            />
+                                            {errors.service && <p className="errorsMsg">{errors.service.message}</p>}
                                         </div>
                                     </div>
                                 </div>

@@ -1,23 +1,60 @@
-import React, { useEffect, useRef, useState } from 'react';
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
-import { useLocation, useNavigate } from 'react-router-dom';
-import { CalendarFill } from 'react-bootstrap-icons';
+import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Slide, toast } from 'react-toastify';
-import { InvoiceGenerateApi } from '../Axios';
+import { companyViewByIdApi, InvoiceDownloadApi, InvoiceGetApiById } from '../Axios';
+import { CalendarFill } from 'react-bootstrap-icons';
+import { useAuth } from '../Context/AuthContext';
+import { useForm } from 'react-hook-form';
 
-const InvoicePdf = ({ showPreview, setShowPreview }) => {
+const InvoicePdf = () => {
+  const { setValue } = useForm();
   const [invoiceData, setInvoiceData] = useState({});
   const location = useLocation();
-  const navigate = useNavigate();
-  const pdfRef = useRef();
+  const [companyDetails, setCompanyDetails] = useState({});
+  const { user } = useAuth();
 
-  // Fetch the invoice data
+  useEffect(() => {
+    if (user.companyId) {
+      const fetchCompanyDetails = async () => {
+        try {
+          const response = await companyViewByIdApi(user.companyId);
+          console.log("Fetched company details for companyId:", user.companyId);
+          setCompanyDetails(response.data);
+          const companyData = response.data;
+          setValue('userName', companyData.userName);
+          setValue('companyEmail', companyData.companyEmail);
+          setValue('phone', companyData.phone);
+          setValue('companyName', companyData.companyName);
+          setValue('serviceName', companyData.serviceName);
+          setValue('pan', companyData.pan);
+          setValue('gstNumber', companyData.gstNumber);
+          setValue('gender', companyData.gender);
+          setValue('accountNumber', companyData.accountNumber);
+          setValue('bankName', companyData.bankName);
+          setValue('branch', companyData.branch);
+          setValue('ifscCode', companyData.ifscCode);
+          setValue('address', companyData.address);
+          setValue('state', companyData.state);
+          setValue('password', companyData.password);
+        } catch (error) {
+          toast.error('Failed to load company details.', {
+            position: 'top-right',
+            theme: "colored",
+            autoClose: 1000,
+            transition: Slide,
+          });
+        }
+      };
+
+      fetchCompanyDetails();
+    }
+  }, [user.companyId, setValue]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (location && location.state && location.state.invoiceId) {
-          const response = await InvoiceGenerateApi(location.state.invoiceId);
+        if (location?.state?.invoiceId) {
+          const response = await InvoiceGetApiById(location.state.invoiceId);
           setInvoiceData(response.data.data);
         } else {
           console.error('Invoice ID not found in location state');
@@ -29,152 +66,208 @@ const InvoicePdf = ({ showPreview, setShowPreview }) => {
     fetchData();
   }, [location]);
 
-  const downloadPdf = () => {
-    toast.success('Download Successfully', {
-      position: 'top-right',
-      transition: Slide,
-      hideProgressBar: true,
-      theme: "colored",
-      progress: 2,
-      autoClose: 1000,
-    });
-    navigate('/Invoices');
-    const input = pdfRef.current;
-    html2canvas(input).then((canvas) => {
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4', true);
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const img = new Image();
-      img.src = imgData;
-      img.onload = function () {
-        const imgWidth = pdfWidth - 1;
-        const imgHeight = (img.height * imgWidth) / 900;
-        const imgX = 0;
-        const imgY = 0;
-        pdf.addImage(img, 'PNG', imgX, imgY, imgWidth, imgHeight);
-        pdf.save('invoice.pdf');
-      };
-    });
+  const handleDownload = async () => {
+    if (location && location.state && location.state.invoiceId) {
+      try {
+        const success = await InvoiceDownloadApi(location.state.invoiceId);
+        if (success) {
+          toast.success("Invoice downloaded successfully");
+        } else {
+          toast.error("Failed to download invoice");
+        }
+      } catch (err) {
+        console.error("Error downloading invoice:", err);
+        toast.error("Failed to download invoice");
+      }
+    } else {
+      console.error("Invoice ID is missing");
+      toast.error("Invoice ID is missing");
+    }
   };
 
   return (
     <div className="container-fluid" style={{ width: "900px" }}>
       <div className="row">
         <div className="col-md-12">
-          <div className="card card-body printableArea bg-white" ref={pdfRef}>
-            <img src="assets/images/pathbreaker_logo.png" style={{ height: "60px", width: "155px" }} alt="logo" />
-            <hr />
+          <div className="card card-body printableArea bg-white">
+            <p style={{ fontWeight: "bold", width: "150px", marginBottom: "0px" }}> PAN No: {invoiceData.pan}</p>
+            <p style={{ fontWeight: "bold", width: "400px" }}>GST Number : {companyDetails.gstNumber}</p>
+            <div style={{ textAlign: "right" }}>
+              <img src={companyDetails.imageFile} style={{ height: "60px", width: "155px", marginTop: "0px" }} alt="logo" />
+            </div>
+            <h1>Invoice</h1>
             <div className="row">
               {/* Billing Information */}
               <div className="col-md-6">
                 <div className="text-left">
                   <address>
-                    <h6 style={{ fontSize: "smaller" }}>Billed To,</h6>
-                    <h4 className="font-small">{invoiceData.customerName}</h4>
+                    <h6 className="font-small">Billed To,</h6>
+                    <h6 className="font-small">{invoiceData.customerName}</h6>
+                    <h6 className="font-small">{invoiceData.address}</h6>
                     <h6 className="m-l-30">Email Id: {invoiceData.email}</h6>
-                    <h6 className="m-l-30">Contact No: {invoiceData.phone}</h6>
-                    <h6 className="m-l-30">GST: {invoiceData.gstNo}</h6>
+                    <h6 className="m-l-30">Contact No: {invoiceData.mobileNumber}</h6>
+                    <h6 className="m-l-30">GST NO: {invoiceData.gstNo}</h6>
                     <h6 className="m-l-30">{invoiceData.Address}</h6>
                   </address>
                 </div>
               </div>
               <div className="col-md-6 text-right">
-                <h5><b style={{ fontSize: "smaller" }}>INVOICE -</b><span>{invoiceData.invoiceNumber}</span></h5>
-                <p>Invoice Date : <CalendarFill /> <b>{invoiceData.invoiceDate}</b></p>
-                <p>Due Date : <CalendarFill /> <b>{invoiceData.dueDate}</b></p>
+                <h5><b style={{ fontSize: "smaller" }}>INVOICE </b>-<span>{invoiceData.invoiceId}</span></h5>
+                <p><b>Invoice Date :</b> <CalendarFill /> <b>{invoiceData.invoiceDate}</b></p>
+                <p><b>Due Date : </b><CalendarFill /> <b>{invoiceData.dueDate}</b></p>
               </div>
-
-              {/* Invoice Table */}
+              {/* Bank Details in Two Columns */}
               <div className="col-md-12">
                 <div className="table-responsive m-t-40">
-                  <table className="table table-hover">
+                  <table className="table table-hover" style={{ marginBottom: "0px" }}>
                     <thead>
                       <tr>
-                        <th className="text-center">#</th>
-                        <th className="text-left">ProductName</th>
-                        <th className="text-left">HSN-no</th>
-                        <th className="text-left">Purchase Date</th>
-                        <th className="text-left">Quantity</th>
-                        <th className="text-left">Unit Cost (₹)</th>
-                        <th className="text-left">Total Cost(₹)</th>
+                        <th className="text-center" style={{ background: "#efeded" }}>S.No</th>
+                        <th className="text-left" style={{ background: "#efeded" }}>HSN-no</th>
+                        <th className="text-left" style={{ background: "#efeded" }}>Details</th>
+                        <th className="text-left" style={{ background: "#efeded" }}>Service</th>
+                        <th className="text-left" style={{ background: "#efeded" }}>Quantity</th>
+                        <th className="text-left" style={{ background: "#efeded" }}>Unit Cost (₹)</th>
+                        <th className="text-left" style={{ background: "#efeded" }}>Total Cost (₹)</th>
                       </tr>
                     </thead>
                     <tbody>
                       {invoiceData.orderRequests && invoiceData.orderRequests.map((item, index) => (
                         <tr key={index}>
                           <td className="text-center">{index + 1}</td>
-                          <td className="text-left">{item.productName}</td>
                           <td className="text-left">{item.hsnNo}</td>
-                          <td className="text-left">{item.purchaseDate}</td>
+                          <td className="text-left">{item.productName}</td>
+                          <td className="text-left">{item.productCompany}</td>
                           <td className="text-left">{item.quantity}</td>
                           <td className="text-left">{item.unitCost}</td>
                           <td className="text-left">{item.totalCost}</td>
                         </tr>
                       ))}
                     </tbody>
+                    <tfoot>
+                      {/* Total Cost, IGST, and Grand Total */}
+                      <tr>
+                        <td colSpan="6" style={{ textAlign: 'right', fontWeight: 'bold' }}>Total Amount</td>
+                        <td>{invoiceData.totalAmount}</td>
+                      </tr>
+                      {/* <tr>
+                        <td colSpan="6" style={{ textAlign: 'right', fontWeight: 'bold' }}>IGST (18%)</td>
+                        <td>{invoiceData.iGst}</td>
+                      </tr> */}
+                      {/* Conditional Rendering for Tax Rows */}
+                      {/* {invoiceData.iGst > 0 ? (
+                        <tr>
+                          <td colSpan="6" style={{ textAlign: 'right', fontWeight: 'bold' }}>IGST (18%)</td>
+                          <td>{invoiceData.iGst}</td>
+                        </tr>
+                      ) : (
+                        <>
+                          <tr>
+                            <td colSpan="6" style={{ textAlign: 'right', fontWeight: 'bold' }}>SGST (9%)</td>
+                            <td>{invoiceData.sGst}</td>
+                          </tr>
+                          <tr>
+                            <td colSpan="6" style={{ textAlign: 'right', fontWeight: 'bold' }}>CGST (9%)</td>
+                            <td>{invoiceData.cGst}</td>
+                          </tr>
+                        </>
+                      )} */}
+                      {invoiceData.gstNo === 0 ||invoiceData.gstNo ===""? (
+                        <>
+                          <tr>
+                            <td colSpan="6" style={{ textAlign: 'right', fontWeight: 'bold' }}>SGST (9%)</td>
+                            <td>0</td>
+                          </tr>
+                          <tr>
+                            <td colSpan="6" style={{ textAlign: 'right', fontWeight: 'bold' }}>CGST (9%)</td>
+                            <td>0</td>
+                          </tr>
+                        </>
+                      ) : invoiceData.iGst > 0 ? (
+                        <tr>
+                          <td colSpan="6" style={{ textAlign: 'right', fontWeight: 'bold' }}>IGST (18%)</td>
+                          <td>{invoiceData.iGst}</td>
+                        </tr>
+                      ) : (
+                        <>
+                          <tr>
+                            <td colSpan="6" style={{ textAlign: 'right', fontWeight: 'bold' }}>SGST (9%)</td>
+                            <td>{invoiceData.sGst}</td>
+                          </tr>
+                          <tr>
+                            <td colSpan="6" style={{ textAlign: 'right', fontWeight: 'bold' }}>CGST (9%)</td>
+                            <td>{invoiceData.cGst}</td>
+                          </tr>
+                        </>
+                      )}
+                      <tr>
+                        <td colSpan="6" style={{ textAlign: 'right', fontWeight: 'bold' }}>Grand Total</td>
+                        <td>{invoiceData.grandTotal}</td>
+                      </tr>
+                      <tr>
+                        <td colSpan="12" style={{ textAlign: 'center', fontWeight: 'bold' }}>In Words : {invoiceData.grandTotalInWords} </td>
+                      </tr>
+                      <tr>
+                        <td colSpan="12" style={{ textAlign: 'center', fontWeight: 'bold' }}>The payment should be made favouring {companyDetails.companyName} or Direct deposite information below</td>
+                      </tr>
+                    </tfoot>
                   </table>
                 </div>
               </div>
-
-              {/* Total Amount Section */}
               <div className="col-md-12">
                 <div className="table-responsive">
-                  <table className="table">
-                    <tr>
-                      <th colSpan="12" style={{ fontSize: "medium" }}>Bank Details</th>
-                    </tr>
-                    <tr>
-                      <td>Bank Name: {invoiceData.bankName}</td>
-                      <td>Pan Number: {invoiceData.pan}</td>
-                    </tr>
-                    <tr>
-                      <td>Account Number: {invoiceData.bankAccount}</td>
-                      <td>GST Number: {invoiceData.gstNo}</td>
-                    </tr>
-                    <tr>
-                      <td>IFSC Code: {invoiceData.ifscCode}</td>
-                      <td>Branch: {invoiceData.branch}</td>
-                    </tr>
-                  </table>
-                </div>
-                {/* Additional Table Below Bank Details */}
-                <div className="table-responsive">
-                  <table className="table">
-                    <tbody>
-                      <tr>
-                        <th>Total Amount</th>
-                        <td>{invoiceData.totalAmount}</td>
-                      </tr>
-                      <tr>
-                        <th>SGST(9%)</th>
-                        <td>{invoiceData.sGST}</td>
-                      </tr>
-                      <tr>
-                        <th>CGST(9%)</th>
-                        <td>{invoiceData.cGst}</td>
-                      </tr>
-                      <tr>
-                        <th>IGST(18%)</th>
-                        <td>{invoiceData.iGst}</td>
-                      </tr>
-                      <tr>
-                        <th>Grand Total</th>
-                        <td>{invoiceData.grandTotal}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+                  <h3 style={{ margin: "40px 0 10px 10px" }}>Bank Details</h3>
+                  <div className="col-md-12">
+                    <div className="bank-details" style={{ marginBottom: "20px" }}>
+                      <div style={{ display: "flex", marginBottom: "10px" }}>
+                        <span style={{ fontWeight: "bold", width: "150px" }}>Bank Name:</span>
+                        <span>{invoiceData.bankName}</span>
+                      </div>
+                      {/* <div style={{ display: "flex", marginBottom: "10px" }}>
+                        <span style={{ fontWeight: "bold", width: "150px" }}>Account Type:</span>
+                        <span>{invoiceData.accountType}</span>
+                      </div> */}
+                      <div style={{ display: "flex", marginBottom: "10px" }}>
+                        <span style={{ fontWeight: "bold", width: "150px" }}>Account Number:</span>
+                        <span>{invoiceData.accountNumber}</span>
+                      </div>
+                      <div style={{ display: "flex", marginBottom: "10px" }}>
+                        <span style={{ fontWeight: "bold", width: "150px" }}>IFSC Code:</span>
+                        <span>{invoiceData.ifscCode}</span>
+                      </div>
+                      <div style={{ display: "flex", marginBottom: "10px" }}>
+                        <span style={{ fontWeight: "bold", width: "150px" }}>Branch:</span>
+                        <span>{invoiceData.branch}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <p style={{ marginTop: "50px" }}><b>{companyDetails.companyName}</b> </p>
+                    <img
+                      src={companyDetails.stampImage}
+                      alt="Stamp"
+                      style={{ width: '130px', height: '130px' }}
+                    />
+                    <h5>Authorized Signature</h5>
+                  </div>
 
+                  {/* <h6 style={{ textAlign: "center" }}>CIN : </h6> */}
+                  <hr />
+                  <div style={{ margin: "40px 0px" }}>
+                    <h5 style={{ textAlign: "center" }}>{companyDetails.companyName}</h5>
+                    <p style={{ marginBottom: "0px", textAlign: "center" }}>{companyDetails.address}</p>
+                    <p style={{ marginBottom: "0px", textAlign: "center" }}>{companyDetails.phone},{companyDetails.companyEmail} </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
           <div className="text-right" style={{ marginBottom: "30px" }}>
-            <button className="btn btn-danger" onClick={downloadPdf}>Download</button>
+            <button className="btn btn-danger" onClick={handleDownload}>Download as PDF</button>
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 
