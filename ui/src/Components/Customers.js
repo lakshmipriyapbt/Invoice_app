@@ -83,7 +83,7 @@ const Customers = () => {
         },
         {
             name: "Contact",
-            selector: (row) => row.mobileNumber ,
+            selector: (row) => row.phone ,
         },
         {
             name: "customerEmai-Id",

@@ -100,6 +100,10 @@ export const userResetPassword = (data) => {
     return axiosInstance.patch(`${Login_URL}/userPassword`, data);
 }
 
+export const CompanyImagePatchApi = (companyId, formData) => {
+    return axiosInstance.patch(`/company/${companyId}/logo`, formData);
+}
+
 export const CompanyRegistrationApi = (data) => {
     return axiosInstance.post('/company', data, {
         headers: {
@@ -176,9 +180,34 @@ export const InvoicePutApiById = (invoiceId, data) => {
     return axiosInstance.patch(`/invoice/${invoiceId}`, data)
 };
 
-export const InvoiceGenerateApi = (invoiceId, data) => {
- return axiosInstance.get(`/invoice/${invoiceId}/generate`, data)
-}
+export const InvoiceDownloadApi = async (invoiceId, data) => {
+    try {
+        const response = await axiosInstance.get(`/invoice/${invoiceId}/generate`, {
+            params: data,
+            responseType: 'blob',
+            headers: {
+                'Accept': 'application/pdf',
+            }
+        });
+        if (response.status === 200 && response.data) {
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `invoice_${invoiceId}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            return true;
+        } else {
+            console.error('Error: Invalid response or empty data');
+            return false;
+        }
+    } catch (error) {
+        console.error('Download error:', error.response || error.message || error);
+        return false; // Return false or handle the error as needed
+    }
+};
 
 export const QuotationGetApi = () => {
     return axiosInstance.get(`/quotation/all`);
@@ -212,7 +241,7 @@ export const QuotationPutApiById = (quotationId, data) => {
 };
 
 export const QuotationGenerateApi = (quotationId, data) => {
- return axiosInstance.get(`/quotation/${quotationId}/generate`, data)
+    return axiosInstance.get(`/quotation/${quotationId}/generate`, data)
 }
 
 export const ProductsGetApi = async () => {

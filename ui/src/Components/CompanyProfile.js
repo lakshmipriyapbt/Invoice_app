@@ -1,21 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { companyUpdateByIdApi, companyViewByIdApi } from '../Axios';
+import { CompanyImagePatchApi, companyUpdateByIdApi, companyViewByIdApi } from '../Axios';
 import { Slide, toast } from 'react-toastify';
 import TopNav from "../Pages/TopNav";
 import SideNav from "../Pages/SideNav";
 import Footer from '../Pages/Footer';
-import { Eye, EyeSlash } from 'react-bootstrap-icons';
+import { CameraFill, Eye, EyeSlash } from 'react-bootstrap-icons';
 import { useAuth } from '../Context/AuthContext';
+import { Button, Modal, ModalBody, ModalFooter, ModalHeader, ModalTitle } from 'react-bootstrap';
 
 const CompanyProfile = () => {
     const { register, handleSubmit, formState: { errors }, control, trigger, setValue } = useForm();
     const [selectedFile, setSelectedFile] = useState(null);
     const [companyId, setCompanyId] = useState(null);
     const [isUpdating, setIsUpdating] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
+    const [postImage, setPostImage] = useState(null);
+    const fileInputRef = useRef(); // To reference the file input
+    const [error, setError] = useState(null);
+    const [successMessage, setSuccessMessage] = useState("");
+    const [imgError, setImgError] = useState(null);
     const [passwordShown, setPasswordShown] = useState(false);
-    const { user } = useAuth();
+    const { user, logoFileName } = useAuth();
+    const [showModal, setShowModal] = useState(false);
     console.log(user.companyId);
     const navigate = useNavigate();
     const location = useLocation();
@@ -52,7 +60,7 @@ const CompanyProfile = () => {
                     setValue('address', companyData.address);
                     setValue('state', companyData.state);
                     setValue('password', companyData.password);
-                    setSelectedFile(companyData.stampAndSign);
+                    setSelectedFile(companyData.stampImage);
                 } catch (error) {
                     toast.error('Failed to load company details.', {
                         position: 'top-right',
@@ -81,7 +89,7 @@ const CompanyProfile = () => {
 
         if (selectedFile) {
             console.log("Selected file :", selectedFile);  // For debugging, print the base64 string
-            formData.append("stampAndSign", selectedFile);  // Append the base64 string, not the file object
+            formData.append("stampImage", selectedFile);  // Append the base64 string, not the file object
         } else {
             console.log("No file selected");  // Handle case when no file is selected
         }
@@ -181,6 +189,68 @@ const CompanyProfile = () => {
         }
     };
 
+    const onChangePicture = (e) => {
+        const file = e.target.files[0]; // Get the selected file
+        // Check if no file is selected
+        if (!file) {
+            setImgError("No file selected.");
+            return; // Stop processing if no file is selected
+        }
+        // Check file size (limit to 200KB)
+        if (file.size > 200 * 1024) {
+            setImgError("File size must be less than 200KB.");
+            return; // Stop further processing if size exceeds limit
+        }
+        // Check file type (valid image types and PDF)
+        const validTypes = ["image/png", "image/jpeg", "image/svg+xml"];
+        if (!validTypes.includes(file.type)) {
+            setImgError("Only .png, .jpg, .jpeg, .svg files are allowed.");
+            return; // Stop further processing if the type is invalid
+        }
+        // If the file is valid, clear previous errors and update the state
+        setImgError(''); // Clear error messages
+        setPostImage(file); // Store the selected file
+        console.log("File is valid and ready for upload:", file);
+    };
+
+    const handleCloseUploadImageModal = () => {
+        setPostImage(null);
+        setShowModal(false);
+        setErrorMessage("");
+    };
+
+    const handleLogoSubmit = async (e) => {
+        e.preventDefault(); // Prevent form default action
+        if (!user.companyId) return;
+        if (!postImage) {
+            setErrorMessage("Logo is Required");
+            return;
+        }
+        try {
+            const formData = new FormData();
+            formData.append("image", "string");
+            formData.append("file", postImage);
+            await CompanyImagePatchApi(user.companyId, formData);
+            setPostImage(null);
+            setSuccessMessage("Logo updated successfully.");
+            toast.success("Company Logo Updated Successfully");
+            setErrorMessage('');
+            setImgError(''); // Clear image error if everything goes fine
+            closeModal();
+            setTimeout(() => {
+                window.location.href = "/main";
+            }, 2000);
+        } catch (err) {
+            console.error("Logo update error:", err);
+            setSuccessMessage('');
+            toast.error("Failed To Update Logo");
+            setError(err);
+        }
+    };
+
+    const openModal = () => setShowModal(true);
+    const closeModal = () => setShowModal(false);
+
     return (
         <div id="main-wrapper" data-sidebartype="mini-sidebar">
             <TopNav />
@@ -189,6 +259,55 @@ const CompanyProfile = () => {
                 <div className="row">
                     <div className="col-12 d-flex no-block align-items-center">
                         <h4 className="page-title" style={{ color: "blue" }}>Profile</h4>
+                    </div>
+                </div>
+            </div>
+            <div className='container-fliuid'>
+                <div className="row">
+                    <div className='col-md-9 ' style={{ marginLeft: "300px", marginTop: "40px" }}>
+                        <div className="col-12">
+                            <div className="card">
+                                <div className="card-header">
+                                    <h5 className="card-title" style={{ marginBottom: "0px" }}>Add Company Logo</h5>
+                                </div>
+                                <div className="card-body">
+                                    <div className="row">
+                                        <div className="col-12 col-md-6 mb-3">
+                                            <div
+                                                style={{
+                                                    position: "relative",
+                                                    fontSize: "50px",
+                                                    cursor: "pointer",
+                                                    marginRight: "80%",
+                                                }}
+                                                onClick={openModal}
+                                            >
+                                                <div
+                                                    style={{
+                                                        position: "relative",
+                                                        justifyContent: "center",
+                                                    }}
+                                                >
+                                                    <CameraFill />
+                                                </div>
+                                            </div>
+                                            <span className="text-info align-start">Max-Size=200 KB </span>
+                                        </div>
+                                        <div className="col-12 col-md-6 mb-3">
+                                            {logoFileName && (
+                                                <img
+                                                    className="align-middle"
+                                                    src={`${logoFileName}`}
+                                                    accept=".png, .jpg. ,svg ,.jpeg,"
+                                                    alt="Company Logo"
+                                                    style={{ height: "80px", width: "200px" }}
+                                                />
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -240,7 +359,7 @@ const CompanyProfile = () => {
                                         </div>
                                     </div>
                                     <div className='form row'>
-                                        <div className="form-group col-md-6">
+                                        <div className="form-group col-md-6" style={{ paddingRight: "40px" }}>
                                             <label htmlFor="password" className="col-sm-4 text-left control-label col-form-label">Password</label>
                                             <div className="input-group">
                                                 <input
@@ -406,18 +525,20 @@ const CompanyProfile = () => {
                                             </div>
                                             {errors.gender && <p className="errorsMsg">{errors.gender.message}</p>}
                                         </div>
-                                        <div className="form-group col-md-6">
-                                            <label htmlFor="stampAndSign" className="col-sm-4 text-left control-label col-form-label">Stamp & Sign</label>
+                                        <div className="form-group col-md-6" style={{ paddingRight: "40px" }}>
+                                            <label htmlFor="stampImage" className="col-sm-4 text-left control-label col-form-label">Stamp & Sign</label>
                                             <div className="custom-file">
                                                 <Controller
-                                                    name="stampAndSign"
+                                                    name="stampImage"
                                                     control={control}
+                                                    defaultValue={selectedFile || null} // Set the default value to the existing file
                                                     render={({ field }) => (
                                                         <div>
                                                             <input
                                                                 type="file"
                                                                 className="custom-file-input"
-                                                                id="stampAndSign"
+                                                                id="stampImage"
+                                                                ref={fileInputRef} // Reference for clearing the input
                                                                 onChange={(e) => {
                                                                     const file = e.target.files[0];
                                                                     if (file) {
@@ -426,18 +547,22 @@ const CompanyProfile = () => {
                                                                         field.onChange(fileName);
                                                                         console.log("Selected file:", fileName);
                                                                     } else {
+                                                                        setSelectedFile(null); // Clear state if no file is selected
+                                                                        field.onChange(null); // Pass null to the Controller's field
                                                                         console.log('No file selected');
                                                                     }
                                                                 }}
                                                             />
-                                                            <label className="custom-file-label" htmlFor="stampAndSign">
+                                                            <label className="custom-file-label" htmlFor="stampImage">
                                                                 {selectedFile || "Choose file..."}
                                                             </label>
                                                         </div>
                                                     )}
-                                                // rules={{ required: "Upload a Stamp" }}
+                                                    rules={{
+                                                        required: selectedFile ? false : "Please upload a stamp and signature", // Validation only if no file exists
+                                                    }}
                                                 />
-                                                {errors.stampAndSign && <p className="errorsMsg">{errors.stampAndSign.message}</p>}
+                                                {errors.stampImage && <p className="errorsMsg">{errors.stampImage.message}</p>}
                                             </div>
                                         </div>
                                     </div>
@@ -548,6 +673,29 @@ const CompanyProfile = () => {
                                     </div>
                                 </div>
                             </div>
+                            < Modal show={showModal} onHide={handleCloseUploadImageModal} style={{ zIndex: "1050" }
+                            } centered >
+                                <ModalHeader closeButton>
+                                    <ModalTitle>Upload Logo</ModalTitle>
+                                </ModalHeader>
+                                <ModalBody>
+                                    <input
+                                        type="file"
+                                        className="form-control"
+                                        accept=".png, .jpg, .svg, .jpeg,"
+                                        onChange={onChangePicture}
+                                    />
+                                    {errorMessage && <p className="text-danger pb-0" style={{ marginLeft: "2%" }}>{errorMessage}</p>}
+                                </ModalBody>
+                                <ModalFooter>
+                                    <Button variant="secondary" onClick={handleCloseUploadImageModal}>
+                                        Cancel
+                                    </Button>
+                                    <Button variant="primary" onClick={handleLogoSubmit}>
+                                        Upload Logo
+                                    </Button>
+                                </ModalFooter>
+                            </Modal >
                             <div className="border-top">
                                 <div className="card-body">
                                     <button className="btn btn-primary bt-lg" style={{ marginLeft: "95%" }} type='submit'>Save</button>

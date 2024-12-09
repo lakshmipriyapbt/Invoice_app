@@ -14,13 +14,11 @@ import Select from 'react-select'
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCustomers } from '../Redux/CustomerSlice';  // Import the fetchCustomers action
 import { fetchAllProducts } from '../Redux/ProductSlice'; // Import the fetchAllProducts action
-import { selectProducts,selectCustomers } from '../Redux/Store'; // Selectors for loading states
-
-
+import { selectProducts, selectCustomers } from '../Redux/Store'; // Selectors for loading states
 
 
 const InvoiceReg = () => {
-  const { register, handleSubmit, control, setValue, reset, formState: { errors } } = useForm();
+  const { register, handleSubmit, control, setValue, reset, formState: { errors } } = useForm({mode:"onChange"});
   // Select data from Redux store
   const customers = useSelector(selectCustomers) || []; // Ensure it's an array
   const products = useSelector(selectProducts);
@@ -89,7 +87,7 @@ const InvoiceReg = () => {
     const selectedProduct = formattedProducts.find(
       (product) => product.value === selectedValue
     );
-  
+
     if (selectedProduct) {
       // Update local state
       const updatedProductsInfo = [...productsInfo];
@@ -100,12 +98,12 @@ const InvoiceReg = () => {
         productCost: selectedProduct.productCost,
       };
       setProductsInfo(updatedProductsInfo);
-  
+
       // Update React Hook Form values
       setValue(`productsInfo[${index}].productId`, selectedProduct.value);
       setValue(`productsInfo[${index}].hsnNo`, selectedProduct.hsnNo);
       setValue(`productsInfo[${index}].productCost`, selectedProduct.productCost);
-  
+
       console.log("Updated Products Info: ", updatedProductsInfo); // Debugging log
     }
   };
@@ -127,6 +125,7 @@ const InvoiceReg = () => {
         purchaseOrder: data.purchaseOrder,
         vendorCode: data.vendorCode,
         invoiceDate: data.invoiceDate,
+        dueDate: data.dueDate,
         invoiceNumber: data.invoiceNumber,
         orderRequests: data.productsInfo.map(product => ({
           productId: product.productId,
@@ -210,7 +209,7 @@ const InvoiceReg = () => {
       e.preventDefault();
     }
   };
-  
+
   return (
     <div id="main-wrapper" data-sidebartype="mini-sidebar">
       <TopNav />
@@ -243,7 +242,7 @@ const InvoiceReg = () => {
                   {/* Customer Name Dropdown */}
                   <div className="form-group row mt-5">
                     <label htmlFor="customer" className="col-sm-3 text-right control-label col-form-label">Customer Name</label>
-                    <div className="col-sm-9">
+                    <div className="col-sm-9" style={{ paddingRight: "58px" }}>
                       <Controller
                         name="customerName"
                         id="customerName"
@@ -293,6 +292,31 @@ const InvoiceReg = () => {
                       />
                     </div>
                     {errors.purchaseOrder && (<p className="errorsMsg">{errors.purchaseOrder.message}</p>)}
+                  </div>
+                  <div className="form-group row">
+                    <label htmlFor="invoiceDate" className="col-sm-3 text-right control-label col-form-label">
+                      Due Date
+                    </label>
+                    <div className="col-sm-9">
+                      <input
+                        type="date"
+                        className="form-control"
+                        name="dueDate"
+                        id="dueDate"
+                        {...register("dueDate", {
+                          required: "Due date is required",
+                          validate: {
+                            notPast: (value) => {
+                              const today = new Date();
+                              const selectedDate = new Date(value);
+                              // Check if the selected date is today or in the future
+                              return selectedDate >= today || "Due date cannot be in the past.";
+                            },
+                          },
+                        })}
+                      />
+                    </div>
+                    {errors.dueDate && <p className="errorsMsg">{errors.dueDate.message}</p>}
                   </div>
                   {/* Invoice Number */}
                   <div className="form-group row">
@@ -369,9 +393,9 @@ const InvoiceReg = () => {
                               <label htmlFor="quantity" className="text-right control-label col-form-label">Quantity</label>
                               <input className="form-control" id="quantity" name="quantity" type="number"
                                 {...register(`productsInfo[${index}][quantity]`, {
-                                   required: 'Quantity is required', 
-                                   })}
-                                   onKeyPress={allowNumbersOnly}
+                                  required: 'Quantity is required',
+                                })}
+                                onKeyPress={allowNumbersOnly}
                               />
                             </div>
                             <div className="form-group row col-sm-2 ml-2">

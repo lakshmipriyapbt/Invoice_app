@@ -132,7 +132,7 @@ const UserProfile = (props) => {
                                     </div>
                                     <div className="form-group row ">
                                         <label htmlFor="fname" className="col-sm-3 text-right control-label col-form-label">User Role</label>
-                                        <div className="col-sm-9">
+                                        <div className="col-sm-9" style={{ paddingRight: "60px" }}>
                                             <Controller
                                                 name="role"
                                                 defaultValue={role[0]?.id}

@@ -151,7 +151,6 @@ const Product = () => {
 
                 <div className="table-responsive">
                   <DataTable
-                    className="table table-striped table-bordered"
                     columns={columns}
                     data={filteredData}
                     pagination
