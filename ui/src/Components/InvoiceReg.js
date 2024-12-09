@@ -16,6 +16,7 @@ import { fetchCustomers } from '../Redux/CustomerSlice';  // Import the fetchCus
 import { fetchAllProducts } from '../Redux/ProductSlice'; // Import the fetchAllProducts action
 import { selectProducts, selectCustomers } from '../Redux/Store'; // Selectors for loading states
 
+
 const InvoiceReg = () => {
   const { register, handleSubmit, control, setValue, reset, formState: { errors } } = useForm({mode:"onChange"});
   // Select data from Redux store

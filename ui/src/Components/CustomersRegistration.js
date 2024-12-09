@@ -289,12 +289,14 @@ const CustomersRegistration = () => {
                           name="gstNo"
                           placeholder="Enter Gst Number"
                           {...register("gstNo", {
+
                             validate: (value) =>
                               !value || validateField(value, 'gst'), // Validate only if the field is not empty
                             maxLength: {
                               value: 15,
                               message: "GST Number should be 15 characters long",
                             },
+
                           })}
                           onChange={(e) => handleInputChange(e, "gstNo")}
                           onKeyPress={(e) => preventInvalidInput(e, 'alphaNumeric')}
