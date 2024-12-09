@@ -28,13 +28,17 @@ public class CompanyModel {
     private String pan;
     private String gstNumber;
     private String gender;
-    private String stampAndSign;
+    private String stampImage;
     private String accountNumber;
+    private String accountType;
     private String bankName;
     private String branch;
     private String ifscCode;
     private String address;
     private String state;
+    @Column(length = 500)
+    private String imageFile;
+    private String place;
 
     private String otp;
     private Long expiryTime;
@@ -43,5 +47,4 @@ public class CompanyModel {
 
     @OneToMany(mappedBy = "companyModel", orphanRemoval = true)
     private List<InvoiceModel> invoices;
-
 }

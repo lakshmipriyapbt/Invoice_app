@@ -12,7 +12,7 @@ public interface LoginService {
 
     ResponseEntity<?> UserLogin(UserLoginRequest request) throws InvoiceException;
 
-    ResponseEntity<?> validateOtp(OtpRequest request) throws InvoiceException;
+    ResponseEntity<?> validateOtp(UserOtpRequest request) throws InvoiceException;
 
     ResponseEntity<?> validateCompanyOtp(CompanyOtpRequest request) throws InvoiceException;
 

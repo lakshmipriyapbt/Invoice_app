@@ -11,7 +11,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @Builder
-public class OtpRequest {
+public class UserOtpRequest {
 
     @Schema(required = true, description = "${login.otp.description}", example = "123456")
     private Long otp;

@@ -2,6 +2,7 @@ package com.invoice.service;
 
 import com.invoice.exception.InvoiceException;
 import com.invoice.request.InvoiceRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 
 public interface InvoiceService {
@@ -16,5 +17,5 @@ public interface InvoiceService {
 
     ResponseEntity<?> deleteInvoice(String invoiceId) throws InvoiceException;
 
-    ResponseEntity<?> generateInvoice(Long invoiceId) throws InvoiceException;
+    ResponseEntity<?> generateInvoice(String invoiceId, HttpServletRequest request) throws InvoiceException;
 }

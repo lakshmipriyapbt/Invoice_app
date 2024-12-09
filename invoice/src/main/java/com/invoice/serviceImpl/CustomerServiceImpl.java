@@ -44,13 +44,10 @@ public class CustomerServiceImpl implements CustomerService {
                 log.error("Mobile number already exists: {}", customerRequest.getMobileNumber());
                 throw new InvoiceException(InvoiceErrorMessageKey.MOBILE_ALREADY_EXISTS, HttpStatus.BAD_REQUEST);
             }
-            if (repository.existsByGstNo(customerRequest.getGstNo())) {
-                log.error("GST Number already exists: {}", customerRequest.getGstNo());
-                throw new InvoiceException(InvoiceErrorMessageKey.GSTNO_ALREADY_EXISTS, HttpStatus.BAD_REQUEST);
-            }
             CustomerModel customer = new CustomerModel();
             customer.setCustomerName(customerRequest.getCustomerName());
             customer.setEmail(customerRequest.getEmail());
+            customer.setCustomerCompany(customerRequest.getCustomerCompany());
             customer.setMobileNumber(customerRequest.getMobileNumber());
             customer.setAddress(customerRequest.getAddress());
             customer.setState(customerRequest.getState());
@@ -65,9 +62,10 @@ public class CustomerServiceImpl implements CustomerService {
             response.put(Constants.CUSTOMER_ID, savedCustomer.getCustomerId());
             response.put(Constants.CUSTOMER_NAME, savedCustomer.getCustomerName());
             response.put(Constants.CUSTOMER_EMAIL, savedCustomer.getEmail());
-            response.put(Constants.CUSTOMER_MOBILE, savedCustomer.getMobileNumber());
+            response.put(Constants.MOBILE_NUMBER, savedCustomer.getMobileNumber());
             response.put(Constants.CUSTOMER_ADDRESS, savedCustomer.getAddress());
             response.put(Constants.CUSTOMER_STATE, savedCustomer.getState());
+            response.put(Constants.CUSTOMER_COMPANY,savedCustomer.getCustomerCompany());
             return new ResponseEntity<>(ResponseBuilder.builder().build().createSuccessResponse((String) Constants.CREATE_SUCCESS), HttpStatus.CREATED);
         } catch (Exception e) {
             log.error("Unexpected error occurred while creating customer: {}", e.getMessage(), e);
@@ -137,6 +135,7 @@ public class CustomerServiceImpl implements CustomerService {
                 }
                 customerToUpdate.setCustomerName(customerRequest.getCustomerName());
                 customerToUpdate.setEmail(customerRequest.getEmail());
+                customerToUpdate.setCustomerCompany(customerRequest.getCustomerCompany());
                 customerToUpdate.setMobileNumber(customerRequest.getMobileNumber());
                 customerToUpdate.setAddress(customerRequest.getAddress());
                 customerToUpdate.setState(customerRequest.getState());

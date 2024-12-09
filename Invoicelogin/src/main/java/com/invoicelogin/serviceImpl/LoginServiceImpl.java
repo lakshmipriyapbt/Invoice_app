@@ -25,6 +25,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @Slf4j
@@ -72,7 +73,7 @@ public class LoginServiceImpl implements LoginService {
         Long companyId = (Long) company.get(Constants.COMPANY_ID);
         if (companyId == null) {
             log.error("Company ID not found for email: {}", request.getCompanyEmail());
-            throw new InvoiceException(InvoiceErrorMessageKey.COMPANY_ID_NOT_FOUND, HttpStatus.NOT_FOUND);
+            throw new InvoiceException(InvoiceErrorMessageKey.COMPANY_ID_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND);
         }
         String storedPassword = (String) company.get(Constants.PASSWORD);
         if (storedPassword != null && storedPassword.equals(request.getPassword())) {
@@ -83,12 +84,14 @@ public class LoginServiceImpl implements LoginService {
             jdbcTemplate.update(propertiesConfig.getCompanyUpdateOtpQuery(), newOtp, expiryTime, request.getCompanyEmail());
             log.info("New OTP generated and stored for email: {}", request.getCompanyEmail());
 
-            try {
-                sendOtpEmail(request.getCompanyEmail(), newOtp, (int) propertiesConfig.getOtpExpiryMinutes());
-            } catch (MessagingException e) {
-                log.error("Failed to send OTP email to {}: {}", request.getCompanyEmail(), e.getMessage());
-                throw new InvoiceException(InvoiceErrorMessageKey.FAILED_TO_SEND_OTP.getMessage(), HttpStatus.UNAUTHORIZED);            }
-
+            // Offload email sending to a background thread
+            CompletableFuture.runAsync(() -> {
+                try {
+                    sendOtpEmail(request.getCompanyEmail(), newOtp, (int) propertiesConfig.getOtpExpiryMinutes());
+                } catch (MessagingException e) {
+                    log.error("Failed to send OTP email to {}: {}", request.getCompanyEmail(), e.getMessage());
+                }
+            });
             String token = JwtTokenUtil.generateToken(String.valueOf(companyId), Collections.singletonList(propertiesConfig.getCompanyRole()));
             log.info("Generated Token: {}", token);
             return new ResponseEntity<>(ResponseBuilder.createSuccessResponse(new LoginResponse(token, Constants.SUCCESS)), HttpStatus.OK);
@@ -113,6 +116,7 @@ public class LoginServiceImpl implements LoginService {
     public ResponseEntity<?> UserLogin(UserLoginRequest request) throws InvoiceException {
         log.info("Attempting login for email: {}", request.getUserEmail());
 
+        // Fetch user details
         Map<String, Object> user = fetchUserByEmail(request.getUserEmail());
         if (user == null) {
             log.error("Invalid email: {}", request.getUserEmail());
@@ -121,34 +125,42 @@ public class LoginServiceImpl implements LoginService {
 
         Long userId = (Long) user.get(Constants.USER_ID);
         if (userId == null) {
-            log.error("Company ID not found for email: {}", request.getUserEmail());
+            log.error("User ID not found for email: {}", request.getUserEmail());
             throw new InvoiceException(InvoiceErrorMessageKey.USERID_NOT_FOUND, HttpStatus.NOT_FOUND);
         }
+
         String storedPassword = (String) user.get(Constants.PASSWORD);
-        if (storedPassword.equals(request.getPassword())) {
-            log.info("Login successful for email: {}", request.getUserEmail());
+        if (!storedPassword.equals(request.getPassword())) {
+            log.error("Password mismatch for email: {}", request.getUserEmail());
+            throw new InvoiceException(InvoiceErrorMessageKey.INVALID_EMAIL_PASSWORD.name(), HttpStatus.UNAUTHORIZED);
+        }
 
-            String newOtp = String.valueOf(generateOtp());
-            long expiryTime = Instant.now()
-                    .plus(propertiesConfig.getOtpExpiryMinutes(), ChronoUnit.MINUTES)
-                    .getEpochSecond();
-            jdbcTemplate.update(propertiesConfig.getUserUpdateOtpQuery(), newOtp, expiryTime, request.getUserEmail());
-            log.info("New OTP generated and stored for email: {}", request.getUserEmail());
+        log.info("Login successful for email: {}", request.getUserEmail());
 
+        // Generate OTP
+        String newOtp = String.valueOf(generateOtp());
+        long expiryTime = Instant.now()
+                .plus(propertiesConfig.getOtpExpiryMinutes(), ChronoUnit.MINUTES)
+                .getEpochSecond();
+
+        // Store OTP in the database
+        jdbcTemplate.update(propertiesConfig.getUserUpdateOtpQuery(), newOtp, expiryTime, request.getUserEmail());
+        log.info("New OTP generated and stored for email: {}", request.getUserEmail());
+
+        // Offload email sending to a background thread
+        CompletableFuture.runAsync(() -> {
             try {
                 sendOtpEmail(request.getUserEmail(), newOtp, (int) propertiesConfig.getOtpExpiryMinutes());
             } catch (MessagingException e) {
                 log.error("Failed to send OTP email to {}: {}", request.getUserEmail(), e.getMessage());
-                throw new InvoiceException(InvoiceErrorMessageKey.FAILED_TO_SEND_OTP, HttpStatus.INTERNAL_SERVER_ERROR);
             }
-            String token = JwtTokenUtil.generateToken(String.valueOf(userId), Collections.singletonList(propertiesConfig.getUserRole()));
-            log.info("Generated Token: {}", token);
-
-            return new ResponseEntity<>(ResponseBuilder.createSuccessResponse(new LoginResponse(token, Constants.SUCCESS)), HttpStatus.OK);
-        } else {
-            log.error("Password does not match for email: {}", request.getUserEmail());
-            throw new InvoiceException(InvoiceErrorMessageKey.INVALID_EMAIL_PASSWORD.name(), HttpStatus.UNAUTHORIZED);
-        }
+        });
+        // Generate JWT token
+        String token = JwtTokenUtil.generateToken(String.valueOf(userId), Collections.singletonList(propertiesConfig.getUserRole()));
+        log.info("Generated Token: {}", token);
+        // Build response
+        LoginResponse loginResponse = new LoginResponse(token, Constants.SUCCESS);
+        return new ResponseEntity<>(ResponseBuilder.createSuccessResponse(loginResponse), HttpStatus.OK);
     }
 
     private Map<String, Object> fetchUserByEmail(String email) {
@@ -172,7 +184,7 @@ public class LoginServiceImpl implements LoginService {
     }
 
     @Override
-    public ResponseEntity<?> validateOtp(OtpRequest request) throws InvoiceException {
+    public ResponseEntity<?> validateOtp(UserOtpRequest request) throws InvoiceException {
         return validateOtpForUser(request.getUserEmail(), Math.toIntExact(request.getOtp()));
     }
 
@@ -240,30 +252,25 @@ public class LoginServiceImpl implements LoginService {
         Map<String, Object> company = fetchCompanyByEmail(request.getCompanyEmail());
         if (company == null) {
             log.error("Company not found for email: {}", request.getCompanyEmail());
-            throw new InvoiceException(InvoiceErrorMessageKey.INVALID_EMAIL, HttpStatus.NOT_FOUND);
+            throw new InvoiceException(InvoiceErrorMessageKey.INVALID_EMAIL.getMessage(), HttpStatus.NOT_FOUND);
         }
         Long companyId = (Long) company.get(Constants.COMPANY_ID);
         if (companyId == null) {
             log.error("Company ID not found for email: {}", request.getCompanyEmail());
-            throw new InvoiceException(InvoiceErrorMessageKey.COMPANY_ID_NOT_FOUND, HttpStatus.NOT_FOUND);
+            throw new InvoiceException(InvoiceErrorMessageKey.COMPANY_ID_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND);
         }
         //String storedPassword = (String) company.get(Constants.PASSWORD);
         if(!request.getConfirmPassword().equals(request.getNewPassword())){
             log.error("Entered Password is not matched");
-            throw new InvoiceException(InvoiceErrorMessageKey.INVALID_EMAIL_PASSWORD,HttpStatus.FORBIDDEN);
+            throw new InvoiceException(InvoiceErrorMessageKey.INVALID_EMAIL_PASSWORD.getMessage(),HttpStatus.FORBIDDEN);
         }
         if(propertiesConfig.getCompanyPassword().equals(request.getNewPassword())){
             log.error("You Can't update with the previous password");
-            throw new InvoiceException(InvoiceErrorMessageKey.PASSWORD_NOT_MATCH,HttpStatus.FORBIDDEN);
+            throw new InvoiceException(InvoiceErrorMessageKey.PASSWORD_NOT_MATCH.getMessage(),HttpStatus.FORBIDDEN);
         }
 
         jdbcTemplate.update(propertiesConfig.getCompanyUpdatePasswordQuery(), request.getNewPassword(), request.getCompanyEmail());
         log.info("Password updated successfully for company with email: {}", request.getCompanyEmail());
-
-        String newOtp = String.valueOf(generateOtp());
-        long expiryTime = Instant.now().plus(propertiesConfig.getOtpExpiryMinutes(), ChronoUnit.MINUTES).getEpochSecond();
-        jdbcTemplate.update(propertiesConfig.getCompanyUpdateOtpQuery(), newOtp, expiryTime, request.getCompanyEmail());
-        log.info("New OTP generated and stored for company with email: {}", request.getCompanyEmail());
 
         String token = JwtTokenUtil.generateToken(request.getCompanyEmail(), Collections.singletonList(propertiesConfig.getCompanyRole()));
         log.info("Generated Token: {}", token);
@@ -274,39 +281,41 @@ public class LoginServiceImpl implements LoginService {
 
     @Override
     public ResponseEntity<?> updateUserPassword(UserPassword request) throws InvoiceException {
-        log.info("Attempting to update password for email: {}", request.getUserEmail());
+        String email = request.getUserEmail(); // Fetch the email from the UserPassword request
 
-        Map<String, Object> user = fetchUserByEmail(request.getUserEmail());
+        log.info("Attempting to update password for user with email: {}", email);
+
+        // Fetch user details by email
+        Map<String, Object> user = fetchUserByEmail(email);
         if (user == null) {
-            log.error("User not found for email: {}", request.getUserEmail());
-            throw new InvoiceException(InvoiceErrorMessageKey.INVALID_EMAIL,HttpStatus.NOT_FOUND);
+            log.error("User not found for email: {}", email);
+            throw new InvoiceException(InvoiceErrorMessageKey.INVALID_EMAIL.getMessage(), HttpStatus.NOT_FOUND);
         }
-        Long userId = (Long) user.get(Constants.USER_ID);
-        if (userId == null) {
-            log.error("Company ID not found for email: {}", request.getUserEmail());
-            throw new InvoiceException(InvoiceErrorMessageKey.USERID_NOT_FOUND, HttpStatus.NOT_FOUND);
-        }
-        //String storedPassword = (String) user.get(Constants.PASSWORD);
-        if(!request.getConfirmPassword().equals(request.getNewPassword())){
-            log.error("Entered Password is not matched");
-            throw new InvoiceException(InvoiceErrorMessageKey.PASSWORD_NOT_MATCH,HttpStatus.FORBIDDEN);
-        }
-        if(propertiesConfig.getUserPassword().equals(request.getNewPassword())){
-            log.error("User Can't update with the previous password");
-            throw new InvoiceException(InvoiceErrorMessageKey.INVALID_EMAIL_PASSWORD,HttpStatus.FORBIDDEN);
-        }
-        jdbcTemplate.update(propertiesConfig.getUserUpdatePasswordQuery(), request.getNewPassword(), request.getUserEmail());
-        log.info("Password updated successfully for email: {}", request.getUserEmail());
-        String newOtp = String.valueOf(generateOtp());
 
-        long expiryTime = Instant.now().plus(propertiesConfig.getOtpExpiryMinutes(), ChronoUnit.MINUTES).getEpochSecond();
-        jdbcTemplate.update(propertiesConfig.getUserUpdateOtpQuery(), newOtp, expiryTime, request.getUserEmail());
-        log.info("New OTP generated and stored for email: {}", request.getUserEmail());
+        // Validate that the new password and confirm password match
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            log.error("Password and confirm password do not match for email: {}", email);
+            throw new InvoiceException(InvoiceErrorMessageKey.PASSWORD_MISMATCH.getMessage(), HttpStatus.BAD_REQUEST);
+        }
 
-        String token = JwtTokenUtil.generateToken(request.getUserEmail(), Collections.singletonList(propertiesConfig.getUserRole()));
-        log.info("Generated Token: {}", token);
+        // Prevent updating to the previous password (if needed)
+        String storedPassword = (String) user.get(Constants.PASSWORD);
+        if (storedPassword != null && storedPassword.equals(request.getNewPassword())) {
+            log.error("You can't update to the same password for email: {}", email);
+            throw new InvoiceException(InvoiceErrorMessageKey.PASSWORD_SAME_AS_PREVIOUS.getMessage(), HttpStatus.FORBIDDEN);
+        }
 
-        log.info("Password updated successfully for email: {}", request.getUserEmail());
+        // Update the user's password in the database
+        String updatePasswordSql = propertiesConfig.getUserUpdatePasswordQuery();
+        jdbcTemplate.update(updatePasswordSql, request.getNewPassword(), email);
+
+        log.info("Password successfully updated for user with email: {}", email);
+
+        // Generate a new JWT token for the user after password update
+        String token = JwtTokenUtil.generateToken(email, Collections.singletonList(propertiesConfig.getUserRole()));
+        log.info("Generated new token for user with email: {}", email);
+
+        // Return the response with the generated token
         return new ResponseEntity<>(ResponseBuilder.createSuccessResponse(new LoginResponse(token, Constants.SUCCESS)), HttpStatus.OK);
     }
 
@@ -317,7 +326,7 @@ public class LoginServiceImpl implements LoginService {
         Map<String, Object> user = fetchUserByEmail(request.getUserEmail());
         if (user == null) {
             log.error("User not found for email: {}", request.getUserEmail());
-            throw new InvoiceException(InvoiceErrorMessageKey.INVALID_EMAIL,HttpStatus.NOT_FOUND);
+            throw new InvoiceException(InvoiceErrorMessageKey.INVALID_EMAIL.getMessage(),HttpStatus.NOT_FOUND);
         }
         String newOtp = String.valueOf(generateOtp());
         long expiryTime = Instant.now().plus(propertiesConfig.getOtpExpiryMinutes(), ChronoUnit.MINUTES).getEpochSecond();
@@ -325,19 +334,28 @@ public class LoginServiceImpl implements LoginService {
         jdbcTemplate.update(propertiesConfig.getUserUpdateOtpQuery(), newOtp, expiryTime, request.getUserEmail());
         log.info("New OTP generated and stored for email: {}", request.getUserEmail());
 
-        Long userId = (Long) user.get(Constants.COMPANY_ID);
+        // Offload email sending to a background thread
+        CompletableFuture.runAsync(() -> {
+            try {
+                sendOtpEmail(request.getUserEmail(), newOtp, (int) propertiesConfig.getOtpExpiryMinutes());
+            } catch (MessagingException e) {
+                log.error("Failed to send OTP email to {}: {}", request.getUserEmail(), e.getMessage());
+            }
+        });
+        Long userId = (Long) user.get(Constants.USER_ID);
         if (userId == null) {
             log.error("Company ID not found for email: {}", request.getUserEmail());
-            throw new InvoiceException(InvoiceErrorMessageKey.COMPANY_ID_NOT_FOUND, HttpStatus.NOT_FOUND);
+            throw new InvoiceException(InvoiceErrorMessageKey.USERID_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND);
         }
-        String storedPassword = (String) user.get(Constants.PASSWORD);
+        //String storedPassword = (String) user.get(Constants.PASSWORD);
         if(!request.getConfirmPassword().equals(request.getNewPassword())){
             log.error("Entered Password is not matched");
-            throw new InvoiceException(InvoiceErrorMessageKey.PASSWORD_NOT_MATCH,HttpStatus.BAD_REQUEST);
+            throw new InvoiceException(InvoiceErrorMessageKey.PASSWORD_NOT_MATCH.getMessage(),HttpStatus.BAD_REQUEST);
         }
+
         if(propertiesConfig.getUserPassword().equals(request.getNewPassword())){
             log.error("User Can't update with the previous password");
-            throw new InvoiceException(InvoiceErrorMessageKey.INVALID_EMAIL_PASSWORD, HttpStatus.FORBIDDEN);
+            throw new InvoiceException(InvoiceErrorMessageKey.INVALID_EMAIL_PASSWORD.getMessage(), HttpStatus.FORBIDDEN);
         }
         jdbcTemplate.update(propertiesConfig.getUserUpdatePasswordQuery(), request.getNewPassword(), request.getUserEmail());
         log.info("Password updated successfully for email: {}", request.getUserEmail());
@@ -351,26 +369,42 @@ public class LoginServiceImpl implements LoginService {
         Map<String, Object> company = fetchCompanyByEmail(request.getCompanyEmail());
         if (company == null) {
             log.error("User not found for email: {}", request.getNewPassword());
-            throw new InvoiceException(InvoiceErrorMessageKey.INVALID_EMAIL, HttpStatus.NOT_FOUND);
+            throw new InvoiceException(InvoiceErrorMessageKey.INVALID_EMAIL.getMessage(), HttpStatus.NOT_FOUND);
         }
         String newOtp = String.valueOf(generateOtp());
         long expiryTime = Instant.now().plus(propertiesConfig.getOtpExpiryMinutes(), ChronoUnit.MINUTES).getEpochSecond();
 
         jdbcTemplate.update(propertiesConfig.getCompanyUpdateOtpQuery(), newOtp, expiryTime, request.getCompanyEmail());
         log.info("New OTP generated and stored for email: {}", request.getCompanyEmail());
+
+        try {
+            sendOtpEmail(request.getCompanyEmail(), newOtp, (int) propertiesConfig.getOtpExpiryMinutes());
+        } catch (MessagingException e) {
+            log.error("Failed to send OTP email to {}: {}", request.getCompanyEmail(), e.getMessage());
+            throw new InvoiceException(InvoiceErrorMessageKey.FAILED_TO_SEND_OTP.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         Long companyId = (Long) company.get(Constants.COMPANY_ID);
         if (companyId == null) {
             log.error("Company ID not found for email: {}", request.getCompanyEmail());
-            throw new InvoiceException(InvoiceErrorMessageKey.COMPANY_ID_NOT_FOUND, HttpStatus.NOT_FOUND);
+            throw new InvoiceException(InvoiceErrorMessageKey.COMPANY_ID_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND);
         }
-        String storedPassword = (String) company.get(Constants.PASSWORD);
+        //String storedPassword = (String) company.get(Constants.PASSWORD);
         if(!request.getConfirmPassword().equals(request.getNewPassword())){
             log.error("Entered Password is not matched");
-            throw new InvoiceException(InvoiceErrorMessageKey.INVALID_EMAIL_PASSWORD, HttpStatus.FORBIDDEN);
+            throw new InvoiceException(InvoiceErrorMessageKey.INVALID_EMAIL_PASSWORD.getMessage(), HttpStatus.FORBIDDEN);
         }
+        // Offload email sending to a background thread
+        CompletableFuture.runAsync(() -> {
+            try {
+                sendOtpEmail(request.getCompanyEmail(), newOtp, (int) propertiesConfig.getOtpExpiryMinutes());
+            } catch (MessagingException e) {
+                log.error("Failed to send OTP email to {}: {}", request.getCompanyEmail(), e.getMessage());
+            }
+        });
+
         if(propertiesConfig.getCompanyPassword().equals(request.getNewPassword())){
             log.error("You Can't update with the previous password");
-            throw new InvoiceException(InvoiceErrorMessageKey.PASSWORD_NOT_MATCH, HttpStatus.BAD_REQUEST);
+            throw new InvoiceException(InvoiceErrorMessageKey.PASSWORD_NOT_MATCH.getMessage(), HttpStatus.BAD_REQUEST);
         }
         jdbcTemplate.update(propertiesConfig.getUserUpdatePasswordQuery(), request.getNewPassword(), request.getCompanyEmail());
         log.info("Password updated successfully for email: {}", request.getCompanyEmail());

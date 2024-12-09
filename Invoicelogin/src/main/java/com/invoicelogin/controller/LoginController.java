@@ -58,11 +58,12 @@ public class LoginController {
         return loginService.UserLogin(request);
     }
 
+
     @PostMapping("validate/userOtp")
     @io.swagger.v3.oas.annotations.Operation(summary = "${api.userOtpValidate.tag}", description = "${api.otpValidate.description}")
     @ResponseStatus(HttpStatus.OK)
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "OK")
-    public ResponseEntity<?> validateOtp(@RequestBody @Valid OtpRequest request) throws InvoiceException {
+    public ResponseEntity<?> validateOtp(@RequestBody @Valid UserOtpRequest request) throws InvoiceException {
         return loginService.validateOtp(request);
     }
 

@@ -1,24 +1,31 @@
 package com.invoice.serviceImpl;
 
-import com.invoice.config.GstConfig;
+import com.invoice.config.Config;
+import com.invoice.config.NumberToWordsConverter;
 import com.invoice.exception.InvoiceErrorMessageKey;
 import com.invoice.exception.InvoiceException;
 import com.invoice.model.*;
 import com.invoice.repository.*;
 import com.invoice.request.InvoiceRequest;
 import com.invoice.request.OrderRequest;
-import com.invoice.response.InvoiceResponse;
 import com.invoice.service.InvoiceService;
 import com.invoice.common.ResponseBuilder;
+import com.invoice.util.CompanyUtils;
 import com.invoice.util.Constants;
+import com.itextpdf.text.DocumentException;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
-import lombok.Value;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
+import org.xhtmlrenderer.pdf.ITextRenderer;
+import freemarker.template.Configuration;
+
+import java.io.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
@@ -29,6 +36,9 @@ import java.util.stream.Collectors;
 public class InvoiceServiceImpl implements InvoiceService {
 
     private final InvoiceRepository repository;
+
+    @Autowired
+    private Configuration freeMarkerConfig;
 
     @Autowired
     public InvoiceServiceImpl(InvoiceRepository repository) {
@@ -42,7 +52,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     private CompanyRepository companyRepository;
 
     @Autowired
-    private GstConfig gstConfig;
+    private Config config;
 
     @Autowired
     private OrderRepository orderRepository;
@@ -79,6 +89,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 invoice.setVendorCode(request.getVendorCode());
                 invoice.setInvoiceDate(request.getInvoiceDate());
                 invoice.setStatus(request.getStatus());
+                invoice.setDueDate(request.getDueDate());
             } catch (Exception e) {
                 log.error("Error setting invoice fields: {}", e.getMessage(), e);
                 throw new InvoiceException(InvoiceErrorMessageKey.INVOICE_CREATION_FAILED.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -106,7 +117,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                         orderModel.setProduct(product);
                         orderModel.setInvoiceModel(invoice);
 
-                    }  catch (Exception e) {
+                    } catch (Exception e) {
                         log.error("Error processing order for productId {}: {}", orderRequest.getProductId(), e.getMessage(), e);
                         throw new InvoiceException(InvoiceErrorMessageKey.ORDER_CREATION_FAILED.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
                     }
@@ -122,7 +133,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 String companyGstNo = company.get().getGstNumber();
                 String customerGstNo = customer.get().getGstNo();
                 // If either customer or company GST number is missing, set all GST-related values to 0
-                if (companyGstNo == null || customerGstNo == null) {
+                if (companyGstNo == null || Objects.equals(customerGstNo, "")) {
                     invoice.setGst(Constants.ZERO);
                     invoice.setCGst(Constants.ZERO);
                     invoice.setSGst(Constants.ZERO);
@@ -131,16 +142,16 @@ public class InvoiceServiceImpl implements InvoiceService {
                 } else {
                     String companyStateCode = extractStateCode(companyGstNo);
                     String customerStateCode = extractStateCode(customerGstNo);
-                    BigDecimal gstRate = gstConfig.getRate();
+                    BigDecimal gstRate = config.getRate();
 
                     if (companyStateCode.equals(customerStateCode)) {
-                        BigDecimal halfGst = totalAmount.multiply(gstRate).divide((gstConfig.getValue()));
+                        BigDecimal halfGst = totalAmount.multiply(gstRate).divide((config.getValue()));
                         invoice.setGst(gstRate.toString());
                         invoice.setCGst(halfGst.toString());
                         invoice.setSGst(halfGst.toString());
                         invoice.setIGst(Constants.ZERO);
                         invoice.setGst(Constants.ZERO);
-                        BigDecimal grandTotal = totalAmount.add(halfGst.multiply(gstConfig.getValue())); // Add both CGST and SGST
+                        BigDecimal grandTotal = totalAmount.add(halfGst.multiply(config.getValue())); // Add both CGST and SGST
                         invoice.setGrandTotal(grandTotal.toString());
                     } else {
                         BigDecimal igst = totalAmount.multiply(gstRate);
@@ -152,6 +163,11 @@ public class InvoiceServiceImpl implements InvoiceService {
                         invoice.setGrandTotal(grandTotal.toString());
                     }
                 }
+                // Convert grand total to words and save
+                BigDecimal grandTotalValue = new BigDecimal(invoice.getGrandTotal());
+                String grandTotalInWords = NumberToWordsConverter.convert(grandTotalValue);
+                invoice.setGrandTotalInWords(grandTotalInWords);
+
                 repository.save(invoice);
             } catch (Exception e) {
                 log.error("Error saving invoice to the database: {}", e.getMessage(), e);
@@ -161,7 +177,7 @@ public class InvoiceServiceImpl implements InvoiceService {
             return new ResponseEntity<>(ResponseBuilder.builder().build().createSuccessResponse(Constants.CREATE_SUCCESS), HttpStatus.CREATED);
         } catch (Exception e) {
             log.error("Unexpected error during invoice creation: {}", e.getMessage(), e);
-            throw new  InvoiceException(InvoiceErrorMessageKey.UNEXPECTED_ERROR.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new InvoiceException(InvoiceErrorMessageKey.UNEXPECTED_ERROR.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -184,33 +200,35 @@ public class InvoiceServiceImpl implements InvoiceService {
             InvoiceModel invoice = optionalInvoice.get();
             Map<String, Object> response = new HashMap<>();
             response.put(Constants.CUSTOMER_NAME, invoice.getCustomer().getCustomerName());
-            response.put(Constants.EMAIL,invoice.getCustomer().getEmail());
-            response.put(Constants.CUSTOMER_ADDRESS,invoice.getCustomer().getAddress());
-            response.put(Constants.CITY,invoice.getCustomer().getCity());
-            response.put(Constants.GST_NO,invoice.getCustomer().getGstNo());
-            response.put(Constants.CUSTOMER_MOBILE,invoice.getCustomer().getCustomerId());
-            response.put(Constants.PINCODE,invoice.getCustomer().getPinCode());
-            response.put(Constants.CUSTOMER_STATE,invoice.getCustomer().getState());
-            response.put(Constants.CUSTOMER_STATE_CODE,invoice.getCustomer().getStateCode());
+            response.put(Constants.EMAIL, invoice.getCustomer().getEmail());
+            response.put(Constants.CUSTOMER_ADDRESS, invoice.getCustomer().getAddress());
+            response.put(Constants.CITY, invoice.getCustomer().getCity());
+            response.put(Constants.GST_NO, invoice.getCustomer().getGstNo());
+            response.put(Constants.GST_NUMBER,invoice.getCompanyModel().getGstNumber());
+            response.put(Constants.MOBILE_NUMBER, invoice.getCustomer().getMobileNumber());
+            response.put(Constants.PINCODE, invoice.getCustomer().getPinCode());
+            response.put(Constants.CUSTOMER_STATE, invoice.getCustomer().getState());
+            response.put(Constants.CUSTOMER_STATE_CODE, invoice.getCustomer().getStateCode());
             response.put(Constants.CUSTOMER_ID, invoice.getCustomer().getCustomerId());
             response.put(Constants.INVOICE_ID, invoice.getInvoiceId());
             response.put(Constants.PURCHASE_ORDER, invoice.getPurchaseOrder());
             response.put(Constants.VENDOR_CODE, invoice.getVendorCode());
             response.put(Constants.INVOICE_DATE, invoice.getInvoiceDate());
+            response.put(Constants.GRAND_TOTAL_WORDS,invoice.getGrandTotalInWords());
             response.put(Constants.TOTAL_AMOUNT, invoice.getTotalAmount());
-            response.put(Constants.GRAND_TOTAL,invoice.getGrandTotal());
-            response.put(Constants.GST,invoice.getGst());
-            response.put(Constants.C_GST,invoice.getCGst());
-            response.put(Constants.S_GST,invoice.getSGst());
-            response.put(Constants.I_GST,invoice.getIGst());
+            response.put(Constants.GRAND_TOTAL, invoice.getGrandTotal());
+            response.put(Constants.GST, invoice.getGst());
+            response.put(Constants.C_GST, invoice.getCGst());
+            response.put(Constants.S_GST, invoice.getSGst());
+            response.put(Constants.I_GST, invoice.getIGst());
             List<Map<String, Object>> orderRequests = invoice.getOrderModels().stream()
                     .map(order -> {
                         Map<String, Object> orderMap = new HashMap<>();
                         orderMap.put(Constants.PRODUCT_ID, order.getProduct().getProductId());
                         orderMap.put(Constants.PRODUCT_NAME, order.getProduct().getProductName());
-                        //orderMap.put(Constants.GST, order.getProduct().getGst());
-                        orderMap.put(Constants.TOTAL_COST, order.getProduct().getUnitCost());
-                       // orderMap.put(Constants.COST, order.getProduct().getProductCost());
+                        orderMap.put(Constants.SERVICE,order.getProduct().getService());
+                        orderMap.put(Constants.UNIT_COST, order.getProduct().getUnitCost());
+                         orderMap.put(Constants.TOTAL_COST, order.getTotalCost());
                         orderMap.put(Constants.HSN_NO, order.getProduct().getHsnNo());
                         orderMap.put(Constants.PURCHASE_DATE, order.getPurchaseDate());
                         orderMap.put(Constants.QUANTITY, order.getQuantity());
@@ -219,6 +237,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                     .collect(Collectors.toList());
             response.put(Constants.ORDER_REQUESTS, orderRequests);
             response.put(Constants.STATUS_VALUE, Constants.STATUS);
+
             log.info("Invoice with ID: {} fetched successfully", invoiceId);
             return new ResponseEntity<>(ResponseBuilder.builder().build().createSuccessResponse(response), HttpStatus.OK);
         } catch (Exception e) {
@@ -241,33 +260,37 @@ public class InvoiceServiceImpl implements InvoiceService {
                     .map(invoice -> {
                         Map<String, Object> response = new HashMap<>();
                         response.put(Constants.CUSTOMER_NAME, invoice.getCustomer().getCustomerName());
-                        response.put(Constants.EMAIL,invoice.getCustomer().getEmail());
-                        response.put(Constants.CUSTOMER_ADDRESS,invoice.getCustomer().getAddress());
-                        response.put(Constants.CITY,invoice.getCustomer().getCity());
-                        response.put(Constants.GST_NO,invoice.getCustomer().getGstNo());
-                        response.put(Constants.CUSTOMER_MOBILE,invoice.getCustomer().getCustomerId());
-                        response.put(Constants.PINCODE,invoice.getCustomer().getPinCode());
-                        response.put(Constants.CUSTOMER_STATE,invoice.getCustomer().getState());
-                        response.put(Constants.CUSTOMER_STATE_CODE,invoice.getCustomer().getStateCode());
+                        response.put(Constants.EMAIL, invoice.getCustomer().getEmail());
+                        response.put(Constants.CUSTOMER_ADDRESS, invoice.getCustomer().getAddress());
+                        response.put(Constants.CITY, invoice.getCustomer().getCity());
+                        response.put(Constants.CUSTOMER_COMPANY,invoice.getCustomer().getCustomerCompany());
+                        response.put(Constants.GST_NO, invoice.getCustomer().getGstNo());
+                        response.put(Constants.BRANCH,invoice.getCompanyModel().getBranch());
+                        response.put(Constants.ACCOUNT_TYPE,invoice.getCompanyModel().getAccountType());
+                        response.put(Constants.PHONE, invoice.getCustomer().getCustomerId());
+                        response.put(Constants.PINCODE, invoice.getCustomer().getPinCode());
+                        response.put(Constants.CUSTOMER_STATE, invoice.getCustomer().getState());
+                        response.put(Constants.CUSTOMER_STATE_CODE, invoice.getCustomer().getStateCode());
                         response.put(Constants.CUSTOMER_ID, invoice.getCustomer().getCustomerId());
                         response.put(Constants.INVOICE_ID, invoice.getInvoiceId());
                         response.put(Constants.PURCHASE_ORDER, invoice.getPurchaseOrder());
                         response.put(Constants.VENDOR_CODE, invoice.getVendorCode());
                         response.put(Constants.INVOICE_DATE, invoice.getInvoiceDate());
+                        response.put(Constants.GRAND_TOTAL_WORDS,invoice.getGrandTotalInWords());
                         response.put(Constants.TOTAL_AMOUNT, invoice.getTotalAmount());
-                        response.put(Constants.GRAND_TOTAL,invoice.getGrandTotal());
-                        response.put(Constants.GST,invoice.getGst());
-                        response.put(Constants.C_GST,invoice.getCGst());
-                        response.put(Constants.S_GST,invoice.getSGst());
-                        response.put(Constants.I_GST,invoice.getIGst());
+                        response.put(Constants.GRAND_TOTAL, invoice.getGrandTotal());
+                        response.put(Constants.GST, invoice.getGst());
+                        response.put(Constants.C_GST, invoice.getCGst());
+                        response.put(Constants.S_GST, invoice.getSGst());
+                        response.put(Constants.I_GST, invoice.getIGst());
                         List<Map<String, Object>> orderRequests = invoice.getOrderModels().stream()
                                 .map(order -> {
                                     Map<String, Object> orderMap = new HashMap<>();
                                     orderMap.put(Constants.PRODUCT_ID, order.getProduct().getProductId());
                                     orderMap.put(Constants.PRODUCT_NAME, order.getProduct().getProductName());
-                                  //  orderMap.put(Constants.GST, order.getProduct().getGst());
-                                    orderMap.put(Constants.TOTAL_COST, order.getProduct().getUnitCost());
-                                   // orderMap.put(Constants.COST, order.getProduct().getProductCost());
+                                    orderMap.put(Constants.SERVICE,order.getProduct().getService());
+                                    orderMap.put(Constants.UNIT_COST, order.getProduct().getUnitCost());
+                                     orderMap.put(Constants.TOTAL_COST, order.getTotalCost());
                                     orderMap.put(Constants.HSN_NO, order.getProduct().getHsnNo());
                                     orderMap.put(Constants.PURCHASE_DATE, order.getPurchaseDate());
                                     orderMap.put(Constants.QUANTITY, order.getQuantity());
@@ -322,6 +345,7 @@ public class InvoiceServiceImpl implements InvoiceService {
             existingInvoice.setVendorCode(request.getVendorCode());
             existingInvoice.setInvoiceDate(request.getInvoiceDate());
             existingInvoice.setStatus(request.getStatus());
+            existingInvoice.setDueDate(request.getDueDate());
             List<OrderModel> updatedOrderModels = new ArrayList<>();
             BigDecimal totalAmount = BigDecimal.ZERO;
             for (OrderRequest orderRequest : request.getOrderRequests()) {
@@ -349,7 +373,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                     orderModel.setTotalCost(totalCost);
                     updatedOrderModels.add(orderModel);
                     totalAmount = totalAmount.add(totalCost);
-                }  catch (Exception e) {
+                } catch (Exception e) {
                     log.error("Error updating order for productId {}: {}", orderRequest.getProductId(), e.getMessage());
                     throw new InvoiceException(InvoiceErrorMessageKey.INVOICE_UPDATE_FAILED, HttpStatus.INTERNAL_SERVER_ERROR);
                 }
@@ -358,7 +382,7 @@ public class InvoiceServiceImpl implements InvoiceService {
             String companyGstNo = existingInvoice.getCompanyModel().getGstNumber();
             String customerGstNo = existingInvoice.getCustomer().getGstNo();
 
-            BigDecimal gstRate = gstConfig.getRate();
+            BigDecimal gstRate = config.getRate();
             if (companyGstNo == null || customerGstNo == null) {
                 existingInvoice.setGst(Constants.ZERO);
                 existingInvoice.setCGst(Constants.ZERO);
@@ -400,59 +424,135 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
-    @Transactional
-    public ResponseEntity<?> generateInvoice(Long invoiceId) throws InvoiceException {
-        log.info("Generating invoice with ID: {}", invoiceId);
-        InvoiceModel invoice = repository.findById(String.valueOf(invoiceId))
-                .orElseThrow(() -> new InvoiceException(InvoiceErrorMessageKey.INVOICE_NOT_FOUND, HttpStatus.NOT_FOUND));
-
+    public ResponseEntity<?> generateInvoice(String invoiceId, HttpServletRequest request) throws InvoiceException {
+        log.info("Fetching invoice with ID: {}", invoiceId);
         try {
-            Map<String, Object> response = new HashMap<>();
-            response.put(Constants.COMPANY_NAME, invoice.getCompanyModel() != null ? invoice.getCompanyModel().getCompanyName() : null);
-            response.put(Constants.BANK_NAME, invoice.getCompanyModel() != null ? invoice.getCompanyModel().getBankName() : null);
-            response.put(Constants.ACCOUNT_NO, invoice.getCompanyModel() != null ? invoice.getCompanyModel().getAccountNumber() : null);
-            response.put(Constants.IFSC_CODE, invoice.getCompanyModel() != null ? invoice.getCompanyModel().getIfscCode() : null);
-            response.put(Constants.PAN_NO, invoice.getCompanyModel() != null ? invoice.getCompanyModel().getPan() : null);
-            response.put(Constants.CUSTOMER_NAME, invoice.getCustomer() != null ? invoice.getCustomer().getCustomerName() : null);
-            response.put(Constants.CUSTOMER_EMAIL, invoice.getCustomer() != null ? invoice.getCustomer().getEmail() : null);
-            response.put(Constants.CONTACT, invoice.getCustomer() != null ? invoice.getCustomer().getMobileNumber() : null);
-            response.put(Constants.GST_NO, invoice.getCustomer() != null ? invoice.getCustomer().getGstNo() : null);
-            response.put(Constants.ADDRESS, invoice.getCustomer() != null ? invoice.getCustomer().getAddress() : null);
-            response.put(Constants.INVOICE_DATE, invoice.getInvoiceDate() != null ? invoice.getInvoiceDate().toString() : null);
-            response.put(Constants.DUE_DATE, invoice.getInvoiceDate() != null ? invoice.getInvoiceDate().plusDays(30).toString() : null); // Example for due date
-            response.put(Constants.INVOICE_NUMBER, String.valueOf(invoice.getInvoiceId()));
-            response.put(Constants.TOTAL_AMOUNT, invoice.getTotalAmount() != null ? invoice.getTotalAmount().toString() : null);
-            response.put(Constants.STATUS, invoice.getStatus() != null ? invoice.getStatus().toString() : null);
-            response.put(Constants.GRAND_TOTAL,invoice.getGrandTotal() != null ? invoice.getGrandTotal().toString() : null);
-            response.put(Constants.GST,invoice.getGst() != null ? invoice .getGst().toString() : null);
-            response.put(Constants.C_GST,invoice.getCGst() != null ? invoice .getCGst().toString() : null);
-            response.put(Constants.S_GST,invoice.getSGst() != null ? invoice .getSGst().toString() : null);
-            response.put(Constants.I_GST,invoice.getIGst() != null ? invoice .getIGst().toString() : null);
-
-            // Process orders and products for the invoice
-            if (invoice.getOrderModels() != null && !invoice.getOrderModels().isEmpty()) {
-                List<Map<String, Object>> orderRequests = invoice.getOrderModels().stream()
-                        .map(order -> {
-                            Map<String, Object> orderMap = new HashMap<>();
-                            orderMap.put(Constants.PRODUCT_ID, order.getProduct() != null ? order.getProduct().getProductId() : null);
-                            orderMap.put(Constants.PRODUCT_NAME, order.getProduct() != null ? order.getProduct().getProductName() : null);
-                            //orderMap.put(Constants.GST, order.getProduct() != null ? order.getProduct().getGst() : null);
-                            orderMap.put(Constants.TOTAL_COST, order.getProduct() != null ? order.getProduct().getUnitCost() : null);
-                            //orderMap.put(Constants.COST, order.getProduct() != null ? order.getProduct().getProductCost() : null);
-                            orderMap.put(Constants.HSN_NO, order.getProduct() != null ? order.getProduct().getHsnNo() : null);
-                            orderMap.put(Constants.PURCHASE_DATE, order.getPurchaseDate());
-                            orderMap.put(Constants.QUANTITY, order.getQuantity());
-
-                            return orderMap;
-                        })
-                        .collect(Collectors.toList());
-                response.put(Constants.ORDER_REQUESTS, orderRequests);
+            // Fetch invoice
+                Optional<InvoiceModel> optionalInvoice = repository.findById(invoiceId);
+            if (optionalInvoice.isEmpty()) {
+                log.error("Invoice not found with ID: {}", invoiceId);
+                throw new InvoiceException(InvoiceErrorMessageKey.INVOICE_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND);
             }
-            log.info("Returning success response for invoice ID: {}", invoiceId);
-            return new ResponseEntity<>(ResponseBuilder.builder().build().createSuccessResponse(response), HttpStatus.OK);
+            InvoiceModel invoice = optionalInvoice.get();
+
+            // Unmask company properties
+            if (invoice.getCompanyModel() != null) {
+                invoice.setCompanyModel(CompanyUtils.CompanyProperties(invoice.getCompanyModel(), request));
+            }
+            // Prepare data for rendering
+            Map<String, Object> dataModel = prepareInvoiceData(invoice, request);
+
+            // Generate HTML from FreeMarker template
+            Template template = freeMarkerConfig.getTemplate("invoice-template.ftl");
+            StringWriter stringWriter = new StringWriter();
+            try {
+                template.process(dataModel, stringWriter);
+            } catch (TemplateException e) {
+                log.error("Error processing FreeMarker template: {}", e.getMessage());
+                throw new InvoiceException(InvoiceErrorMessageKey.INVALID_COMPANY, HttpStatus.BAD_REQUEST);
+            }
+            String htmlContent = stringWriter.toString();
+
+            // Generate PDF
+            byte[] pdfContent = generatePdfFromHtml(htmlContent);
+
+            // Return PDF as response
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDisposition(ContentDisposition.builder("attachment")
+                    .filename("Invoice-" + invoiceId + ".pdf")
+                    .build());
+
+            log.info("Invoice with ID: {} generated successfully", invoiceId);
+            return new ResponseEntity<>(pdfContent, headers, HttpStatus.OK);
         } catch (Exception e) {
-            log.error("An error occurred while generating the invoice: {}", e.getMessage(), e);
-            throw new InvoiceException(InvoiceErrorMessageKey.INTERNAL_SERVER_ERROR.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error("An error occurred while fetching or generating invoice: {}", e.getMessage(), e);
+            throw new InvoiceException(InvoiceErrorMessageKey.INVALID_INVOICE_ID_FORMAT.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private Map<String, Object> prepareInvoiceData(InvoiceModel invoice, HttpServletRequest request) throws IOException {
+        Map<String, Object> response = new HashMap<>();
+
+        if (invoice.getCompanyModel() != null) {
+            CompanyModel company = invoice.getCompanyModel();
+            response.put(Constants.STAMP_SIGN,company.getStampImage());
+            response.put(Constants.COMPANY_IMAGE_FILE, company.getImageFile());
+            response.put(Constants.BANK_NAME, company.getBankName());
+            response.put(Constants.COMPANY_NAME, company.getCompanyName());
+            response.put(Constants.ADDRESS, company.getAddress());
+            response.put(Constants.COMPANY_EMAIL,company.getCompanyEmail());
+            response.put(Constants.STATE, company.getState());
+            response.put(Constants.PHONE,company.getPhone());
+            response.put(Constants.PAN, company.getPan());
+            response.put(Constants.GST_NUMBER, company.getGstNumber());
+            response.put(Constants.BANK_ACCOUNT, company.getAccountNumber());
+            response.put(Constants.BRANCH, company.getBranch());
+            response.put(Constants.IFSC_CODE, company.getIfscCode());
+            response.put(Constants.ACCOUNT_TYPE,company.getAccountType());
+            response.put(Constants.PLACE,company.getPlace());
+        } else {
+            System.out.println("Company details are missing for Invoice ID: " + invoice.getInvoiceId());
+        }
+        response.put(Constants.CUSTOMER_NAME, invoice.getCustomer().getCustomerName());
+        response.put(Constants.CUSTOMER_COMPANY,invoice.getCustomer().getCustomerCompany());
+        response.put(Constants.EMAIL, invoice.getCustomer().getEmail());
+        response.put(Constants.CUSTOMER_ADDRESS, invoice.getCustomer().getAddress());
+        response.put(Constants.CITY, invoice.getCustomer().getCity());
+        response.put(Constants.GST_NO, invoice.getCustomer().getGstNo());
+        response.put(Constants.MOBILE_NUMBER, invoice.getCustomer().getMobileNumber());
+        response.put(Constants.PINCODE, invoice.getCustomer().getPinCode());
+        response.put(Constants.CUSTOMER_STATE, invoice.getCustomer().getState());
+        response.put(Constants.CUSTOMER_STATE_CODE, invoice.getCustomer().getStateCode());
+        response.put(Constants.CUSTOMER_ID, invoice.getCustomer().getCustomerId());
+        response.put(Constants.INVOICE_ID, invoice.getInvoiceId());
+        response.put(Constants.PURCHASE_ORDER, invoice.getPurchaseOrder());
+        response.put(Constants.VENDOR_CODE, invoice.getVendorCode());
+        response.put(Constants.INVOICE_DATE, invoice.getInvoiceDate());
+        response.put(Constants.DUE_DATE,invoice.getDueDate());
+        response.put(Constants.TOTAL_AMOUNT, invoice.getTotalAmount());
+        response.put(Constants.GRAND_TOTAL, invoice.getGrandTotal());
+        response.put(Constants.GST, invoice.getGst());
+        response.put(Constants.C_GST, invoice.getCGst());
+        response.put(Constants.S_GST, invoice.getSGst());
+        response.put(Constants.I_GST, invoice.getIGst());
+        response.put(Constants.GRAND_TOTAL_WORDS,invoice.getGrandTotalInWords());
+        List<Map<String, Object>> orderRequests = new ArrayList<>();
+
+        if (invoice.getOrderModels() != null && !invoice.getOrderModels().isEmpty()) {
+            for (OrderModel order : invoice.getOrderModels()) {
+                if (order.getProduct() != null) {
+                    Map<String, Object> orderMap = new HashMap<>();
+                    orderMap.put(Constants.PRODUCT_ID, order.getProduct().getProductId());
+                    orderMap.put(Constants.PRODUCT_NAME, order.getProduct().getProductName());
+                    orderMap.put(Constants.SERVICE,order.getProduct().getService());
+                    orderMap.put(Constants.HSN_NO, order.getProduct().getHsnNo());
+                    orderMap.put(Constants.PURCHASE_DATE, order.getPurchaseDate());
+                    orderMap.put(Constants.QUANTITY,order.getQuantity());
+                    orderMap.put(Constants.UNIT_COST, order.getProduct().getUnitCost());
+                    orderMap.put(Constants.TOTAL_COST,order.getTotalCost());
+                    orderRequests.add(orderMap);
+                    System.out.println("Product is null for Order ID: " + order.getOrderId());
+                }
+            }
+        } else {
+            System.out.println("Order Models list is null or empty for Invoice ID: " + invoice.getInvoiceId());
+        }
+        response.put(Constants.ORDER_REQUESTS, orderRequests);
+
+        return response;
+    }
+
+    private byte[] generatePdfFromHtml(String html) throws IOException {
+        html = html.replaceAll("&(?![a-zA-Z]{2,6};|#\\d{1,5};)", "&amp;");
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            ITextRenderer renderer = new ITextRenderer();
+            renderer.setDocumentFromString(html);
+            renderer.layout();
+            renderer.createPDF(baos);
+            return baos.toByteArray();
+        } catch (DocumentException e) {
+            throw new IOException(e.getMessage());
         }
     }
 }

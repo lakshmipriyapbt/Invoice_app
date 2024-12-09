@@ -22,5 +22,11 @@ public class Constants {
     public static final String EXPIRY_TIME = "expiry_time";
     public static final String COMPANY_ID ="company_Id";
     public static final String USER_ID = "user_Id";
+    public static final String BEARER = "Bearer";
+    public static final String JWT = "JWT";
+    public static final String MULTI_PART_FILE = "MultipartFile";
+    public static final String STRING = "String";
+    public static final String BINARY = "binary";
+    public static final String AUTHORIZATION = "Authorization";
 }
 

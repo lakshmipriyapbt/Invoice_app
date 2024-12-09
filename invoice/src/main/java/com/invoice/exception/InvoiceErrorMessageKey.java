@@ -34,7 +34,10 @@ public enum InvoiceErrorMessageKey {
     ERROR_RETRIEVING_USERS("error.retrieving.users"),
     INVOICE_DELETION_FAILED("Invoice.deletion.failed"),
     ERROR_FETCHING_COMPANY("error.fetching.company"),
-    ERROR_CREATING_CUSTOMER("error.creating.customer");
+    ERROR_CREATING_CUSTOMER("error.creating.customer"),
+    ERROR_UPDATING_COMPANY("error.updating.company"),
+    INVALID_COMPANY("invalid.company"),
+    UNABLE_SAVE_COMPANY("Unable to save company");
 
     private final String message;
 

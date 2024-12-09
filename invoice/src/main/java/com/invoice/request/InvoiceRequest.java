@@ -25,6 +25,9 @@ public class InvoiceRequest {
     @NotNull(message = "{invoiceDate.notnull.message}")
     private LocalDate invoiceDate;
 
+    @NotNull(message = "{dueDate.notnull.message}")
+    private String dueDate;
+
     @NotNull(message = "{Product.Details.notnull.message}")
     @Size(min = 1, message = "{Product.Details.size.message}")
     private List<OrderRequest> orderRequests;

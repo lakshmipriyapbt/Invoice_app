@@ -42,8 +42,8 @@ public class CompanyRequest {
     @NotBlank(message = "{gender.notnull.message}")
     private String gender;
 
-    @NotBlank(message = "{stampAndSign.notnull.message}")
-    private String stampAndSign;
+    @NotBlank(message = "{stampImage.notnull.message}")
+    private String stampImage;
 
     @NotBlank(message = "{accountNumber.notnull.message}")
     private String accountNumber;
@@ -66,4 +66,10 @@ public class CompanyRequest {
 
     @NotBlank(message = "{serviceName.notnull.message}")
     private String serviceName;
+
+    private String imageFile;
+
+    private String place;
+
+    private String accountType;
 }

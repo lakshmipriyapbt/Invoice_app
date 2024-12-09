@@ -80,34 +80,22 @@ public class PropertiesConfig {
     @Value("${sql.company.nullOtp}")
     public String CompanyNullOtpQuery;
 
-//    @Value("${smtp.host}")
-//    private String smtpHost;
-//
-//    @Value("${smtp.port}")
-//    private String smtpPort;
-
     @Value("${smtp.auth}")
     private String smtpAuth;
 
     @Value("${smtp.starttls}")
     private String smtpStartTls;
+    
+    @Value("${mail.subject}")
+    private String subject;
 
-    @Value("${email.username}")
-    private String emailUsername;
+    @Value("${mail.text}")
+    private String text;
 
-    @Value("${email.password}")
-    private String emailPassword;
+    @Value("${mail.subject.otp}")
+    private String otpSubject;
 
-    @Value("${email.otp.subject}")
-    private String emailOtpSubject;
-
-    @Value("${email.otp.body}")
-    private String emailOtpBody;
-
-    @Value("${email.failure.message}")
-    private String emailFailureMessage;
-
-    @Value("${get.companyId}")
-    private String companyId;
+    @Value("${mail.text.otp}")
+    private String otpText;
 
 }

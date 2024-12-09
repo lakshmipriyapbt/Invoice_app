@@ -24,6 +24,7 @@ public class ProductModel {
 
     private String productName;
     private String productCost;
+    private String service;
     private String hsnNo;
     private String gst;
     private BigDecimal unitCost;

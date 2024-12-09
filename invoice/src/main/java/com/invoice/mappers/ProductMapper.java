@@ -18,6 +18,7 @@ public interface ProductMapper {
         Map<String, Object> response = new HashMap<>();
         response.put(Constants.PRODUCT_ID, productModel.getProductId());
         response.put(Constants.PRODUCT_NAME, productModel.getProductName());
+        response.put(Constants.SERVICE,productModel.getService());
         response.put(Constants.COST, productModel.getProductCost());
         response.put(Constants.HSN_NO, productModel.getHsnNo());
         response.put(Constants.GST, productModel.getGst());

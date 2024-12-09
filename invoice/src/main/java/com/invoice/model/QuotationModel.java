@@ -38,6 +38,11 @@ public class QuotationModel {
     private String shippingAddress;
     private String deliveryAddress;
     private BigDecimal totalAmount;
+    private String gst;
+    private String cGst;
+    private String sGst;
+    private String iGst;
+    private String grandTotal;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customerId")
@@ -45,5 +50,4 @@ public class QuotationModel {
 
     @OneToMany(mappedBy = "quotationModel", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<QuotationOrderModel> orderModels;
-
 }

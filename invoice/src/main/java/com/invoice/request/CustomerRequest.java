@@ -1,5 +1,6 @@
 package com.invoice.request;
 
+import io.micrometer.common.lang.Nullable;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
@@ -19,7 +20,7 @@ public class CustomerRequest {
     private String email;
 
     @NotBlank(message = "{mobileNumber.notnull.message}")
-    @Pattern(regexp = "^\\d{10}$", message = "{mobileNumber.format}")
+    @Pattern(regexp = "^(\\+\\d{1,3}[- ]?)?\\d{10,15}$", message = "{mobileNumber.format}")
     private String mobileNumber;
 
     @NotBlank(message = "{address.notnull.message}")
@@ -33,14 +34,18 @@ public class CustomerRequest {
     private String city;
 
     @NotBlank(message = "{pinCode.notnull.message}")
-    @Pattern(regexp = "^\\d{6}$", message = "{pinCode.format}")
+    @Pattern(regexp = "^[A-Za-z0-9 \\-]{3,10}$", message = "{pinCode.format}")
     private String pinCode;
 
-    @Pattern(regexp = "^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$", message = "{gstNo.format}")
+
+    @Nullable
     private String gstNo;
 
-    @NotBlank(message = "{stateCode.notnull.message}")
-    @Pattern(regexp = "^\\d{2}$", message = "{stateCode.format}")
+    @Nullable
     private String stateCode;
+
+    @NotBlank(message = "{customerCompany.notnull.message}")
+    @Size(min = 2, max = 100, message = "{customerCompany.size.message}")
+    private String customerCompany;
 }
 

@@ -9,9 +9,8 @@ import java.math.BigDecimal;
 @Getter
 @Configuration
 @ConfigurationProperties(prefix = "gst")
-public class GstConfig {
+public class Config {
 
     private BigDecimal rate;
     private BigDecimal value;
-
 }

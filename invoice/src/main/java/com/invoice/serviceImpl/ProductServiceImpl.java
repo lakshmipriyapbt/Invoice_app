@@ -42,6 +42,7 @@ public class ProductServiceImpl implements ProductService {
         try {
             ProductModel product = new ProductModel();
             product.setProductName(productRequest.getProductName());
+            product.setService(productRequest.getService());
             product.setProductCost(productRequest.getProductCost());
             product.setHsnNo(productRequest.getHsnNo());
             product.setGst(productRequest.getGst());
@@ -136,6 +137,9 @@ public class ProductServiceImpl implements ProductService {
             }
             if (productRequest.getGst() != null) {
                 productToUpdate.setGst(productRequest.getGst());
+            }
+            if (productRequest.getService() != null) {
+                productToUpdate.setService(productRequest.getService());
             }
             BigDecimal totalCost = calculateTotalCost(productToUpdate);
             productToUpdate.setUnitCost(totalCost);

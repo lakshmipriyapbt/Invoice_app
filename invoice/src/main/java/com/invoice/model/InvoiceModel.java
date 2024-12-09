@@ -2,6 +2,7 @@ package com.invoice.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -32,6 +33,7 @@ public class InvoiceModel {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate invoiceDate;
 
+    @JsonManagedReference
     @OneToMany(mappedBy = "invoiceModel", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderModel> orderModels;
 
@@ -42,6 +44,8 @@ public class InvoiceModel {
     private String sGst;
     private String iGst;
     private String grandTotal;
+    private String dueDate;
+    private String grandTotalInWords;
 
     @ManyToOne
     @JoinColumn(name = "companyId")

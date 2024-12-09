@@ -1,9 +1,11 @@
 package com.invoicelogin.config;
 
+import com.invoicelogin.util.Constants;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.ExternalDocumentation;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springdoc.core.utils.SpringDocUtils;
 import org.springframework.context.annotation.Bean;
@@ -16,7 +18,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 @Profile("!test")
 public class SwaggerConfig {
-    public static final String INVOICE_TAG = "invoice";
 
     static {
         SpringDocUtils.getConfig().addFileType(MultipartFile.class);
@@ -29,8 +30,14 @@ public class SwaggerConfig {
                         .description("Invoice REST API for managing invoices")
                         .version("v1.0.0")
                 ).components(new Components()
-                        .addSecuritySchemes("Authorization",
-                                new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("Bearer").bearerFormat("JWT")))
+                        // Add security schema for JWT
+                        .addSecuritySchemes(Constants.AUTHORIZATION,
+                                new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme(Constants.BEARER).bearerFormat(Constants.JWT))
+                        // Add schema for multipart file
+                        .addSchemas(Constants.MULTI_PART_FILE, new Schema<>()
+                                .type(Constants.STRING)
+                                .format(Constants.BINARY))
+                )
                 .externalDocs(new ExternalDocumentation()
                         .description("Invoice Application - Documentation")
                         .url("http://your-invoice-app-docs-url"));

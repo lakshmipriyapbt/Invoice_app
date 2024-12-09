@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -81,9 +82,8 @@ public class InvoiceController {
     @ApiResponse(responseCode = "200", description = "Invoice generated successfully")
     public ResponseEntity<?> generateInvoice(@Parameter(hidden = true, required = true, description = "${apiAuthToken.description}", example = "Bearer abcdef12-1234-1234-1234-abcdefabcdef")
                                              @RequestHeader(Constants.AUTH_KEY) String authToken,
-                                             @PathVariable Long invoiceId) throws InvoiceException {
+                                             @PathVariable String invoiceId, HttpServletRequest request) throws InvoiceException {
 
-        return invoiceService.generateInvoice(invoiceId);
+        return invoiceService.generateInvoice(invoiceId,request);
     }
-
 }

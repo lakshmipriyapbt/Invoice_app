@@ -21,8 +21,9 @@ public interface CustomerMapper {
         Map<String, Object> response = new HashMap<>();
         response.put(Constants.CUSTOMER_ID, customerModel.getCustomerId());
         response.put(Constants.CUSTOMER_NAME, customerModel.getCustomerName());
+        response.put(Constants.CUSTOMER_COMPANY,customerModel.getCustomerCompany());
         response.put(Constants.EMAIL, customerModel.getEmail());
-        response.put(Constants.CUSTOMER_MOBILE, customerModel.getMobileNumber());
+        response.put(Constants.PHONE, customerModel.getMobileNumber());
         response.put(Constants.CUSTOMER_ADDRESS, customerModel.getAddress());
         response.put(Constants.STATE, customerModel.getState());
         response.put(Constants.CITY, customerModel.getCity());

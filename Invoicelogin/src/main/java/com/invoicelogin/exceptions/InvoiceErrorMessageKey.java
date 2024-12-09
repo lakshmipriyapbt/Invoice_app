@@ -10,7 +10,9 @@ public enum InvoiceErrorMessageKey {
     INVALID_EMAIL("invalid.email"),
     FAILED_TO_SEND_OTP("failed.to.send.otp"),
     COMPANY_ID_NOT_FOUND("company.id.not.fount"),
-    USERID_NOT_FOUND("userId.not.found");
+    USERID_NOT_FOUND("userId.not.found"),
+    PASSWORD_MISMATCH("password.missMatch"),
+    PASSWORD_SAME_AS_PREVIOUS("Password.same.as.previous");
 
     private final String message;
 

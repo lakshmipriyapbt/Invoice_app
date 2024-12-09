@@ -28,7 +28,7 @@ public interface CompanyMapper {
         response.put(Constants.PAN, companyModel.getPan());
         response.put(Constants.GST_NO, companyModel.getGstNumber());
         response.put(Constants.GENDER, companyModel.getGender());
-        response.put(Constants.STAMP_SIGN, companyModel.getStampAndSign());
+        response.put(Constants.STAMP_SIGN, companyModel.getStampImage());
         response.put(Constants.BANK_ACCOUNT, companyModel.getAccountNumber());
         response.put(Constants.BANK_NAME, companyModel.getBankName());
         response.put(Constants.BRANCH, companyModel.getBranch());
