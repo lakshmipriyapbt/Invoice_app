@@ -15,7 +15,8 @@ public interface UserMapper {
         }
         Map<String, Object> response = new HashMap<>();
         response.put(Constants.USER_ID, userModel.getUserId());
-        response.put(Constants.USER_NAME,userModel.getPassword());
+        response.put(Constants.USER_NAME,userModel.getUserName());
+        response.put(Constants.PASSWORD,userModel.getPassword());
         response.put(Constants.USER_EMAIL, userModel.getUserEmail());
         response.put(Constants.ROLES, userModel.getRole());
         response.put(Constants.OTP, userModel.getOtp());

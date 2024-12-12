@@ -3,12 +3,15 @@ package com.invoice.util;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.invoice.exception.InvoiceErrorMessageKey;
+import com.invoice.exception.InvoiceException;
 import com.invoice.model.CompanyModel;
 import com.invoice.request.CompanyImageUpdate;
 import com.invoice.request.CompanyRequest;
 import com.invoice.request.CompanyStampUpdate;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.BeanUtils;
+import org.springframework.http.HttpStatus;
 
 public class CompanyUtils {
 
@@ -22,14 +25,13 @@ public class CompanyUtils {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     static {
-        // Configure the ObjectMapper to ignore unknown properties
         OBJECT_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
-    public static void updateCompanyFromRequest(CompanyModel companyToUpdate, CompanyRequest companyRequest) throws JsonMappingException {
+    public static void updateCompanyFromRequest(CompanyModel companyToUpdate, CompanyRequest companyRequest) throws JsonMappingException, InvoiceException {
         if (companyRequest == null) {
-            throw new IllegalArgumentException(Constants.COMPANY_NOT_NULL);
+            throw new InvoiceException(InvoiceErrorMessageKey.COMPANY_NOT_NULL.getMessage(), HttpStatus.NOT_FOUND);
         }
-        // Use ObjectMapper to merge the properties
+
         OBJECT_MAPPER.updateValue(companyToUpdate, companyRequest);
     }
     public static CompanyModel CompanyImageUpdateProperties(CompanyModel existingEntity, CompanyImageUpdate companyRequest, String id) {
@@ -64,10 +66,10 @@ public class CompanyUtils {
     }
 
     public static String getBaseUrl(HttpServletRequest request) {
-        String scheme = request.getScheme(); // http or https
-        String serverName = request.getServerName(); // localhost or IP
-        int serverPort = request.getServerPort(); // port number
-        String contextPath = request.getContextPath(); // context path
+        String scheme = request.getScheme();
+        String serverName = request.getServerName();
+        int serverPort = request.getServerPort();
+        String contextPath = request.getContextPath();
 
         return scheme + "://" + serverName+":" + (serverPort) + contextPath + "/";
     }

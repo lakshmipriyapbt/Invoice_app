@@ -37,7 +37,10 @@ public enum InvoiceErrorMessageKey {
     ERROR_CREATING_CUSTOMER("error.creating.customer"),
     ERROR_UPDATING_COMPANY("error.updating.company"),
     INVALID_COMPANY("invalid.company"),
-    UNABLE_SAVE_COMPANY("Unable to save company");
+    UNABLE_SAVE_COMPANY("Unable to save company"),
+    COMPANY_NOT_NULL("Company request can't be null"),
+    PRODUCT_NOT_NULL("Product request can't be null"),
+    CUSTOMER_NOT_NULL("Customer request can't be null");
 
     private final String message;
 

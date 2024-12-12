@@ -95,7 +95,6 @@ public class Constants {
     public static final String FILE = "file";
     public static final String COMPANY_IMAGE_FILE = "imageFile";
     public static final String CUSTOMER_COMPANY = "customerCompany";
-    public static final String PRODUCT_COMPANY = "productCompany";
     public static final String GRAND_TOTAL_WORDS = "grandTotalInWords";
     public static final String ACCOUNT_TYPE = "accountType";
     public static final String PLACE = "place";
@@ -109,7 +108,6 @@ public class Constants {
     public static final String THOUSAND = " Thousand";
     public static final String LAKH = " Lakh";
     public static final String CRORE = " Crore";
-    public static final String COMPANY_NOT_NULL = "CompanyRequest cannot be null";
     public static final String SERVICE = "service";
     public static final String BEARER = "Bearer";
     public static final String JWT = "JWT";
@@ -118,6 +116,3 @@ public class Constants {
     public static final String BINARY = "binary";
     public static final String AUTHORIZATION = "Authorization";
 }
-
-
-

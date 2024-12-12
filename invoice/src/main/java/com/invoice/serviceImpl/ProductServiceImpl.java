@@ -1,5 +1,6 @@
 package com.invoice.serviceImpl;
 
+import com.invoice.config.Config;
 import com.invoice.exception.InvoiceErrorMessageKey;
 import com.invoice.exception.InvoiceException;
 import com.invoice.mappers.ProductMapper;
@@ -9,6 +10,7 @@ import com.invoice.request.ProductRequest;
 import com.invoice.service.ProductService;
 import com.invoice.common.ResponseBuilder;
 import com.invoice.util.Constants;
+import com.invoice.util.ProductUtils;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,12 +18,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
+
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import static com.invoice.util.ProductUtils.parseToBigDecimal;
 
 @Service
 @Slf4j
@@ -36,17 +40,18 @@ public class ProductServiceImpl implements ProductService {
         this.productMapper = productMapper;
     }
 
+    @Autowired
+    private Config config;
+
     @Override
-    public ResponseEntity<?> createProduct(@Valid ProductRequest productRequest) {
+    public ResponseEntity<?> createProduct(@Valid ProductRequest productRequest) throws InvoiceException {
         log.debug("Creating product: {}", productRequest);
         try {
-            ProductModel product = new ProductModel();
-            product.setProductName(productRequest.getProductName());
-            product.setService(productRequest.getService());
-            product.setProductCost(productRequest.getProductCost());
-            product.setHsnNo(productRequest.getHsnNo());
-            product.setGst(productRequest.getGst());
-            BigDecimal totalCost = calculateTotalCost(product);
+            ProductModel product = ProductUtils.populateProductFromRequest(productRequest);
+
+            BigDecimal totalCost = calculateTotalCost(productRequest.getProductCost(),
+                    productRequest.getGst()
+            );
             product.setUnitCost(totalCost);
 
             log.debug("Product to save: {}", product);
@@ -56,19 +61,15 @@ public class ProductServiceImpl implements ProductService {
             return new ResponseEntity<>(ResponseBuilder.builder().build().createSuccessResponse(Constants.CREATE_SUCCESS), HttpStatus.CREATED);
         } catch (Exception e) {
             log.error("Error occurred while creating product: {}", e.getMessage(), e);
-            return new ResponseEntity<>(ResponseBuilder.builder().build().failureResponse(InvoiceErrorMessageKey.CREATE_FAILED), HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new InvoiceException(InvoiceErrorMessageKey.CREATE_FAILED.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    private BigDecimal calculateTotalCost(ProductModel product) {
-        BigDecimal productCost = parseToBigDecimal(product.getProductCost());
-        BigDecimal gstPercentage = parseToBigDecimal(product.getGst());
-        // Calculate the GST amount (productCost * gstPercentage / 100)
-        BigDecimal gstAmount = productCost.multiply(gstPercentage).divide(BigDecimal.valueOf(100));
-        // Add the GST amount to the product cost
-        return productCost.add(gstAmount);
-    }
-    private BigDecimal parseToBigDecimal(String value) {
-        return value != null && !value.isEmpty() ? new BigDecimal(value) : BigDecimal.ZERO;
+
+    public BigDecimal calculateTotalCost(String productCost, String gstPercentage) {
+        BigDecimal cost = parseToBigDecimal(productCost);
+
+        BigDecimal gstAmount = cost.multiply(config.getRate());
+        return cost.add(gstAmount);
     }
 
     @Override
@@ -125,26 +126,18 @@ public class ProductServiceImpl implements ProductService {
     public ResponseEntity<?> updateProduct(String productId, @Valid ProductRequest productRequest) throws InvoiceException {
         log.info("Updating product with ID: {}", productId);
         try {
-            ProductModel productToUpdate = repository.findById((productId)).orElseThrow(() -> new InvoiceException(InvoiceErrorMessageKey.PRODUCT_NOT_FOUND, HttpStatus.NOT_FOUND));
-            if (productRequest.getProductName() != null) {
-                productToUpdate.setProductName(productRequest.getProductName());
-            }
-            if (productRequest.getProductCost() != null) {
-                productToUpdate.setProductCost(productRequest.getProductCost());
-            }
-            if (productRequest.getHsnNo() != null) {
-                productToUpdate.setHsnNo(productRequest.getHsnNo());
-            }
-            if (productRequest.getGst() != null) {
-                productToUpdate.setGst(productRequest.getGst());
-            }
-            if (productRequest.getService() != null) {
-                productToUpdate.setService(productRequest.getService());
-            }
-            BigDecimal totalCost = calculateTotalCost(productToUpdate);
-            productToUpdate.setUnitCost(totalCost);
-            repository.save(productToUpdate);
+            ProductModel productToUpdate = repository.findById(productId)
+                    .orElseThrow(() -> new InvoiceException(InvoiceErrorMessageKey.PRODUCT_NOT_FOUND, HttpStatus.NOT_FOUND));
+            ProductUtils.updateProductFromRequest(productToUpdate, productRequest);
 
+            ProductModel product = ProductUtils.populateProductFromRequest(productRequest);
+
+            BigDecimal totalCost = calculateTotalCost(productRequest.getProductCost(),
+                    productRequest.getGst()
+            );
+            product.setUnitCost(totalCost);
+
+            repository.save(productToUpdate);
             log.info("Product updated successfully with ID: {}", productId);
             return new ResponseEntity<>(ResponseBuilder.builder().build().createSuccessResponse(Constants.UPDATE_SUCCESS), HttpStatus.OK);
         } catch (Exception e) {
